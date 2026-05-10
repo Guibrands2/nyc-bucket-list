@@ -651,9 +651,9 @@ function DetailModal({ place, entry, places, entries, onClose, onSave, onDelete,
             </div>
           </div>
           <div style={{ display:"flex",gap:5 }}>
-            <a href={mapsUrl} target="_blank" rel="noreferrer" title="Google Maps" style={{ background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:8,width:34,height:34,color:"#9090b0",display:"flex",alignItems:"center",justifyContent:"center",textDecoration:"none" }}><Icons.Route/></a>
-            {cityUrl&&<a href={cityUrl} target="_blank" rel="noreferrer" title="Citymapper" style={{ background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:8,width:34,height:34,color:"#9090b0",display:"flex",alignItems:"center",justifyContent:"center",textDecoration:"none",fontSize:14 }}>🗺</a>}
-            {link&&<a href={link} target="_blank" rel="noreferrer" title="Link" style={{ background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:8,width:34,height:34,color:"#9090b0",display:"flex",alignItems:"center",justifyContent:"center",textDecoration:"none" }}><Icons.Link/></a>}
+            <a href={mapsUrl} target="_blank" rel="noreferrer" style={{ background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:8,padding:"0 10px",height:34,color:"#9090b0",display:"flex",alignItems:"center",gap:5,textDecoration:"none",fontSize:11,whiteSpace:"nowrap" }}>📍 Maps</a>
+            {cityUrl&&<a href={cityUrl} target="_blank" rel="noreferrer" style={{ background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:8,padding:"0 10px",height:34,color:"#9090b0",display:"flex",alignItems:"center",gap:5,textDecoration:"none",fontSize:11,whiteSpace:"nowrap" }}>🗺 Rota</a>}
+            {link&&<a href={link} target="_blank" rel="noreferrer" style={{ background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:8,padding:"0 10px",height:34,color:"#9090b0",display:"flex",alignItems:"center",gap:5,textDecoration:"none",fontSize:11,whiteSpace:"nowrap" }}>🔗 Site</a>}
             <button onClick={onClose} style={{ background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:8,width:34,height:34,color:"#9090b0",cursor:"pointer",fontSize:18 }}>×</button>
           </div>
         </div>
