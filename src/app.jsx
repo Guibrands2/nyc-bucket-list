@@ -178,6 +178,7 @@ const CAT_META = {
   "Comida":           { color:"#d97706", en:"Food" },
   "Mercados & Delis": { color:"#b45309", en:"Markets & Delis" },
   "Dispensaries":     { color:"#15803d", en:"Dispensaries" },
+  "Bares":            { color:"#c2410c", en:"Bars" },
   "Daytrips":         { color:"#475569", en:"Daytrips" },
 };
 
@@ -291,6 +292,21 @@ const INITIAL_PLACES = [
   { id:"dt008", category:"Daytrips", name:"Storm King Art Center", nameEN:"Storm King Art Center", emoji:"🗿", desc:"Museu de escultura ao ar livre em 500 acres de paisagem natural no Hudson Valley.", descEN:"Outdoor sculpture museum on 500 acres of natural landscape in the Hudson Valley.", price:"$$", lat:41.4096, lng:-74.0046, time:"dia inteiro", link:"https://stormking.org", petFriendly:false, publicBathroom:true, season:"outono", rep:"Uma das experiencias artisticas mais unicas do mundo.", repEN:"One of the most unique artistic experiences in the world." },
 ];
 
+  { id:"b001", category:"Bares", name:"Death & Co", nameEN:"Death & Co", emoji:"💀", desc:"Um dos bares de coqueteis mais influentes do mundo, no East Village. Ambiente escuro e sofisticado, menu de drinques inovador.", descEN:"One of the world's most influential cocktail bars in the East Village. Dark and sophisticated atmosphere.", price:"$$", lat:40.7265, lng:-73.9822, time:"2h", link:"https://deathandcompany.com", petFriendly:false, publicBathroom:true, season:"sempre", rep:"Lendario. Reserve com antecedencia ou chegue cedo.", repEN:"Legendary. Reserve ahead or arrive early." },
+  { id:"b002", category:"Bares", name:"Please Don't Tell (PDT)", nameEN:"Please Don't Tell (PDT)", emoji:"📞", desc:"Speakeasy escondido atras de uma cabine telefonica em uma lanchonete no East Village. Um dos bares mais exclusivos de NYC.", descEN:"Speakeasy hidden behind a phone booth in an East Village hot dog joint. One of NYC's most exclusive bars.", price:"$$", lat:40.7267, lng:-73.9838, time:"2h", link:"https://pdtnyc.com", petFriendly:false, publicBathroom:true, season:"sempre", rep:"Reserve pelo site - so 45 lugares. A experiencia de entrar ja vale.", repEN:"Reserve online - only 45 seats. The entry experience alone is worth it." },
+  { id:"b003", category:"Bares", name:"Employees Only", nameEN:"Employees Only", emoji:"🎩", desc:"Bar de coqueteis de era proibicao no West Village com excelente menu de comida tardia.", descEN:"Prohibition-era cocktail bar in the West Village with an excellent late-night food menu.", price:"$$", lat:40.7341, lng:-74.0059, time:"2h", petFriendly:false, publicBathroom:true, season:"sempre", rep:"O Late Night Food aqui e tao bom quanto os drinks. Abre ate 4am.", repEN:"The late night food here is as good as the drinks. Open until 4am." },
+  { id:"b004", category:"Bares", name:"The Dead Rabbit", nameEN:"The Dead Rabbit", emoji:"🐰", desc:"Considerado um dos melhores bares do mundo, no Financial District. Tematica irlandesa, coqueteis historicos.", descEN:"Considered one of the world's best bars in the Financial District. Irish themed, historical cocktails.", price:"$$$", lat:40.7033, lng:-74.0133, time:"2h", link:"https://deadrabbitnyc.com", petFriendly:false, publicBathroom:true, season:"sempre", rep:"Top 10 mundial. Os Irish Coffee e punch bowls sao lendarios.", repEN:"World top 10. The Irish Coffee and punch bowls are legendary." },
+  { id:"b005", category:"Bares", name:"Attaboy", nameEN:"Attaboy", emoji:"🥂", desc:"Sem menu - o bartender cria um drink personalizado baseado no seu humor e preferencias. No Lower East Side.", descEN:"No menu - the bartender creates a personalized drink based on your mood and preferences. In the Lower East Side.", price:"$$", lat:40.7202, lng:-73.9875, time:"2h", petFriendly:false, publicBathroom:false, season:"sempre", rep:"Experiencia unica. Chegue cedo - so aceita quem aparece.", repEN:"Unique experience. Arrive early - walk-ins only." },
+  { id:"b006", category:"Bares", name:"Dante", nameEN:"Dante", emoji:"🍹", desc:"Bar italiano classico no West Village, eleito o melhor bar do mundo em 2019. Negronis lendarios.", descEN:"Classic Italian bar in the West Village, voted world's best bar in 2019. Legendary Negronis.", price:"$$", lat:40.7313, lng:-74.0021, time:"2h", link:"https://dante-nyc.com", petFriendly:true, publicBathroom:true, season:"sempre", rep:"Melhor Negroni de NYC. Excelente para brunch tambem.", repEN:"Best Negroni in NYC. Excellent for brunch too." },
+  { id:"b007", category:"Bares", name:"Maison Premiere", nameEN:"Maison Premiere", emoji:"🦪", desc:"Ostras e coqueteis estilo New Orleans em Williamsburg. Jardim externo lindo no verao.", descEN:"Oysters and New Orleans-style cocktails in Williamsburg. Beautiful outdoor garden in summer.", price:"$$$", lat:40.7142, lng:-73.9609, time:"2h", link:"https://maisonpremiere.com", petFriendly:false, publicBathroom:true, season:"primavera", rep:"O jardim no verao e perfeito. Absinthe e ostras - combinacao infalivel.", repEN:"The garden in summer is perfect. Absinthe and oysters - unbeatable combo." },
+  { id:"b008", category:"Bares", name:"McSorley's Old Ale House", nameEN:"McSorley's Old Ale House", emoji:"🍺", desc:"O bar mais antigo de NYC, aberto desde 1854. Serve so dois tipos de cerveja: light e dark. Historia viva.", descEN:"NYC's oldest bar, open since 1854. Serves only two types of beer: light and dark. Living history.", price:"$", lat:40.7281, lng:-73.9889, time:"1h", petFriendly:false, publicBathroom:true, season:"sempre", rep:"Imprescindivel por historia. Sawdust no chao, fotos do seculo XIX nas paredes.", repEN:"Essential for history. Sawdust on the floor, 19th century photos on the walls." },
+  { id:"b009", category:"Bares", name:"White Horse Tavern", nameEN:"White Horse Tavern", emoji:"🐴", desc:"Bar historico do West Village frequentado por Dylan Thomas, Jack Kerouac e Jim Morrison. Desde 1880.", descEN:"Historic West Village bar frequented by Dylan Thomas, Jack Kerouac and Jim Morrison. Since 1880.", price:"$", lat:40.7339, lng:-74.0069, time:"1h", petFriendly:false, publicBathroom:true, season:"sempre", rep:"Um dos bares mais literarios do mundo. Muito charme.", repEN:"One of the world's most literary bars. Very charming." },
+  { id:"b010", category:"Bares", name:"Nowadays", nameEN:"Nowadays", emoji:"🌿", desc:"Bar e clube ao ar livre em Queens com jardim enorme. Musica eletronica, vibes descontraidas e boa comida.", descEN:"Outdoor bar and club in Queens with a huge garden. Electronic music, relaxed vibes and good food.", price:"$$", lat:40.7138, lng:-73.9088, time:"3h+", link:"https://now-a-days.com", petFriendly:false, publicBathroom:true, season:"verao", rep:"O melhor bar ao ar livre de NYC. Noites de domingo sao lendarias.", repEN:"NYC's best outdoor bar. Sunday nights are legendary." },
+  { id:"b011", category:"Bares", name:"Amor y Amargo", nameEN:"Amor y Amargo", emoji:"🌿", desc:"Minusculo bar especializado em bitters e amargos no East Village. 20 lugares, 100% foco em craft.", descEN:"Tiny bar specializing in bitters and amaro in the East Village. 20 seats, 100% craft focused.", price:"$$", lat:40.7261, lng:-73.9814, time:"1h", petFriendly:false, publicBathroom:false, season:"sempre", rep:"Para quem curte bitter e amaro. Ambiente intimo e especializado.", repEN:"For lovers of bitter and amaro. Intimate and specialized atmosphere." },
+  { id:"b012", category:"Bares", name:"Westlight", nameEN:"Westlight", emoji:"🌅", desc:"Rooftop bar no 22o andar do William Vale em Williamsburg. Vista 360 de Manhattan e Brooklyn.", descEN:"Rooftop bar on the 22nd floor of the William Vale in Williamsburg. 360 view of Manhattan and Brooklyn.", price:"$$$", lat:40.7181, lng:-73.9566, time:"2h", link:"https://www.westlightnyc.com", petFriendly:false, publicBathroom:true, season:"verao", rep:"A melhor vista de Manhattan a partir de Brooklyn. Va no por do sol.", repEN:"Best view of Manhattan from Brooklyn. Go at sunset." },
+  { id:"b013", category:"Bares", name:"Hotel Delmano", nameEN:"Hotel Delmano", emoji:"🕯️", desc:"Bar estilo Belle Epoque em Williamsburg com ambiente romantico, espelhos, madeira e drinques classicos.", descEN:"Belle Epoque style bar in Williamsburg with romantic atmosphere, mirrors, wood and classic drinks.", price:"$$", lat:40.7161, lng:-73.9588, time:"2h", petFriendly:false, publicBathroom:true, season:"sempre", rep:"O bar mais romantico de Brooklyn. Perfeito para uma data especial.", repEN:"Brooklyn's most romantic bar. Perfect for a special date." },
+  { id:"b014", category:"Bares", name:"Mission Dolores", nameEN:"Mission Dolores", emoji:"🍻", desc:"Beer garden descontraido em Park Slope com cerveja artesanal e ambiente casual. Cachorros bem-vindos.", descEN:"Relaxed beer garden in Park Slope with craft beer and casual atmosphere. Dogs welcome.", price:"$", lat:40.6741, lng:-73.9780, time:"2h", petFriendly:true, publicBathroom:true, season:"verao", rep:"O melhor beer garden de Brooklyn. Leva o cachorro.", repEN:"Brooklyn's best beer garden. Bring the dog." },
+  { id:"b015", category:"Bares", name:"The Ear Inn", nameEN:"The Ear Inn", emoji:"👂", desc:"Um dos bares mais antigos de NYC, desde 1817 em SoHo. Ambiente autentico sem pretensao.", descEN:"One of NYC's oldest bars, since 1817 in SoHo. Authentic atmosphere without pretension.", price:"$", lat:40.7255, lng:-74.0098, time:"1h", petFriendly:false, publicBathroom:true, season:"sempre", rep:"Historia pura. Um dos pubs mais autênticos que NYC tem.", repEN:"Pure history. One of the most authentic pubs NYC has to offer." },
 const CATEGORIES = [...new Set(INITIAL_PLACES.map(p => p.category))].sort();
 
 const injectCSS = () => {
@@ -530,8 +546,19 @@ function PlannerChatModal({ places, entries, onClose, addToast, userLat, userLng
     }
   },[userLat,userLng]);
 
-  const visited=places.filter(p=>(entries[p.id]||{}).status==="fui").map(p=>isEN&&p.nameEN?p.nameEN:p.name).join(", ");
-  const wishlist=places.filter(p=>(entries[p.id]||{}).status==="quero").map(p=>isEN&&p.nameEN?p.nameEN:p.name).join(", ");
+  const available = places.filter(p=>{const e=entries[p.id]||{};return e.status!=="fui";});
+  const visitedPlaces = places.filter(p=>(entries[p.id]||{}).status==="fui");
+
+  const buildCatalog = () => {
+    const lines = available.map(p=>{
+      const e=entries[p.id]||{};
+      const name=isEN&&p.nameEN?p.nameEN:p.name;
+      const status=e.status==="quero"?"♥ wishlist":"disponivel";
+      const region=p.lat>41?"Daytrip":p.lat>40.75?"Upper Manhattan/Bronx":p.lat>40.72?"Manhattan/Brooklyn Norte":p.lat>40.69?"Brooklyn/LES/Downtown":"Brooklyn Sul/Queens";
+      return name+" | "+catLabel(p.category)+" | "+p.price+" | "+(p.time||"?")+" | "+status;
+    });
+    return lines.join("\n");
+  };
 
   const send=async()=>{
     if(!input.trim()||loading)return;
@@ -540,7 +567,17 @@ function PlannerChatModal({ places, entries, onClose, addToast, userLat, userLng
     setMsgs(newMsgs);setLoading(true);
     const selNames=selected.map(id=>{const p=places.find(x=>x.id===id);return p?(isEN&&p.nameEN?p.nameEN:p.name):"";}).filter(Boolean).join(", ");
     const lang=isEN?"English":"portugues brasileiro";
-    const ctx="You are an expert NYC guide. User lives in Jersey City, NJ. Visited: "+visited+". Wishlist: "+wishlist+(selNames?". Selected: "+selNames:"")+". Answer in "+lang+", be concise and helpful.";
+    const visitedNames=visitedPlaces.map(p=>isEN&&p.nameEN?p.nameEN:p.name).join(", ");
+    const catalog=buildCatalog();
+    const ctx=`Voce e uma assistente pessoal de Gui e Gabriel para o NYC Bucket List deles.
+REGRA PRINCIPAL: SOMENTE sugira lugares que existem na LISTA ABAIXO. Nunca invente ou mencione lugares fora desta lista.
+Quando perguntarem o que fazer, filtre pelos criterios pedidos e responda apenas com opcoes da lista que ainda nao foram visitadas.
+Usuario mora em Jersey City, NJ. Partida padrao: ${startLoc}.
+Ja visitados (NAO sugerir): ${visitedNames||"nenhum ainda"}.
+${selNames?"Selecionados para o roteiro: "+selNames+".":""}
+LISTA COMPLETA DISPONIVEL (nome | categoria | preco | tempo | status):
+${catalog}
+Responda em ${lang}. Seja conciso, pratico e personalizado para Gui e Gabriel.`;
     try{const r=await fetch(AI_PROXY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:[{role:"user",content:ctx+"\n\nQuestion: "+userMsg}]})});const d=await r.json();setMsgs([...newMsgs,{role:"assistant",content:d.content?.[0]?.text||"Error."}]);}catch{setMsgs([...newMsgs,{role:"assistant",content:isEN?"Connection error. Try again.":"Erro ao conectar."}]);}
     setLoading(false);
   };
