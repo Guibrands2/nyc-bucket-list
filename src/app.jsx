@@ -405,19 +405,22 @@ function CuradoriaTab({ places, lists, onSaveLists, onSelectPlace }) {
   const [search, setSearch] = useState("");
   const [error, setError] = useState(null);
 
+  const toArr = val => Array.isArray(val) ? val : (val && typeof val === "object" ? Object.values(val) : []);
+  const normLists = lists.map(l => ({...l, placeIds: toArr(l.placeIds)}));
+
   try {
-    const editList = lists.find(l => l.id === editId) || null;
+    const editList = normLists.find(l => l.id === editId) || null;
 
     const create = () => {
       if (!newName.trim()) return;
       const nl = { id:"l"+Date.now(), name:newName.trim(), emoji:newEmoji, desc:newDesc.trim(), placeIds:[] };
-      onSaveLists([...lists, nl]);
+      onSaveLists([...normLists, nl]);
       setEditId(nl.id); setNewName(""); setNewEmoji("📋"); setNewDesc(""); setView("edit");
     };
 
-    const del = id => { onSaveLists(lists.filter(l => l.id !== id)); setView("home"); setEditId(null); };
+    const del = id => { onSaveLists(normLists.filter(l => l.id !== id)); setView("home"); setEditId(null); };
 
-    const toggle = (lid, pid) => onSaveLists(lists.map(l => l.id===lid ? {...l, placeIds:l.placeIds.includes(pid)?l.placeIds.filter(x=>x!==pid):[...l.placeIds,pid]} : l));
+    const toggle = (lid, pid) => onSaveLists(normLists.map(l => l.id===lid ? {...l, placeIds:l.placeIds.includes(pid)?l.placeIds.filter(x=>x!==pid):[...l.placeIds,pid]} : l));
 
     const share = list => { const lp=list.placeIds.map(pid=>places.find(p=>p.id===pid)).filter(Boolean); navigator.clipboard.writeText(list.emoji+" "+list.name+(list.desc?"\n"+list.desc:"")+"\n\n"+lp.map(p=>p.emoji+" "+(isEN&&p.nameEN?p.nameEN:p.name)).join("\n")+"\n\nApp: "+window.location.href); };
 
@@ -464,8 +467,8 @@ function CuradoriaTab({ places, lists, onSaveLists, onSelectPlace }) {
     return (
       <div style={{ padding:"0 16px 80px" }}>
         <button onClick={()=>setView("create")} style={{ width:"100%",padding:"13px",background:"#ff336615",border:"1px dashed #ff336650",borderRadius:12,color:"#ff3366",fontSize:14,cursor:"pointer",marginBottom:14,fontFamily:"inherit" }}>{T.createCuradoria}</button>
-        {!lists.length&&<div style={{ textAlign:"center",padding:"40px 0",color:"#50506a" }}><div style={{ fontSize:32,marginBottom:8 }}>📋</div><div style={{ fontSize:13 }}>{T.curadoriaEmpty}</div><div style={{ fontSize:12,marginTop:4,color:"#3a3a50" }}>{T.curadoriaEx}</div></div>}
-        {lists.map(list=>{const lp=list.placeIds.map(pid=>places.find(p=>p.id===pid)).filter(Boolean);return<div key={list.id} onClick={()=>{setEditId(list.id);setView("edit");}} style={{ background:"#1a1a22",border:"1px solid #2a2a38",borderRadius:14,marginBottom:10,padding:"14px",cursor:"pointer" }} className="card"><div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:lp.length?8:0 }}><div><div style={{ fontSize:15,fontWeight:600,color:"#f0eeff" }}>{list.emoji} {list.name}</div>{list.desc&&<div style={{ fontSize:12,color:"#9090b0",marginTop:2 }}>{list.desc}</div>}<div style={{ fontSize:11,color:"#50506a",marginTop:4 }}>{list.placeIds.length} {T.places} · {T.tapToEdit}</div></div><button onClick={e=>{e.stopPropagation();share(list);}} style={{ padding:"5px 10px",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:8,color:"#9090b0",fontSize:12,cursor:"pointer" }}>↗</button></div>{lp.length>0&&<div style={{ display:"flex",flexWrap:"wrap",gap:4 }}>{lp.slice(0,4).map(p=><span key={p.id} style={{ fontSize:11,color:"#9090b0",background:"#0f0f13",borderRadius:20,padding:"3px 8px" }}>{p.emoji} {isEN&&p.nameEN?p.nameEN:p.name}</span>)}{lp.length>4&&<span style={{ fontSize:11,color:"#50506a",padding:"3px 8px" }}>+{lp.length-4}</span>}</div>}</div>;})}
+        {!normLists.length&&<div style={{ textAlign:"center",padding:"40px 0",color:"#50506a" }}><div style={{ fontSize:32,marginBottom:8 }}>📋</div><div style={{ fontSize:13 }}>{T.curadoriaEmpty}</div><div style={{ fontSize:12,marginTop:4,color:"#3a3a50" }}>{T.curadoriaEx}</div></div>}
+        {normLists.map(list=>{const lp=list.placeIds.map(pid=>places.find(p=>p.id===pid)).filter(Boolean);return<div key={list.id} onClick={()=>{setEditId(list.id);setView("edit");}} style={{ background:"#1a1a22",border:"1px solid #2a2a38",borderRadius:14,marginBottom:10,padding:"14px",cursor:"pointer" }} className="card"><div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:lp.length?8:0 }}><div><div style={{ fontSize:15,fontWeight:600,color:"#f0eeff" }}>{list.emoji} {list.name}</div>{list.desc&&<div style={{ fontSize:12,color:"#9090b0",marginTop:2 }}>{list.desc}</div>}<div style={{ fontSize:11,color:"#50506a",marginTop:4 }}>{list.placeIds.length} {T.places} · {T.tapToEdit}</div></div><button onClick={e=>{e.stopPropagation();share(list);}} style={{ padding:"5px 10px",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:8,color:"#9090b0",fontSize:12,cursor:"pointer" }}>↗</button></div>{lp.length>0&&<div style={{ display:"flex",flexWrap:"wrap",gap:4 }}>{lp.slice(0,4).map(p=><span key={p.id} style={{ fontSize:11,color:"#9090b0",background:"#0f0f13",borderRadius:20,padding:"3px 8px" }}>{p.emoji} {isEN&&p.nameEN?p.nameEN:p.name}</span>)}{lp.length>4&&<span style={{ fontSize:11,color:"#50506a",padding:"3px 8px" }}>+{lp.length-4}</span>}</div>}</div>;})}
       </div>
     );
   } catch(err) {
