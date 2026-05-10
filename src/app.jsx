@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, onValue, set, remove } from "firebase/database";
 
@@ -324,11 +324,14 @@ const injectCSS = () => {
 
 function haversineKm(lat1,lng1,lat2,lng2){const R=6371,dLat=(lat2-lat1)*Math.PI/180,dLng=(lng2-lng1)*Math.PI/180;const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
 
-async function walkingMins(fromLat,fromLng,toLat,toLng){try{const r=await fetch("https://router.project-osrm.org/route/v1/foot/"+fromLng+","+fromLat+";"+toLng+","+toLat+"?overview=false");const d=await r.json();if(d.routes?.[0])return Math.round(d.routes[0].duration/60);}catch{}return Math.round(haversineKm(fromLat,fromLng,toLat,toLng)/5*60);}
+const _osrmCache = {};
+async function walkingMins(fromLat,fromLng,toLat,toLng){
+  const key = [fromLat.toFixed(4),fromLng.toFixed(4),toLat.toFixed(4),toLng.toFixed(4)].join(",");
+  if(_osrmCache[key]!==undefined) return _osrmCache[key];try{const r=await fetch("https://router.project-osrm.org/route/v1/foot/"+fromLng+","+fromLat+";"+toLng+","+toLat+"?overview=false");const d=await r.json();if(d.routes?.[0]){const m=Math.round(d.routes[0].duration/60);_osrmCache[key]=m;return m;}}catch{}const fb=Math.round(haversineKm(fromLat,fromLng,toLat,toLng)/5*60);_osrmCache[key]=fb;return fb;}
 
 function citymapperUrl(place, userLat, userLng) {
   if (!place.lat || !place.lng) return null;
-  let url = "https://citymapper.com/directions?endcoord="+place.lat+"%2C"+place.lng+"&endname="+encodeURIComponent(isEN?place.nameEN:place.name);
+  let url = "https://citymapper.com/directions?endcoord="+place.lat+"%2C"+place.lng+"&endname="+encodeURIComponent(isEN&&place.nameEN?place.nameEN:place.name);
   if (userLat && userLng) url += "&startcoord="+userLat+"%2C"+userLng;
   return url;
 }
@@ -358,22 +361,28 @@ function HdrBtn({ icon, label, onClick }) {
 }
 
 function Toast({ message, type, onDone, onUndo }) {
-  useEffect(()=>{const t=setTimeout(onDone,onUndo?5500:2500);return()=>clearTimeout(t);},[]);
+  const firedRef = useRef(false);
+  const safeDone = useCallback(()=>{ if(!firedRef.current){firedRef.current=true;onDone();} },[onDone]);
+  useEffect(()=>{const t=setTimeout(safeDone,onUndo?5500:2500);return()=>clearTimeout(t);},[]);
   const colors={success:["#1a3a1a","#00e676"],error:["#3a1a1a","#ff3366"],info:["#1a1a3a","#4da6ff"]};
   const [bg,border]=colors[type]||colors.info;
-  return <div style={{ position:"fixed",top:18,right:16,zIndex:9999,background:bg,border:"1px solid "+border,borderRadius:12,padding:"11px 14px",color:"#f0eeff",fontSize:13,fontWeight:600,boxShadow:"0 4px 20px #00000060",animation:"toastIn 0.25s ease",maxWidth:290,display:"flex",alignItems:"center",gap:10 }}><span style={{ flex:1 }}>{message}</span>{onUndo&&<button onClick={()=>{onUndo();onDone();}} style={{ background:"#ffffff20",border:"none",borderRadius:8,padding:"4px 10px",color:"#fff",fontSize:12,cursor:"pointer",whiteSpace:"nowrap" }}>{T.undoBtn}</button>}</div>;
+  return <div style={{ position:"fixed",top:18,right:16,zIndex:9999,background:bg,border:"1px solid "+border,borderRadius:12,padding:"11px 14px",color:"#f0eeff",fontSize:13,fontWeight:600,boxShadow:"0 4px 20px #00000060",animation:"toastIn 0.25s ease",maxWidth:290,display:"flex",alignItems:"center",gap:10 }}><span style={{ flex:1 }}>{message}</span>{onUndo&&<button onClick={()=>{onUndo();safeDone();}} style={{ background:"#ffffff20",border:"none",borderRadius:8,padding:"4px 10px",color:"#fff",fontSize:12,cursor:"pointer",whiteSpace:"nowrap" }}>{T.undoBtn}</button>}</div>;
 }
 
+let _weatherCache = null;
 function WeatherWidget() {
-  const [w,setW]=useState(null);
+  const [w,setW]=useState(_weatherCache);
   useEffect(()=>{
+    if(_weatherCache){setW(_weatherCache);return;}
     fetch("https://api.open-meteo.com/v1/forecast?latitude=40.7128&longitude=-74.0060&current=temperature_2m,weather_code&daily=precipitation_sum,temperature_2m_max,temperature_2m_min&temperature_unit=celsius&timezone=America/New_York&forecast_days=1")
       .then(r=>r.json()).then(d=>{
         const code=d.current.weather_code,tempC=Math.round(d.current.temperature_2m),tempF=Math.round(tempC*9/5+32);
         const maxC=Math.round(d.daily.temperature_2m_max[0]),minC=Math.round(d.daily.temperature_2m_min[0]),rain=d.daily.precipitation_sum[0];
         let icon="☀️",desc=isEN?T.weather.sunny:T.weather.ensolarado;
         if(code>=71){icon="❄️";desc=isEN?T.weather.snowy:T.weather.nevando;}else if(code>=61){icon="🌧️";desc=isEN?T.weather.rainy:T.weather.chovendo;}else if(code>=51){icon="🌦️";desc=isEN?T.weather.drizzle:T.weather.garoa;}else if(code>=45){icon="🌫️";desc=isEN?T.weather.foggy:T.weather.nebuloso;}else if(code>=3){icon="☁️";desc=isEN?T.weather.cloudy:T.weather.nublado;}else if(code>=1){icon="⛅";desc=isEN?T.weather.partCloud:T.weather.parcNublado;}
-        setW({tempC,tempF,maxC,minC,icon,desc,outdoor:rain<2&&code<61});
+        const wData={tempC,tempF,maxC,minC,icon,desc,outdoor:rain<2&&code<61};
+        _weatherCache=wData;
+        setW(wData);
       }).catch(()=>{});
   },[]);
   if(!w) return null;
@@ -573,7 +582,7 @@ function PlannerChatModal({ places, entries, onClose, addToast, userLat, userLng
       </div>
       {selected.length>0&&<button onClick={genPlan} style={{ width:"100%",padding:"10px",background:"#ff3366",border:"none",borderRadius:10,color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer",marginBottom:8 }}>{T.genRoute} ({selected.length}) →</button>}
       <div style={{ display:"flex",gap:8 }}>
-        <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder={T.askNYC} style={{ flex:1,background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:20,padding:"9px 14px",color:"#f0eeff",fontSize:13 }}/>
+        <input autoFocus value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder={T.askNYC} style={{ flex:1,background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:20,padding:"9px 14px",color:"#f0eeff",fontSize:13 }}/>
         <button onClick={send} disabled={!input.trim()||loading} style={{ background:input.trim()&&!loading?"#ff3366":"#2a2a38",border:"none",borderRadius:20,padding:"9px 14px",color:input.trim()&&!loading?"#fff":"#50506a",cursor:input.trim()&&!loading?"pointer":"default",fontSize:14,fontWeight:600,transition:"all 0.15s" }}>↑</button>
       </div>
     </div>
@@ -748,6 +757,8 @@ export default function App() {
   const [filterBathroom, setFilterBathroom] = useState(false);
   const [filterRegion, setFilterRegion] = useState(null);
   const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const searchDebounce = useRef(null);
   const [sortBy, setSortBy] = useState("default");
   const [selected, setSelected] = useState(null);
   const [checkIn, setCheckIn] = useState(null);
@@ -761,6 +772,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [placeOfDay, setPlaceOfDay] = useState(null);
+  const placeOfDayFixed = useRef(false);
   const [toasts, setToasts] = useState([]);
   const removeTimers = useRef({});
 
@@ -796,6 +808,11 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    const timers = removeTimers.current;
+    return () => { Object.values(timers).forEach(t=>clearTimeout(t)); };
+  }, []);
+
+  useEffect(() => {
     const u1=onValue(ref(db,"entries"),snap=>{if(snap.val())setEntries(snap.val());setLoading(false);});
     const u2=onValue(ref(db,"customPlaces"),snap=>{if(snap.val()){const c=Object.values(snap.val());setPlaces(prev=>{const ids=new Set(prev.map(p=>p.id));return[...prev,...c.filter(p=>!ids.has(p.id))];});}});
     const u3=onValue(ref(db,"lists"),snap=>{if(snap.val())setLists(Object.values(snap.val()));});
@@ -806,6 +823,7 @@ export default function App() {
   },[]);
 
   useEffect(()=>{
+    if(placeOfDayFixed.current) return;
     const visible=places.filter(p=>!removedIds.includes(p.id));
     if(!visible.length)return;
     const candidates=visible.filter(p=>{const e=entries[p.id];return !e||!e.status||e.status==="quero";});
@@ -813,9 +831,21 @@ export default function App() {
     const seed=new Date().toDateString();let h=0;
     for(let i=0;i<seed.length;i++)h=((h<<5)-h)+seed.charCodeAt(i);
     setPlaceOfDay(candidates[Math.abs(h)%candidates.length]);
+    placeOfDayFixed.current=true;
   },[places,entries,removedIds]);
 
-  const handleSave=async(placeId,data)=>{setSyncing(true);setEntries(prev=>({...prev,[placeId]:data}));await set(ref(db,"entries/"+placeId),data);setSyncing(false);};
+  const handleSave=async(placeId,data)=>{
+    setSyncing(true);
+    const prev_entry=entries[placeId];
+    setEntries(prev=>({...prev,[placeId]:data}));
+    try{
+      await set(ref(db,"entries/"+placeId),data);
+    }catch(err){
+      setEntries(prev=>({...prev,[placeId]:prev_entry}));
+      addToast(isEN?"Save failed. Check your connection.":"Erro ao salvar. Verifique sua conexao.","error");
+    }
+    setSyncing(false);
+  };
   const handleAdd=async place=>{setPlaces(prev=>[...prev,place]);await set(ref(db,"customPlaces/"+place.id),place);};
 
   const handleEditPlace=async updated=>{
@@ -834,11 +864,11 @@ export default function App() {
     removeTimers.current[placeId]=setTimeout(async()=>{
       if(undone)return;
       setPlaces(prev=>prev.filter(p=>p.id!==placeId));
-      const ne={...entries};delete ne[placeId];setEntries(ne);
-      try{await remove(ref(db,"customPlaces/"+placeId));await remove(ref(db,"entries/"+placeId));await set(ref(db,"removedIds/"+placeId),true);}catch(err){console.error(err);}
+      setEntries(prev=>{const ne={...prev};delete ne[placeId];return ne;});
+      try{await remove(ref(db,"customPlaces/"+placeId));await remove(ref(db,"entries/"+placeId));await set(ref(db,"removedIds/"+placeId),true);}catch(err){addToast(isEN?"Remove failed.":"Erro ao remover.","error");}
       setRemovedIds(prev=>prev.filter(x=>x!==placeId));
     },5000);
-  },[entries,addToast]);
+  },[addToast]);
 
   const saveLists=async newLists=>{setLists(newLists);const obj={};newLists.forEach(l=>{obj[l.id]=l;});await set(ref(db,"lists"),obj);};
 
@@ -846,14 +876,14 @@ export default function App() {
 
   const handleNearby=()=>{navigator.geolocation.getCurrentPosition(pos=>{setUserLat(pos.coords.latitude);setUserLng(pos.coords.longitude);setShowNearby(true);},()=>addToast(T.locationErr,"error"));};
 
-  const effectivePlaces=places.map(p=>{const edits=customEdits[p.id];return edits?{...p,...edits}:p;});
+  const effectivePlaces=useMemo(()=>places.map(p=>{const edits=customEdits[p.id];return edits?{...p,...edits}:p;}),[places,customEdits]);
   const toggleArr=(arr,setArr,val)=>setArr(prev=>prev.includes(val)?prev.filter(x=>x!==val):[...prev,val]);
 
   const activeFiltersCount=[filterVibes.length>0,filterPrices.length>0,filterSeasons.length>0,filterStars>0,filterThumb,filterPet,filterBathroom,filterRegion].filter(Boolean).length;
   const hasAnyFilter=activeFiltersCount>0||activeCategory!=="Todos"||activeFilter!=="todos"||!!search;
-  const visiblePlaces=effectivePlaces.filter(p=>!removedIds.includes(p.id));
+  const visiblePlaces=useMemo(()=>effectivePlaces.filter(p=>!removedIds.includes(p.id)),[effectivePlaces,removedIds]);
 
-  const filteredPlaces=visiblePlaces.filter(p=>{
+  const filteredPlaces=useMemo(()=>visiblePlaces.filter(p=>{
     const entry=entries[p.id]||{};
     const sl=normalize(search);
     const pname=normalize(isEN&&p.nameEN?p.nameEN:p.name);
@@ -880,7 +910,7 @@ export default function App() {
     if(sortBy==="date"){const da=(entries[a.id]||{}).date||"",db2=(entries[b.id]||{}).date||"";return db2.localeCompare(da);}
     if(sortBy==="cat") return a.category.localeCompare(b.category);
     return 0;
-  });
+  }),[visiblePlaces,search,activeCategory,activeFilter,filterVibes,filterPrices,filterSeasons,filterStars,filterThumb,filterPet,filterBathroom,filterRegion,sortBy,entries]);
 
   const total=visiblePlaces.length;
   const visitedCount=Object.values(entries).filter(e=>e.status==="fui").length;
@@ -935,8 +965,8 @@ export default function App() {
         {tab==="list"&&<>
           <div style={{ position:"relative",marginBottom:8 }}>
             <span style={{ position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",color:"#50506a",fontSize:13 }}>🔍</span>
-            <input value={search} onChange={ev=>setSearch(ev.target.value)} placeholder={T.search} style={{ width:"100%",background:"#1a1a22",border:"1px solid #2a2a38",borderRadius:10,padding:"9px 34px 9px 34px",color:"#f0eeff",fontSize:13 }}/>
-            {search&&<button onClick={()=>setSearch("")} style={{ position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"#50506a",cursor:"pointer",fontSize:16 }}>×</button>}
+            <input value={search} onChange={ev=>{setSearchInput(ev.target.value);clearTimeout(searchDebounce.current);searchDebounce.current=setTimeout(()=>setSearch(ev.target.value),200);}} value={searchInput} placeholder={T.search} style={{ width:"100%",background:"#1a1a22",border:"1px solid #2a2a38",borderRadius:10,padding:"9px 34px 9px 34px",color:"#f0eeff",fontSize:13 }}/>
+            {searchInput&&<button onClick={()=>{setSearchInput("");setSearch("");}} style={{ position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"#50506a",cursor:"pointer",fontSize:16 }}>×</button>}
           </div>
 
           <div style={{ display:"flex",gap:5,marginBottom:8,overflowX:"auto",scrollbarWidth:"none" }}>
@@ -969,7 +999,7 @@ export default function App() {
           </div>}
 
           <div style={{ display:"flex",gap:5,overflowX:"auto",scrollbarWidth:"none",paddingBottom:10 }}>
-            {["Todos",...CATEGORIES].map(cat=>{const meta=CAT_META[cat],active=activeCategory===cat;return<button key={cat} onClick={()=>{setActiveCategory(activeCategory===cat&&cat!=="Todos"?"Todos":cat);if(cat!=="Todos"&&activeCategory!==cat)setSortBy("az");}} className="btn" style={{ padding:"4px 10px",borderRadius:20,background:active?(meta?meta.color:"#ff3366")+"20":"#1a1a22",border:"1px solid "+(active?(meta?meta.color:"#ff3366")+"60":"#2a2a38"),color:active?(meta?meta.color:"#ff3366"):"#50506a",fontSize:10,whiteSpace:"nowrap",letterSpacing:"0.04em" }}>{cat==="Todos"?T.all:catLabel(cat)}</button>;})}
+            {["Todos",...CATEGORIES].map(cat=>{const meta=CAT_META[cat],active=activeCategory===cat;return<button key={cat} onClick={()=>{if(cat==="Todos"){setActiveCategory("Todos");setSortBy("default");}else{setActiveCategory(activeCategory===cat?"Todos":cat);if(activeCategory!==cat)setSortBy("az");}}} className="btn" style={{ padding:"4px 10px",borderRadius:20,background:active?(meta?meta.color:"#ff3366")+"20":"#1a1a22",border:"1px solid "+(active?(meta?meta.color:"#ff3366")+"60":"#2a2a38"),color:active?(meta?meta.color:"#ff3366"):"#50506a",fontSize:10,whiteSpace:"nowrap",letterSpacing:"0.04em" }}>{cat==="Todos"?T.all:catLabel(cat)}</button>;})}
           </div>
         </>}
       </div>
