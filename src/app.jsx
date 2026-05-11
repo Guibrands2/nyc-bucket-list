@@ -884,9 +884,14 @@ function DetailModal({ place, entry, places, entries, onClose, onSave, onDelete,
         </div>}
         <div style={{ marginBottom:14 }}>
           <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.12em",marginBottom:8 }}>{T.needsReservation}</div>
-          <button onClick={()=>setNeedsRes(!needsRes)} style={{ width:"100%",padding:"10px",borderRadius:10,background:needsRes?"#f59e0b20":"#0f0f13",border:"1px solid "+(needsRes?"#f59e0b60":"#2a2a38"),color:needsRes?"#f59e0b":"#50506a",fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8,transition:"all 0.15s" }}>
-            <span>{needsRes?"📋":"○"}</span><span>{needsRes?(isEN?"Yes, reservation needed":"Sim, precisa reservar"):(isEN?"No reservation needed":"Nao precisa reservar")}</span>
-          </button>
+          <div style={{ display:"flex",gap:8 }}>
+            <button onClick={()=>setNeedsRes(true)} style={{ flex:1,padding:"10px",borderRadius:10,background:needsRes?"#f59e0b20":"#0f0f13",border:"1px solid "+(needsRes?"#f59e0b60":"#2a2a38"),color:needsRes?"#f59e0b":"#50506a",fontSize:13,cursor:"pointer",transition:"all 0.15s",display:"flex",alignItems:"center",justifyContent:"center",gap:6 }}>
+              <span>📋</span><span>{isEN?"Yes, reserve":"Sim, reservar"}</span>
+            </button>
+            <button onClick={()=>setNeedsRes(false)} style={{ flex:1,padding:"10px",borderRadius:10,background:!needsRes?"#0f0f1380":"#0f0f13",border:"1px solid "+((!needsRes)?"#2a2a38":"#2a2a38"),color:!needsRes?"#9090b0":"#50506a",fontSize:13,cursor:"pointer",transition:"all 0.15s",display:"flex",alignItems:"center",justifyContent:"center",gap:6 }}>
+              <span>✓</span><span>{isEN?"No need":"Nao precisa"}</span>
+            </button>
+          </div>
         </div>
         <div style={{ marginBottom:14 }}>
           <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.12em",marginBottom:8 }}>{T.openingHours}</div>
@@ -1234,8 +1239,12 @@ function StatsTab({ places, entries }) {
     <div style={{ textAlign:"center",padding:"60px 20px",color:"#50506a" }}>
       <div style={{ fontSize:40,marginBottom:12 }}>📊</div>
       <div style={{ fontSize:14 }}>{isEN?"Visit places to see your stats!":"Visitem lugares para ver as estatisticas!"}</div>
+      <div style={{ fontSize:12,color:"#3a3a50",marginTop:8 }}>{isEN?"Mark places as visited to start tracking":"Marque lugares como Ja fui para comecar"}</div>
     </div>
   );
+
+  // Debug: log visited to verify data
+  console.log("StatsTab visited:", visited.length, "entries sample:", Object.keys(entries).slice(0,3));
 
   return (
     <div style={{ padding:"0 16px 80px" }}>
@@ -1633,6 +1642,7 @@ export default function App() {
     </div>
 
     <div style={{ maxWidth:600,margin:"0 auto",padding:"10px 16px 100px" }}>
+        {tab==="stats"&&<StatsTab places={visiblePlaces} entries={entries}/>}
       {tab==="map"&&<MapTab places={filteredPlaces} entries={entries} onSelect={setSelected}/>}
       {tab==="timeline"&&<TimelineTab places={visiblePlaces} entries={entries} onSelect={setSelected}/>}
       {tab==="curadoria"&&<CuradoriaTab places={visiblePlaces} lists={lists} onSaveLists={saveLists} onSelectPlace={setSelected}/>}
