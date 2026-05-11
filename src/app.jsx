@@ -378,6 +378,7 @@ const Icons = {
   Walk: ()=><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="4" r="2"/><path d="M10 8l-2 6 4 2-1 6"/><path d="M10 12l-3 3"/></svg>,
   Edit: ()=><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
   Link: ()=><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>,
+  Sparkles: ()=><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>,
   Route: ()=><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="5" cy="6" r="2"/><path d="M7 6h4a1 1 0 010 2H9a1 1 0 000 2h6a1 1 0 010 2H9"/><circle cx="19" cy="18" r="2"/></svg>,
 };
 
@@ -408,6 +409,7 @@ function WeatherWidget() {
         const wData={tempC,tempF,maxC,minC,icon,desc,outdoor:rain<2&&code<61};
         _weatherCache=wData;
         setW(wData);
+        window._nycWeather=wData;
       }).catch(()=>{});
   },[]);
   if(!w) return null;
@@ -554,7 +556,7 @@ function NearbyDrawer({ userLat, userLng, places, entries, onSelect, onClose }) 
 }
 
 function PlannerChatModal({ places, entries, onClose, addToast, userLat, userLng }) {
-  const MAX_INTERACTIONS = 5;
+  const MAX_INTERACTIONS = 4;
   const [msgs,setMsgs]=useState([{role:"assistant",content:T.chatGreeting,linkedPlaces:[]}]);
   const [previewPlace,setPreviewPlace]=useState(null);
   const [input,setInput]=useState("");
@@ -620,7 +622,7 @@ function PlannerChatModal({ places, entries, onClose, addToast, userLat, userLng
       "3. Use o NOME EXATO da lista ao citar um lugar.\n"+
       "4. Prefira metro + caminhada a pe.\n"+
       "5. No final liste os lugares citados: [lugares: Nome1, Nome2]\n"+
-      (isLast?"6. ULTIMA INTERACAO: Faca um resumo e sugira copiar o contexto para continuar em outro chat de IA.\n":"")+
+      (isLast?"6. ULTIMA INTERACAO: Gere um prompt resumido e compacto para continuar essa conversa em outro chat de IA. Formato: PROMPT PARA CONTINUAR: [contexto em 3-4 linhas com os principais pontos discutidos, preferencias de Gui e Gabriel, e lugares mais relevantes mencionados. Escreva como se fosse a primeira mensagem numa nova conversa de IA]\n":"")+
       "Partida: "+startLoc+".\n"+
       (selNames?"Selecionados: "+selNames+".\n":"")+
       "LISTA:\n"+catalog;
@@ -904,6 +906,294 @@ function ShareModal({ places, entries, onClose, addToast }) {
   </div></div>;
 }
 
+
+
+function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveLists, lists }) {
+  const [step, setStep] = useState("form");
+  const [result, setResult] = useState("");
+  const [linkedPlaces, setLinkedPlaces] = useState([]);
+  const [previewPlace, setPreviewPlace] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [startLoc, setStartLoc] = useState("Jersey City, NJ");
+  const [locLoading, setLocLoading] = useState(false);
+  const [params, setParams] = useState({
+    horas: null, horaSaida: null, humor: null,
+    ambiente: null, budget: null, quem: null,
+    ocasiao: null, raio: null, refeicao: null,
+    exclusoes: []
+  });
+
+  const set = (key, val) => setParams(prev => ({...prev, [key]: val}));
+  const toggleExclusao = cat => setParams(prev => ({...prev, exclusoes: prev.exclusoes.includes(cat)?prev.exclusoes.filter(x=>x!==cat):[...prev.exclusoes,cat]}));
+
+  const detectLoc = () => {
+    setLocLoading(true);
+    navigator.geolocation.getCurrentPosition(async pos=>{
+      try{
+        const r=await fetch("https://nominatim.openstreetmap.org/reverse?lat="+pos.coords.latitude+"&lon="+pos.coords.longitude+"&format=json");
+        const d=await r.json();
+        setStartLoc((d.address.neighbourhood||d.address.suburb||d.address.city||"minha loc")+", "+(d.address.state||"NY"));
+      }catch{setStartLoc(pos.coords.latitude.toFixed(4)+","+pos.coords.longitude.toFixed(4));}
+      setLocLoading(false);
+    },()=>setLocLoading(false));
+  };
+
+  const parseLinked = (text) => {
+    const match = text.match(/\[lugares:\s*([^\]]+)\]/i);
+    if(!match) return [];
+    return match[1].split(",").map(n=>n.trim()).map(name=>places.find(p=>(isEN&&p.nameEN?p.nameEN:p.name).toLowerCase()===name.toLowerCase())||null).filter(Boolean);
+  };
+
+  const generate = async () => {
+    if(!params.horas||!params.ambiente||!params.budget) return;
+    setStep("loading"); setLoading(true);
+    const available = places.filter(p=>{
+      const e=entries[p.id]||{};
+      if(e.status==="fui") return false;
+      if(params.exclusoes.includes(p.category)) return false;
+      if(params.quem==="cachorro"&&!p.petFriendly&&p.category!=="Daytrips") return false;
+      if(params.raio==="manhattan"&&p.lat&&(p.lat<40.70||p.lat>40.88)) return false;
+      if(params.raio==="nodaytrip"&&p.category==="Daytrips") return false;
+      return true;
+    });
+    const catalog = available.map(p=>(isEN&&p.nameEN?p.nameEN:p.name)+" | "+catLabel(p.category)+" | "+p.price+" | "+(p.time||"?")).join("\n");
+    const weatherInfo = weather ? weather.desc+" "+weather.tempC+"C, "+(weather.outdoor?"bom para outdoor":"melhor ficar indoor") : "";
+    const prompt = "Monte um roteiro surpresa perfeito para Gui e Gabriel com base nos parametros abaixo.\n"+
+      "REGRAS:\n"+
+      "1. Use SOMENTE lugares da LISTA. Nunca invente lugares.\n"+
+      "2. Use o NOME EXATO da lista.\n"+
+      "3. Prefira metro + caminhada a pe entre os lugares.\n"+
+      "4. No final: [lugares: Nome1, Nome2, Nome3]\n\n"+
+      "PARAMETROS:\n"+
+      "- Saindo de: "+startLoc+"\n"+
+      "- Hora de saida: "+(params.horaSaida||"agora")+"\n"+
+      "- Tempo disponivel: "+params.horas+"\n"+
+      "- Humor: "+(params.humor||"normal")+"\n"+
+      "- Ambiente: "+params.ambiente+"\n"+
+      "- Budget: "+params.budget+"\n"+
+      "- Quem vai: "+(params.quem||"Gui e Gabriel")+"\n"+
+      "- Ocasiao: "+(params.ocasiao||"dia normal")+"\n"+
+      "- Raio: "+(params.raio||"qualquer bairro")+"\n"+
+      "- Incluir refeicao: "+(params.refeicao||"sim")+"\n"+
+      (weatherInfo?"- Clima agora: "+weatherInfo+"\n":"")+
+      "\nLISTA DISPONIVEL:\n"+catalog+"\n\n"+
+      "Monte um roteiro detalhado com: lugares na ordem geografica ideal, horarios, como ir de um para outro (metro especifico + caminhada), onde comer, estimativa de gasto total e uma frase de clima do dia.\n"+
+      "Responda em "+(isEN?"English":"portugues brasileiro")+".";
+    try{
+      const r=await fetch(AI_PROXY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:[{role:"user",content:prompt}]})});
+      const d=await r.json();
+      const text=d.content?.[0]?.text||"Erro.";
+      const linked=parseLinked(text);
+      const display=text.replace(/\[lugares:[^\]]+\]/gi,"").trim();
+      setResult(display); setLinkedPlaces(linked);
+    }catch{setResult(isEN?"Connection error.":"Erro ao conectar.");}
+    setLoading(false); setStep("result");
+  };
+
+  const saveAsCuradoria = () => {
+    if(!linkedPlaces.length) return;
+    const nova = {id:"l"+Date.now(),name:isEN?"Surprise Day":"Dia Surpresa",emoji:"🎲",desc:new Date().toLocaleDateString(isEN?"en-US":"pt-BR"),placeIds:linkedPlaces.map(p=>p.id)};
+    onSaveLists([...lists,nova]);
+    addToast(isEN?"Saved as curadoria!":"Salvo como curadoria!","success");
+  };
+
+  const CHIP = (label, active, onClick, color="#ff3366") => (
+    <button onClick={onClick} style={{ padding:"7px 14px",borderRadius:20,background:active?color+"20":"#0f0f13",border:"1px solid "+(active?color+"60":"#2a2a38"),color:active?color:"#9090b0",fontSize:12,cursor:"pointer",fontFamily:"inherit",transition:"all 0.15s" }}>{label}</button>
+  );
+
+  if(step==="loading") return (
+    <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center" }}>
+      <div style={{ textAlign:"center" }}>
+        <div className="pulsing" style={{ fontSize:52,marginBottom:16 }}>🎲</div>
+        <div style={{ fontSize:15,color:"#f0eeff",fontWeight:600,marginBottom:6 }}>{isEN?"Building your surprise day...":"Montando seu dia surpresa..."}</div>
+        <div style={{ fontSize:12,color:"#9090b0" }}>{isEN?"Claude is thinking...":"Claude esta pensando..."}</div>
+      </div>
+    </div>
+  );
+
+  if(step==="result") return (
+    <>
+      {previewPlace&&(
+        <div style={{ position:"fixed",inset:0,background:"#000000c0",zIndex:500,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={()=>setPreviewPlace(null)}>
+          <div className="modal" style={{ background:"#1a1a22",borderTop:"1px solid #2a2a38",borderRadius:"20px 20px 0 0",padding:"20px 16px 40px",maxWidth:560,width:"100%",maxHeight:"70vh",overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
+            <div style={{ width:36,height:3,background:"#2a2a38",borderRadius:2,margin:"0 auto 16px" }}/>
+            <div style={{ display:"flex",alignItems:"center",gap:12,marginBottom:12 }}>
+              <span style={{ fontSize:32 }}>{previewPlace.emoji}</span>
+              <div><div style={{ fontSize:17,fontWeight:700,color:"#f0eeff" }}>{isEN&&previewPlace.nameEN?previewPlace.nameEN:previewPlace.name}</div>
+              <div style={{ fontSize:12,color:"#9090b0",marginTop:2 }}>{catLabel(previewPlace.category)} · {PRICE_EMOJI[previewPlace.price]||"?"} · {previewPlace.time}</div></div>
+            </div>
+            <div style={{ fontSize:13,color:"#9090b0",lineHeight:1.6,padding:"10px 12px",background:"#0f0f13",borderRadius:10,marginBottom:12,borderLeft:"2px solid "+(CAT_META[previewPlace.category]||{color:"#ff3366"}).color }}>{isEN&&previewPlace.descEN?previewPlace.descEN:previewPlace.desc}</div>
+            {(isEN&&previewPlace.repEN?previewPlace.repEN:previewPlace.rep)&&<div style={{ fontSize:12,color:"#ffd600",padding:"8px 12px",background:"#ffd60010",borderRadius:10,borderLeft:"2px solid #ffd600",marginBottom:12 }}>⭐ {isEN&&previewPlace.repEN?previewPlace.repEN:previewPlace.rep}</div>}
+            <button onClick={()=>setPreviewPlace(null)} style={{ width:"100%",padding:"11px",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:10,color:"#9090b0",fontSize:13,cursor:"pointer" }}>{isEN?"Close":"Fechar"}</button>
+          </div>
+        </div>
+      )}
+      <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:300,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={onClose}>
+        <div className="modal" style={{ background:"#1a1a22",borderTop:"1px solid #2a2a38",borderRadius:"20px 20px 0 0",padding:"20px 16px 40px",maxWidth:560,width:"100%",height:"88vh",display:"flex",flexDirection:"column" }} onClick={e=>e.stopPropagation()}>
+          <div style={{ width:36,height:3,background:"#2a2a38",borderRadius:2,margin:"0 auto 14px" }}/>
+          <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10 }}>
+            <div style={{ fontSize:16,fontWeight:700,color:"#f0eeff" }}>🎲 {isEN?"Your surprise day!":"Seu dia surpresa!"}</div>
+            <button onClick={onClose} style={{ background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:8,width:32,height:32,color:"#9090b0",cursor:"pointer",fontSize:16 }}>×</button>
+          </div>
+          {linkedPlaces.length>0&&(
+            <div style={{ marginBottom:10 }}>
+              <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"PLACES IN THIS ROUTE":"LUGARES NESTE ROTEIRO"}</div>
+              <div style={{ display:"flex",flexWrap:"wrap",gap:5 }}>
+                {linkedPlaces.map(p=>{const meta=CAT_META[p.category]||{color:"#ff3366"};return<button key={p.id} onClick={()=>setPreviewPlace(p)} style={{ display:"flex",alignItems:"center",gap:5,padding:"5px 10px",background:meta.color+"18",border:"1px solid "+meta.color+"40",borderRadius:20,color:meta.color,fontSize:11,cursor:"pointer",fontFamily:"inherit" }}>{p.emoji} {isEN&&p.nameEN?p.nameEN:p.name} ↗</button>;})}
+              </div>
+            </div>
+          )}
+          <div style={{ flex:1,overflowY:"auto",background:"#0f0f13",borderRadius:12,padding:"14px",fontSize:13,color:"#f0eeff",lineHeight:1.7,whiteSpace:"pre-wrap",marginBottom:12 }}>{result}</div>
+          <div style={{ display:"flex",gap:8 }}>
+            <button onClick={()=>{navigator.clipboard.writeText(result);addToast(isEN?"Copied!":"Copiado!","success");}} style={{ flex:1,padding:"11px",background:"#ff3366",border:"none",borderRadius:10,color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer" }}>{isEN?"Copy":"Copiar"}</button>
+            {linkedPlaces.length>0&&<button onClick={saveAsCuradoria} style={{ flex:1,padding:"11px",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:10,color:"#9090b0",fontSize:13,cursor:"pointer" }}>💾 {isEN?"Save curadoria":"Salvar curadoria"}</button>}
+            <button onClick={()=>{setStep("form");setResult("");setLinkedPlaces([]);}} style={{ padding:"11px 14px",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:10,color:"#9090b0",fontSize:13,cursor:"pointer" }}>🎲</button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+
+  return (
+    <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:300,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={onClose}>
+      <div className="modal" style={{ background:"#1a1a22",borderTop:"1px solid #2a2a38",borderRadius:"20px 20px 0 0",padding:"20px 16px 40px",maxWidth:560,width:"100%",maxHeight:"92vh",overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
+        <div style={{ width:36,height:3,background:"#2a2a38",borderRadius:2,margin:"0 auto 14px" }}/>
+        <div style={{ fontSize:16,fontWeight:700,color:"#f0eeff",marginBottom:4 }}>🎲 {isEN?"Surprise me!":"Me surpreenda!"}</div>
+        <div style={{ fontSize:12,color:"#9090b0",marginBottom:16 }}>{isEN?"Answer a few questions and Claude builds your perfect day.":"Responda algumas perguntas e o Claude monta seu dia perfeito."}</div>
+
+        <div style={{ marginBottom:16 }}>
+          <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8 }}>
+            <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em" }}>{isEN?"DEPARTURE":"SAINDO DE"}</div>
+            <button onClick={detectLoc} style={{ fontSize:11,color:"#ff3366",background:"none",border:"none",cursor:"pointer" }}>{locLoading?"...":"📍 GPS"}</button>
+          </div>
+          <input value={startLoc} onChange={e=>setStartLoc(e.target.value)} style={{ width:"100%",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:10,padding:"9px 12px",color:"#f0eeff",fontSize:13 }}/>
+        </div>
+
+        <div style={{ marginBottom:14 }}>
+          <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:8 }}>{isEN?"WHAT TIME ARE YOU LEAVING?":"QUE HORAS VAO SAIR?"}</div>
+          <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
+            {[["agora",isEN?"Now":"Agora"],["manha",isEN?"Morning":"Manha"],["tarde",isEN?"Afternoon":"Tarde"],["noite",isEN?"Evening":"Noite"]].map(([v,l])=>CHIP(l,params.horaSaida===v,()=>set("horaSaida",v)))}
+          </div>
+        </div>
+
+        <div style={{ marginBottom:14 }}>
+          <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:8 }}>{isEN?"HOW MUCH TIME DO YOU HAVE?":"QUANTO TEMPO VOCES TEM?"} *</div>
+          <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
+            {[["2h","2h"],["4h","4h"],["manha inteira",isEN?"Half day":"Meio dia"],["dia inteiro",isEN?"Full day":"Dia inteiro"]].map(([v,l])=>CHIP(l,params.horas===v,()=>set("horas",v)))}
+          </div>
+        </div>
+
+        <div style={{ marginBottom:14 }}>
+          <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:8 }}>{isEN?"HOW ARE YOU FEELING?":"QUAL O HUMOR DE HOJE?"}</div>
+          <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
+            {[["animados","⚡ "+(isEN?"Energetic":"Animados")],["tranquilos","😌 "+(isEN?"Chill":"Tranquilos")],["cansados","😴 "+(isEN?"Tired":"Cansados")],["romantico","💑 "+(isEN?"Romantic":"Romantico")]].map(([v,l])=>CHIP(l,params.humor===v,()=>set("humor",v)))}
+          </div>
+        </div>
+
+        <div style={{ marginBottom:14 }}>
+          <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:8 }}>{isEN?"INDOOR OR OUTDOOR?":"INDOOR OU OUTDOOR?"} *</div>
+          <div style={{ display:"flex",gap:6 }}>
+            {[["indoor",isEN?"Indoor":"Indoor"],["outdoor",isEN?"Outdoor":"Outdoor"],["tanto faz",isEN?"Either":"Tanto faz"]].map(([v,l])=>CHIP(l,params.ambiente===v,()=>set("ambiente",v),"#4da6ff"))}
+          </div>
+        </div>
+
+        <div style={{ marginBottom:14 }}>
+          <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:8 }}>{isEN?"BUDGET FOR THE DAY?":"BUDGET DO DIA?"} *</div>
+          <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
+            {[["gratis",isEN?"Free only":"So gratis"],["barato","< $30"],["moderado","< $80"],["sem limite",isEN?"No limit":"Sem limite"]].map(([v,l])=>CHIP(l,params.budget===v,()=>set("budget",v),"#ffd600"))}
+          </div>
+        </div>
+
+        <div style={{ marginBottom:14 }}>
+          <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:8 }}>{isEN?"WHO IS GOING?":"QUEM VAI?"}</div>
+          <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
+            {[["so eu","🧘 "+(isEN?"Just me":"So eu")],["nos dois","👫 "+(isEN?"Both of us":"Nos dois")],["amigos","👯 "+(isEN?"With friends":"Com amigos")],["cachorro","🐾 "+(isEN?"With dog":"Com o dog")]].map(([v,l])=>CHIP(l,params.quem===v,()=>set("quem",v)))}
+          </div>
+        </div>
+
+        <div style={{ marginBottom:14 }}>
+          <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:8 }}>{isEN?"SPECIAL OCCASION?":"E UMA OCASIAO ESPECIAL?"}</div>
+          <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
+            {[["dia normal",isEN?"Normal day":"Dia normal"],["date night","💑 Date night"],["aniversario","🎂 "+(isEN?"Anniversary":"Aniversario")],["amigos visitando","✈️ "+(isEN?"Friends visiting":"Amigos visitando")]].map(([v,l])=>CHIP(l,params.ocasiao===v,()=>set("ocasiao",v)))}
+          </div>
+        </div>
+
+        <div style={{ marginBottom:14 }}>
+          <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:8 }}>{isEN?"HOW FAR ARE YOU WILLING TO GO?":"ATE ONDE TOPAM IR?"}</div>
+          <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
+            {[["manhattan",isEN?"Manhattan only":"So Manhattan"],["nodaytrip",isEN?"Any neighborhood":"Qualquer bairro"],["topam tudo",isEN?"Including daytrips":"Topam daytrip"]].map(([v,l])=>CHIP(l,params.raio===v,()=>set("raio",v)))}
+          </div>
+        </div>
+
+        <div style={{ marginBottom:14 }}>
+          <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:8 }}>{isEN?"INCLUDE MEAL IN THE ROUTE?":"INCLUIR REFEICAO NO ROTEIRO?"}</div>
+          <div style={{ display:"flex",gap:6 }}>
+            {[["sim",isEN?"Yes please":"Sim, com fome"],["nao",isEN?"Already eaten":"Ja comemos"]].map(([v,l])=>CHIP(l,params.refeicao===v,()=>set("refeicao",v)))}
+          </div>
+        </div>
+
+        <div style={{ marginBottom:20 }}>
+          <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:8 }}>{isEN?"EXCLUDE CATEGORIES?":"EXCLUIR CATEGORIAS?"}</div>
+          <div style={{ display:"flex",gap:5,flexWrap:"wrap" }}>
+            {CATEGORIES.map(cat=>{const meta=CAT_META[cat]||{color:"#ff3366"};const excluded=params.exclusoes.includes(cat);return<button key={cat} onClick={()=>toggleExclusao(cat)} style={{ padding:"5px 10px",borderRadius:20,background:excluded?"#ff336620":"#0f0f13",border:"1px solid "+(excluded?"#ff336660":"#2a2a38"),color:excluded?"#ff3366":"#9090b0",fontSize:11,cursor:"pointer",fontFamily:"inherit",textDecoration:excluded?"line-through":"none" }}>{catLabel(cat)}</button>;})}
+          </div>
+        </div>
+
+        <button onClick={generate} disabled={!params.horas||!params.ambiente||!params.budget} style={{ width:"100%",padding:"14px",background:params.horas&&params.ambiente&&params.budget?"#ff3366":"#2a2a38",border:"none",borderRadius:12,color:params.horas&&params.ambiente&&params.budget?"#fff":"#50506a",fontSize:14,fontWeight:700,cursor:params.horas&&params.ambiente&&params.budget?"pointer":"default",transition:"all 0.2s" }}>
+          {isEN?"Surprise me! 🎲":"Me surpreenda! 🎲"}
+        </button>
+        <div style={{ fontSize:11,color:"#50506a",textAlign:"center",marginTop:8 }}>* {isEN?"Required fields":"Campos obrigatorios"}</div>
+      </div>
+    </div>
+  );
+}
+
+const PlaceCard = React.memo(function PlaceCard({ place, entry, onSelect, onCheckIn, isEN, entries }) {
+  const status = entry?.status;
+  const meta = CAT_META[place.category]||{color:"#ff3366"};
+  const displayPrice = entry?.price||place.price;
+  const fp = entry?.photos?.[0]||null;
+  const pc = entry?.photos?.length||0;
+  const isPet = entry?.petFriendly!==undefined?entry.petFriendly:place.petFriendly;
+  const hasBath = entry?.publicBathroom!==undefined?entry.publicBathroom:place.publicBathroom;
+  const hasLink = entry?.link||place.link;
+  const displayName = isEN&&place.nameEN?place.nameEN:place.name;
+  return (
+    <div style={{ position:"relative" }}>
+      <div className="card" onClick={()=>onSelect(place)} style={{ background:"#1a1a22",border:"1px solid "+(status==="fui"?meta.color+"40":"#2a2a38"),borderRadius:12,marginBottom:8,padding:"12px 14px",cursor:"pointer",display:"flex",gap:12 }}>
+        {fp?<img src={fp} alt="" style={{ width:54,height:54,borderRadius:8,objectFit:"cover",flexShrink:0 }}/>:<div style={{ width:54,height:54,borderRadius:8,background:meta.color+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0 }}>{place.emoji}</div>}
+        <div style={{ flex:1,minWidth:0 }}>
+          <div style={{ display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:8 }}>
+            <div style={{ fontSize:14,fontWeight:600,color:"#f0eeff",lineHeight:1.3 }}>{displayName}</div>
+            <div style={{ display:"flex",alignItems:"center",gap:4,flexShrink:0 }}>
+              {hasLink&&<span style={{ fontSize:10 }}>🔗</span>}
+              {isPet&&<span style={{ fontSize:10 }}>🐾</span>}
+              {hasBath&&<span style={{ fontSize:10 }}>🚻</span>}
+              {entry?.thumb==="up"&&<span style={{ fontSize:12 }}>👍</span>}
+              {entry?.thumb==="down"&&<span style={{ fontSize:12 }}>👎</span>}
+              {entry?.stars>0&&<span style={{ fontSize:10,color:"#ffd600" }}>{"★".repeat(entry.stars)}</span>}
+              {pc>0&&<span style={{ fontSize:10,color:"#50506a" }}>📷{pc>1?pc:""}</span>}
+              <span style={{ fontSize:15,color:status==="fui"?meta.color:status==="quero"?"#4da6ff":"#50506a" }}>{status==="fui"?"✓":status==="quero"?"♥":"○"}</span>
+            </div>
+          </div>
+          <div style={{ display:"flex",gap:4,alignItems:"center",marginTop:4,flexWrap:"wrap" }}>
+            <span style={{ fontSize:10,color:meta.color,background:meta.color+"18",borderRadius:5,padding:"1px 6px" }}>{catLabel(place.category)}</span>
+            {displayPrice&&<span style={{ fontSize:10,color:"#50506a" }}>{PRICE_EMOJI[displayPrice]}</span>}
+            {place.time&&<span style={{ fontSize:10,color:"#50506a" }}>⏱ {place.time}</span>}
+            {entry?.who&&entry.who!=="juntos"&&<span style={{ fontSize:10 }}>{WHO_EMOJI[entry.who]}</span>}
+            {entry?.vibes&&entry.vibes.map(v=><span key={v} style={{ fontSize:10 }}>{VIBE_EMOJI[v]}</span>)}
+          </div>
+          {entry?.note&&<div style={{ fontSize:11,color:"#9090b0",marginTop:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{entry.note}</div>}
+          {status==="fui"&&entry?.date&&<div style={{ fontSize:10,color:"#50506a",marginTop:2 }}>{new Date(entry.date+"T12:00:00").toLocaleDateString(isEN?"en-US":"pt-BR")}</div>}
+        </div>
+      </div>
+      {status!=="fui"&&<button onClick={ev=>{ev.stopPropagation();onCheckIn(place);}} style={{ position:"absolute",bottom:16,right:12,background:"#00e67612",border:"1px solid #00e67630",borderRadius:8,padding:"3px 8px",color:"#00e676",fontSize:10,cursor:"pointer",fontFamily:"inherit" }}>{T.checkin}</button>}
+    </div>
+  );
+}, (prev, next) => {
+  return prev.place===next.place && prev.entry===next.entry && prev.isEN===next.isEN;
+});
+
 export default function App() {
   const [places, setPlaces] = useState(INITIAL_PLACES);
   const [entries, setEntries] = useState({});
@@ -932,6 +1222,8 @@ export default function App() {
   const [showShare, setShowShare] = useState(false);
   const [showPlanner, setShowPlanner] = useState(false);
   const [showNearby, setShowNearby] = useState(false);
+  const [showSurpresa, setShowSurpresa] = useState(false);
+  const currentWeather = window._nycWeather||null;
   const [userLat, setUserLat] = useState(null);
   const [userLng, setUserLng] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -1192,43 +1484,9 @@ export default function App() {
           </div>
         )}
         {!filteredPlaces.length&&<div style={{ textAlign:"center",color:"#50506a",padding:"60px 0" }}><div style={{ fontSize:32,marginBottom:8 }}>🔍</div><div style={{ fontSize:14 }}>{T.noPlaces}</div></div>}
-        {filteredPlaces.map(place=>{
-          const entry=entries[place.id]||{},status=entry.status,meta=CAT_META[place.category]||{color:"#ff3366"};
-          const displayPrice=entry.price||place.price,fp=entry.photos?entry.photos[0]:null,pc=entry.photos?entry.photos.length:0;
-          const isPet=entry.petFriendly!==undefined?entry.petFriendly:place.petFriendly,hasBath=entry.publicBathroom!==undefined?entry.publicBathroom:place.publicBathroom;
-          const hasLink=entry.link||place.link,displayName=isEN&&place.nameEN?place.nameEN:place.name;
-          return <div key={place.id} style={{ position:"relative" }}>
-            <div className="card" onClick={()=>setSelected(place)} style={{ background:"#1a1a22",border:"1px solid "+(status==="fui"?meta.color+"40":"#2a2a38"),borderRadius:12,marginBottom:8,padding:"12px 14px",cursor:"pointer",opacity:status==="skip"?0.3:1,display:"flex",gap:12 }}>
-              {fp?<img src={fp} alt="" style={{ width:54,height:54,borderRadius:8,objectFit:"cover",flexShrink:0 }}/>:<div style={{ width:54,height:54,borderRadius:8,background:meta.color+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0 }}>{place.emoji}</div>}
-              <div style={{ flex:1,minWidth:0 }}>
-                <div style={{ display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:8 }}>
-                  <div style={{ fontSize:14,fontWeight:600,color:"#f0eeff",lineHeight:1.3 }}>{displayName}</div>
-                  <div style={{ display:"flex",alignItems:"center",gap:4,flexShrink:0 }}>
-                    {hasLink&&<span style={{ fontSize:10 }}>🔗</span>}
-                    {isPet&&<span style={{ fontSize:10 }}>🐾</span>}
-                    {hasBath&&<span style={{ fontSize:10 }}>🚻</span>}
-                    {entry.thumb==="up"&&<span style={{ fontSize:12 }}>👍</span>}
-                    {entry.thumb==="down"&&<span style={{ fontSize:12 }}>👎</span>}
-                    {entry.stars>0&&<span style={{ fontSize:10,color:"#ffd600" }}>{"★".repeat(entry.stars)}</span>}
-                    {pc>0&&<span style={{ fontSize:10,color:"#50506a" }}>📷{pc>1?pc:""}</span>}
-                    <span style={{ fontSize:15,color:status==="fui"?meta.color:status==="quero"?"#4da6ff":"#50506a" }}>{status==="fui"?"✓":status==="quero"?"♥":"○"}</span>
-                  </div>
-                </div>
-                <div style={{ display:"flex",gap:4,alignItems:"center",marginTop:4,flexWrap:"wrap" }}>
-                  <span style={{ fontSize:10,color:meta.color,background:meta.color+"18",borderRadius:5,padding:"1px 6px" }}>{catLabel(place.category)}</span>
-                  {displayPrice&&<span style={{ fontSize:10,color:"#50506a" }}>{PRICE_EMOJI[displayPrice]}</span>}
-                  {place.time&&<span style={{ fontSize:10,color:"#50506a" }}>⏱ {place.time}</span>}
-                  {entry.who&&entry.who!=="juntos"&&<span style={{ fontSize:10 }}>{WHO_EMOJI[entry.who]}</span>}
-                  {entry.vibes&&entry.vibes.map(v=><span key={v} style={{ fontSize:10 }}>{VIBE_EMOJI[v]}</span>)}
-                </div>
-                {entry.note&&<div style={{ fontSize:11,color:"#9090b0",marginTop:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{entry.note}</div>}
-                {status==="fui"&&entry.date&&<div style={{ fontSize:10,color:"#50506a",marginTop:2 }}>{new Date(entry.date+"T12:00:00").toLocaleDateString(isEN?"en-US":"pt-BR")}</div>}
-              </div>
-            </div>
-            {status!=="fui"&&<button onClick={ev=>{ev.stopPropagation();setCheckIn(place);}} style={{ position:"absolute",bottom:16,right:12,background:"#00e67612",border:"1px solid #00e67630",borderRadius:8,padding:"3px 8px",color:"#00e676",fontSize:10,cursor:"pointer",fontFamily:"inherit" }}>{T.checkin}</button>}
-          </div>;
-        })}
-      </>}
+        {filteredPlaces.map(place=>(
+          <PlaceCard key={place.id} place={place} entry={entries[place.id]} onSelect={setSelected} onCheckIn={setCheckIn} isEN={isEN} entries={entries}/>
+        ))}
     </div>
 
     <button onClick={()=>setShowAdd(true)} style={{ position:"fixed",bottom:24,right:20,width:52,height:52,background:"#ff3366",border:"none",borderRadius:"50%",color:"#fff",fontSize:24,cursor:"pointer",boxShadow:"0 4px 20px #ff336660",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700 }}>+</button>
@@ -1237,6 +1495,7 @@ export default function App() {
     {checkIn&&<CheckInModal place={checkIn} onClose={()=>setCheckIn(null)} onSave={async data=>{await handleSave(checkIn.id,data);}} addToast={addToast}/>}
     {showAdd&&<AddModal onClose={()=>setShowAdd(false)} onAdd={handleAdd} addToast={addToast}/>}
     {showShare&&<ShareModal places={visiblePlaces} entries={entries} onClose={()=>setShowShare(false)} addToast={addToast}/>}
+    {showSurpresa&&<SurpresaModal places={visiblePlaces} entries={entries} weather={currentWeather} onClose={()=>setShowSurpresa(false)} addToast={addToast} onSaveLists={saveLists} lists={lists}/>}
     {showPlanner&&<PlannerChatModal places={visiblePlaces} entries={entries} onClose={()=>setShowPlanner(false)} addToast={addToast} userLat={userLat} userLng={userLng}/>}
     {showNearby&&userLat&&<NearbyDrawer userLat={userLat} userLng={userLng} places={visiblePlaces} entries={entries} onSelect={setSelected} onClose={()=>setShowNearby(false)}/>}
   </div>;
