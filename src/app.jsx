@@ -137,6 +137,12 @@ const T = {
   shareTitle: isEN ? "Share" : "Compartilhar",
   shareWith: isEN ? "places with 👍 or 4+ stars" : "lugares com 👍 ou 4+ estrelas",
   rateFirst: isEN ? "Rate places first!" : "Avalie lugares primeiro!",
+  spending: isEN ? "SPENT" : "QUANTO GASTARAM",
+  spendingPlaceholder: isEN ? "0.00" : "0.00",
+  totalSpent: isEN ? "Total spent" : "Total gasto",
+  needsReservation: isEN ? "Needs reservation" : "Precisa reservar",
+  openingHours: isEN ? "OPENING HOURS" : "HORARIO DE FUNCIONAMENTO",
+  hoursPlaceholder: isEN ? "Ex: Mon-Fri 10am-8pm, Sat-Sun 11am-6pm" : "Ex: Seg-Sex 10h-20h, Sab-Dom 11h-18h",
   weather: { sunny:"Sunny", cloudy:"Cloudy", partCloud:"Partly cloudy", foggy:"Foggy", drizzle:"Drizzle", rainy:"Rainy", snowy:"Snowing",
     ensolarado:"Ensolarado", nublado:"Nublado", parcNublado:"Parcialmente nublado", nebuloso:"Nebuloso", garoa:"Garoa", chovendo:"Chovendo", nevando:"Nevando" },
 };
@@ -246,13 +252,13 @@ const INITIAL_PLACES = [
   { id:"t030", category:"Entretenimento", name:"Bares Speakeasy", nameEN:"Speakeasy Bars", emoji:"🥃", desc:"Bares secretos escondidos atras de cafeterias e cabines telefonicas.", descEN:"Secret bars hidden behind cafeterias and phone booths.", price:"$$", lat:40.7282, lng:-74.0076, time:"2h", petFriendly:false, publicBathroom:true, season:"sempre", rep:"PDT e Please Don't Tell sao os mais famosos.", repEN:"PDT and Please Don't Tell are the most famous." },
   { id:"t031", category:"Entretenimento", name:"Brooklyn Mirage", nameEN:"Brooklyn Mirage", emoji:"🎧", desc:"O maior venue de musica eletronica dos EUA, em Queens.", descEN:"The largest electronic music venue in the US, in Queens.", price:"$$", lat:40.6985, lng:-73.9318, time:"3h+", link:"https://www.avant-gardner.com", petFriendly:false, publicBathroom:true, season:"verao", rep:"O melhor venue de eletronico dos EUA.", repEN:"The best electronic music venue in the US." },
   { id:"t032", category:"Entretenimento", name:"Comedy Cellar", nameEN:"Comedy Cellar", emoji:"😂", desc:"O clube de stand-up mais lendario de NY no Village.", descEN:"The most legendary stand-up club in NY in the Village.", price:"$$", lat:40.7302, lng:-74.0005, time:"2h", link:"https://www.comedycellar.com", petFriendly:false, publicBathroom:true, season:"sempre", rep:"Dave Chappelle e Louis CK aparecem sem aviso.", repEN:"Dave Chappelle and Louis CK show up unannounced." },
-  { id:"t033", category:"Entretenimento", name:"Sleep No More", nameEN:"Sleep No More", emoji:"🎭", desc:"Peca imersiva de teatro noir onde voce vaga por um hotel de 5 andares.", descEN:"Immersive noir theater piece where you roam a 5-floor hotel.", price:"$$$", lat:40.7467, lng:-74.0014, time:"3h+", link:"https://www.sleepnomorenyc.com", petFriendly:false, publicBathroom:true, season:"sempre", rep:"Uma das experiencias mais unicas do mundo.", repEN:"One of the most unique experiences in the world." },
+  { id:"t033", needsReservation:true, category:"Entretenimento", name:"Sleep No More", nameEN:"Sleep No More", emoji:"🎭", desc:"Peca imersiva de teatro noir onde voce vaga por um hotel de 5 andares.", descEN:"Immersive noir theater piece where you roam a 5-floor hotel.", price:"$$$", lat:40.7467, lng:-74.0014, time:"3h+", link:"https://www.sleepnomorenyc.com", petFriendly:false, publicBathroom:true, season:"sempre", rep:"Uma das experiencias mais unicas do mundo.", repEN:"One of the most unique experiences in the world." },
   { id:"t034", category:"Entretenimento", name:"Karaoke em Koreatown", nameEN:"Koreatown Karaoke", emoji:"🎤", desc:"32nd St. Karaoke privativo (norebang) disponivel ate de madrugada.", descEN:"32nd St. Private karaoke (norebang) available until late at night.", price:"$$", lat:40.7484, lng:-73.9878, time:"2h", petFriendly:false, publicBathroom:true, season:"sempre", rep:"Norebang privativo e muito melhor que karaoke comum.", repEN:"Private norebang is much better than regular karaoke." },
-  { id:"t035", category:"Entretenimento", name:"Ver um show na Broadway", nameEN:"See a Broadway Show", emoji:"🎭", desc:"Um classico que nao pode faltar. A experiencia mais nova-iorquina que existe.", descEN:"A classic not to miss. The most New York experience there is.", price:"$$$", lat:40.7590, lng:-73.9845, time:"3h+", link:"https://www.broadway.com", petFriendly:false, publicBathroom:true, season:"sempre", rep:"TKTS na Times Square tem ingressos com ate 50% de desconto.", repEN:"TKTS at Times Square has tickets up to 50% off." },
+  { id:"t035", needsReservation:true, category:"Entretenimento", name:"Ver um show na Broadway", nameEN:"See a Broadway Show", emoji:"🎭", desc:"Um classico que nao pode faltar. A experiencia mais nova-iorquina que existe.", descEN:"A classic not to miss. The most New York experience there is.", price:"$$$", lat:40.7590, lng:-73.9845, time:"3h+", link:"https://www.broadway.com", petFriendly:false, publicBathroom:true, season:"sempre", rep:"TKTS na Times Square tem ingressos com ate 50% de desconto.", repEN:"TKTS at Times Square has tickets up to 50% off." },
   { id:"t036", category:"Comida", name:"Joe's Pizza", nameEN:"Joe's Pizza", emoji:"🍕", desc:"A fatia de pizza mais classica de NY desde 1975.", descEN:"The most classic NY pizza slice since 1975.", price:"$", lat:40.7306, lng:-74.0022, time:"30min", link:"https://www.joespizzanyc.com", petFriendly:false, publicBathroom:false, season:"sempre", rep:"A pizza perfeita de NYC.", repEN:"The perfect NYC pizza." },
   { id:"t037", category:"Comida", name:"Di Fara Pizza", nameEN:"Di Fara Pizza", emoji:"🍕", desc:"A pizza mais famosa de Brooklyn, feita a mao pelo mesmo dono ha decadas.", descEN:"Brooklyn's most famous pizza, handmade by the same owner for decades.", price:"$", lat:40.6249, lng:-73.9612, time:"1h", petFriendly:false, publicBathroom:false, season:"sempre", rep:"Peregrinacao obrigatoria para fas de pizza.", repEN:"Mandatory pilgrimage for pizza lovers." },
   { id:"t038", category:"Comida", name:"Levain Bakery", nameEN:"Levain Bakery", emoji:"🍪", desc:"O cookie de chocolate mais famoso de NY. Enorme, cremoso e quente.", descEN:"NY's most famous chocolate cookie. Enormous, creamy and warm.", price:"$", lat:40.7812, lng:-73.9803, time:"30min", link:"https://levainbakery.com", petFriendly:false, publicBathroom:false, season:"sempre", rep:"O cookie mais famoso de NYC.", repEN:"NYC's most famous cookie." },
-  { id:"t039", category:"Comida", name:"Peter Luger Steak House", nameEN:"Peter Luger Steak House", emoji:"🥩", desc:"A churrascaria mais famosa de NY, em Williamsburg desde 1887. So aceita dinheiro.", descEN:"NY's most famous steakhouse, in Williamsburg since 1887. Cash only.", price:"$$$", lat:40.7099, lng:-73.9625, time:"2h", link:"https://peterluger.com", petFriendly:false, publicBathroom:true, season:"sempre", rep:"A melhor churrascaria dos EUA. Reserve meses antes.", repEN:"The best steakhouse in the US. Book months ahead." },
+  { id:"t039", needsReservation:true, category:"Comida", name:"Peter Luger Steak House", nameEN:"Peter Luger Steak House", emoji:"🥩", desc:"A churrascaria mais famosa de NY, em Williamsburg desde 1887. So aceita dinheiro.", descEN:"NY's most famous steakhouse, in Williamsburg since 1887. Cash only.", price:"$$$", lat:40.7099, lng:-73.9625, time:"2h", link:"https://peterluger.com", petFriendly:false, publicBathroom:true, season:"sempre", rep:"A melhor churrascaria dos EUA. Reserve meses antes.", repEN:"The best steakhouse in the US. Book months ahead." },
   { id:"t040", category:"Comida", name:"Momofuku Noodle Bar", nameEN:"Momofuku Noodle Bar", emoji:"🍜", desc:"O restaurante original do David Chang no East Village. Ramen e buns lendarios.", descEN:"David Chang's original restaurant in the East Village. Legendary ramen and buns.", price:"$$", lat:40.7285, lng:-73.9842, time:"1h", link:"https://momofuku.com", petFriendly:false, publicBathroom:false, season:"sempre", rep:"Imprescindivel para fas de gastronomia.", repEN:"Essential for food lovers." },
   { id:"t041", category:"Compras", name:"American Dream Outlet", nameEN:"American Dream Outlet", emoji:"🛍️", desc:"O maior outlet de NJ com parque de diversoes, pista de esqui indoor e aquario.", descEN:"NJ's largest outlet with amusement park, indoor ski slope and aquarium.", price:"$$", lat:40.8135, lng:-74.0669, time:"dia inteiro", link:"https://www.americandream.com", petFriendly:false, publicBathroom:true, season:"sempre", rep:"Muito alem de um outlet.", repEN:"Way more than an outlet." },
   { id:"s001", category:"Bairros", name:"Governors Island", nameEN:"Governors Island", emoji:"⛵", desc:"Ilha sem carros na baia com arte, piquenique e vista pro Downtown.", descEN:"Car-free island in the bay with art, picnics and Downtown views.", price:"gratis", lat:40.6895, lng:-74.0165, time:"3h+", link:"https://govisland.com", petFriendly:true, publicBathroom:true, season:"verao", rep:"Esconderijo perfeito no verao.", repEN:"Perfect summer hideaway." },
@@ -270,7 +276,7 @@ const INITIAL_PLACES = [
   { id:"s013", category:"Museus", name:"Tenement Museum", nameEN:"Tenement Museum", emoji:"🏚️", desc:"Visita guiada a apartamentos de imigrantes preservados do seculo XIX.", descEN:"Guided tour of preserved 19th-century immigrant apartments.", price:"$$", lat:40.7183, lng:-73.9898, time:"2h", link:"https://www.tenement.org", petFriendly:false, publicBathroom:false, season:"sempre", rep:"Uma das experiencias mais tocantes de NYC.", repEN:"One of the most moving experiences in NYC." },
   { id:"s014", category:"Museus", name:"Brooklyn Museum", nameEN:"Brooklyn Museum", emoji:"🖼️", desc:"Segundo maior museu de arte dos EUA com colecao egipcia impressionante.", descEN:"Second largest art museum in the US with an impressive Egyptian collection.", price:"$$", lat:40.6712, lng:-73.9636, time:"3h+", link:"https://www.brooklynmuseum.org", petFriendly:false, publicBathroom:true, season:"sempre", rep:"A colecao egipcia rivaliza com o Met.", repEN:"The Egyptian collection rivals the Met." },
   { id:"s015", category:"Museus", name:"Frick Collection", nameEN:"Frick Collection", emoji:"🎻", desc:"Mansao do seculo XIX transformada em museu com Vermeer, Rembrandt e Renoir.", descEN:"19th-century mansion turned museum with Vermeer, Rembrandt and Renoir.", price:"$$", lat:40.7713, lng:-73.9672, time:"2h", link:"https://www.frick.org", petFriendly:false, publicBathroom:true, season:"sempre", rep:"Experiencia unica de ver arte numa mansao.", repEN:"Unique experience of seeing art in a mansion." },
-  { id:"s016", category:"Monumentos", name:"Estatua da Liberdade", nameEN:"Statue of Liberty", emoji:"🗽", desc:"Balsa de Battery Park pra Liberty Island. Reserve com antecedencia pra subir.", descEN:"Ferry from Battery Park to Liberty Island. Book ahead to climb to the crown.", price:"$$", lat:40.6892, lng:-74.0445, time:"3h+", link:"https://www.nps.gov/stli", petFriendly:false, publicBathroom:true, season:"sempre", rep:"Reserve para subir na coroa com meses de antecedencia.", repEN:"Book months ahead to climb to the crown." },
+  { id:"s016", needsReservation:true, category:"Monumentos", name:"Estatua da Liberdade", nameEN:"Statue of Liberty", emoji:"🗽", desc:"Balsa de Battery Park pra Liberty Island. Reserve com antecedencia pra subir.", descEN:"Ferry from Battery Park to Liberty Island. Book ahead to climb to the crown.", price:"$$", lat:40.6892, lng:-74.0445, time:"3h+", link:"https://www.nps.gov/stli", petFriendly:false, publicBathroom:true, season:"sempre", rep:"Reserve para subir na coroa com meses de antecedencia.", repEN:"Book months ahead to climb to the crown." },
   { id:"s017", category:"Monumentos", name:"Grand Central Terminal", nameEN:"Grand Central Terminal", emoji:"🚂", desc:"A estacao de trem mais bela do mundo com teto estrelado e o Whispering Gallery.", descEN:"The world's most beautiful train station with a star ceiling and Whispering Gallery.", price:"gratis", lat:40.7527, lng:-73.9772, time:"30min", petFriendly:false, publicBathroom:true, season:"sempre", rep:"O Whispering Gallery e magico.", repEN:"The Whispering Gallery is magical." },
   { id:"s018", category:"Monumentos", name:"Washington Square Park", nameEN:"Washington Square Park", emoji:"🎨", desc:"O parque mais vivo de Manhattan com musicos, xadrez e skatistas.", descEN:"Manhattan's most vibrant park with musicians, chess players and skaters.", price:"gratis", lat:40.7308, lng:-74.0002, time:"1h", petFriendly:true, publicBathroom:true, season:"primavera", rep:"O coracao do Greenwich Village.", repEN:"The heart of Greenwich Village." },
   { id:"s019", category:"Monumentos", name:"Little Island", nameEN:"Little Island", emoji:"🌺", desc:"Parque flutuante no Hudson River no Meatpacking, inaugurado em 2021.", descEN:"Floating park on the Hudson River in the Meatpacking District, opened in 2021.", price:"gratis", lat:40.7438, lng:-74.0094, time:"1h", link:"https://littleisland.org", petFriendly:true, publicBathroom:true, season:"primavera", rep:"O projeto de parque mais bonito do seculo em NYC.", repEN:"The most beautiful park project of the century in NYC." },
@@ -291,12 +297,12 @@ const INITIAL_PLACES = [
   { id:"dt007", category:"Daytrips", name:"Ski - Mountain Creek, NJ", nameEN:"Ski - Mountain Creek, NJ", emoji:"⛷️", desc:"Resort de ski mais proximo de NYC, a menos de 1h de carro.", descEN:"Closest ski resort to NYC, less than 1h by car.", price:"$$$", lat:41.1812, lng:-74.5099, time:"dia inteiro", link:"https://mountaincreek.com", petFriendly:false, publicBathroom:true, season:"inverno", rep:"Menor que resorts de Vermont mas acessivel e divertido.", repEN:"Smaller than Vermont resorts but accessible and fun." },
   { id:"dt008", category:"Daytrips", name:"Storm King Art Center", nameEN:"Storm King Art Center", emoji:"🗿", desc:"Museu de escultura ao ar livre em 500 acres de paisagem natural no Hudson Valley.", descEN:"Outdoor sculpture museum on 500 acres of natural landscape in the Hudson Valley.", price:"$$", lat:41.4096, lng:-74.0046, time:"dia inteiro", link:"https://stormking.org", petFriendly:false, publicBathroom:true, season:"outono", rep:"Uma das experiencias artisticas mais unicas do mundo.", repEN:"One of the most unique artistic experiences in the world." },
 { id:"b001", category:"Bares", name:"Death & Co", nameEN:"Death & Co", emoji:"💀", desc:"Um dos bares de coqueteis mais influentes do mundo, no East Village. Ambiente escuro e sofisticado, menu de drinques inovador.", descEN:"One of the world's most influential cocktail bars in the East Village. Dark and sophisticated atmosphere.", price:"$$", lat:40.7265, lng:-73.9822, time:"2h", link:"https://deathandcompany.com", petFriendly:false, publicBathroom:true, season:"sempre", rep:"Lendario. Reserve com antecedencia ou chegue cedo.", repEN:"Legendary. Reserve ahead or arrive early." },
-  { id:"b002", category:"Bares", name:"Please Don't Tell (PDT)", nameEN:"Please Don't Tell (PDT)", emoji:"📞", desc:"Speakeasy escondido atras de uma cabine telefonica em uma lanchonete no East Village. Um dos bares mais exclusivos de NYC.", descEN:"Speakeasy hidden behind a phone booth in an East Village hot dog joint. One of NYC's most exclusive bars.", price:"$$", lat:40.7267, lng:-73.9838, time:"2h", link:"https://pdtnyc.com", petFriendly:false, publicBathroom:true, season:"sempre", rep:"Reserve pelo site - so 45 lugares. A experiencia de entrar ja vale.", repEN:"Reserve online - only 45 seats. The entry experience alone is worth it." },
+  { id:"b002", needsReservation:true, category:"Bares", name:"Please Don't Tell (PDT)", nameEN:"Please Don't Tell (PDT)", emoji:"📞", desc:"Speakeasy escondido atras de uma cabine telefonica em uma lanchonete no East Village. Um dos bares mais exclusivos de NYC.", descEN:"Speakeasy hidden behind a phone booth in an East Village hot dog joint. One of NYC's most exclusive bars.", price:"$$", lat:40.7267, lng:-73.9838, time:"2h", link:"https://pdtnyc.com", petFriendly:false, publicBathroom:true, season:"sempre", rep:"Reserve pelo site - so 45 lugares. A experiencia de entrar ja vale.", repEN:"Reserve online - only 45 seats. The entry experience alone is worth it." },
   { id:"b003", category:"Bares", name:"Employees Only", nameEN:"Employees Only", emoji:"🎩", desc:"Bar de coqueteis de era proibicao no West Village com excelente menu de comida tardia.", descEN:"Prohibition-era cocktail bar in the West Village with an excellent late-night food menu.", price:"$$", lat:40.7341, lng:-74.0059, time:"2h", petFriendly:false, publicBathroom:true, season:"sempre", rep:"O Late Night Food aqui e tao bom quanto os drinks. Abre ate 4am.", repEN:"The late night food here is as good as the drinks. Open until 4am." },
-  { id:"b004", category:"Bares", name:"The Dead Rabbit", nameEN:"The Dead Rabbit", emoji:"🐰", desc:"Considerado um dos melhores bares do mundo, no Financial District. Tematica irlandesa, coqueteis historicos.", descEN:"Considered one of the world's best bars in the Financial District. Irish themed, historical cocktails.", price:"$$$", lat:40.7033, lng:-74.0133, time:"2h", link:"https://deadrabbitnyc.com", petFriendly:false, publicBathroom:true, season:"sempre", rep:"Top 10 mundial. Os Irish Coffee e punch bowls sao lendarios.", repEN:"World top 10. The Irish Coffee and punch bowls are legendary." },
+  { id:"b004", needsReservation:true, category:"Bares", name:"The Dead Rabbit", nameEN:"The Dead Rabbit", emoji:"🐰", desc:"Considerado um dos melhores bares do mundo, no Financial District. Tematica irlandesa, coqueteis historicos.", descEN:"Considered one of the world's best bars in the Financial District. Irish themed, historical cocktails.", price:"$$$", lat:40.7033, lng:-74.0133, time:"2h", link:"https://deadrabbitnyc.com", petFriendly:false, publicBathroom:true, season:"sempre", rep:"Top 10 mundial. Os Irish Coffee e punch bowls sao lendarios.", repEN:"World top 10. The Irish Coffee and punch bowls are legendary." },
   { id:"b005", category:"Bares", name:"Attaboy", nameEN:"Attaboy", emoji:"🥂", desc:"Sem menu - o bartender cria um drink personalizado baseado no seu humor e preferencias. No Lower East Side.", descEN:"No menu - the bartender creates a personalized drink based on your mood and preferences. In the Lower East Side.", price:"$$", lat:40.7202, lng:-73.9875, time:"2h", petFriendly:false, publicBathroom:false, season:"sempre", rep:"Experiencia unica. Chegue cedo - so aceita quem aparece.", repEN:"Unique experience. Arrive early - walk-ins only." },
   { id:"b006", category:"Bares", name:"Dante", nameEN:"Dante", emoji:"🍹", desc:"Bar italiano classico no West Village, eleito o melhor bar do mundo em 2019. Negronis lendarios.", descEN:"Classic Italian bar in the West Village, voted world's best bar in 2019. Legendary Negronis.", price:"$$", lat:40.7313, lng:-74.0021, time:"2h", link:"https://dante-nyc.com", petFriendly:true, publicBathroom:true, season:"sempre", rep:"Melhor Negroni de NYC. Excelente para brunch tambem.", repEN:"Best Negroni in NYC. Excellent for brunch too." },
-  { id:"b007", category:"Bares", name:"Maison Premiere", nameEN:"Maison Premiere", emoji:"🦪", desc:"Ostras e coqueteis estilo New Orleans em Williamsburg. Jardim externo lindo no verao.", descEN:"Oysters and New Orleans-style cocktails in Williamsburg. Beautiful outdoor garden in summer.", price:"$$$", lat:40.7142, lng:-73.9609, time:"2h", link:"https://maisonpremiere.com", petFriendly:false, publicBathroom:true, season:"primavera", rep:"O jardim no verao e perfeito. Absinthe e ostras - combinacao infalivel.", repEN:"The garden in summer is perfect. Absinthe and oysters - unbeatable combo." },
+  { id:"b007", needsReservation:true, category:"Bares", name:"Maison Premiere", nameEN:"Maison Premiere", emoji:"🦪", desc:"Ostras e coqueteis estilo New Orleans em Williamsburg. Jardim externo lindo no verao.", descEN:"Oysters and New Orleans-style cocktails in Williamsburg. Beautiful outdoor garden in summer.", price:"$$$", lat:40.7142, lng:-73.9609, time:"2h", link:"https://maisonpremiere.com", petFriendly:false, publicBathroom:true, season:"primavera", rep:"O jardim no verao e perfeito. Absinthe e ostras - combinacao infalivel.", repEN:"The garden in summer is perfect. Absinthe and oysters - unbeatable combo." },
   { id:"b008", category:"Bares", name:"McSorley's Old Ale House", nameEN:"McSorley's Old Ale House", emoji:"🍺", desc:"O bar mais antigo de NYC, aberto desde 1854. Serve so dois tipos de cerveja: light e dark. Historia viva.", descEN:"NYC's oldest bar, open since 1854. Serves only two types of beer: light and dark. Living history.", price:"$", lat:40.7281, lng:-73.9889, time:"1h", petFriendly:false, publicBathroom:true, season:"sempre", rep:"Imprescindivel por historia. Sawdust no chao, fotos do seculo XIX nas paredes.", repEN:"Essential for history. Sawdust on the floor, 19th century photos on the walls." },
   { id:"b009", category:"Bares", name:"White Horse Tavern", nameEN:"White Horse Tavern", emoji:"🐴", desc:"Bar historico do West Village frequentado por Dylan Thomas, Jack Kerouac e Jim Morrison. Desde 1880.", descEN:"Historic West Village bar frequented by Dylan Thomas, Jack Kerouac and Jim Morrison. Since 1880.", price:"$", lat:40.7339, lng:-74.0069, time:"1h", petFriendly:false, publicBathroom:true, season:"sempre", rep:"Um dos bares mais literarios do mundo. Muito charme.", repEN:"One of the world's most literary bars. Very charming." },
   { id:"b010", category:"Bares", name:"Nowadays", nameEN:"Nowadays", emoji:"🌿", desc:"Bar e clube ao ar livre em Queens com jardim enorme. Musica eletronica, vibes descontraidas e boa comida.", descEN:"Outdoor bar and club in Queens with a huge garden. Electronic music, relaxed vibes and good food.", price:"$$", lat:40.7138, lng:-73.9088, time:"3h+", link:"https://now-a-days.com", petFriendly:false, publicBathroom:true, season:"verao", rep:"O melhor bar ao ar livre de NYC. Noites de domingo sao lendarias.", repEN:"NYC's best outdoor bar. Sunday nights are legendary." },
@@ -309,8 +315,22 @@ const INITIAL_PLACES = [
 
 const CATEGORIES = [...new Set(INITIAL_PLACES.map(p => p.category))].sort();
 
+let _pullStartY = 0;
+let _pulling = false;
+
+function initPullToRefresh() {
+  if (window._ptrInit) return;
+  window._ptrInit = true;
+  document.addEventListener("touchstart", e => { _pullStartY = e.touches[0].clientY; }, { passive:true });
+  document.addEventListener("touchend", e => {
+    const dy = e.changedTouches[0].clientY - _pullStartY;
+    if (dy > 80 && window.scrollY === 0) { window.location.reload(); }
+  }, { passive:true });
+}
+
 const injectCSS = () => {
   if (document.getElementById("nyc-css")) return;
+  initPullToRefresh();
   const s = document.createElement("style");
   s.id = "nyc-css";
   s.textContent = `
@@ -783,6 +803,9 @@ function DetailModal({ place, entry, places, entries, onClose, onSave, onDelete,
   const [confirmDel,setConfirmDel]=useState(false);
   const [showEdit,setShowEdit]=useState(false);
   const [improving,setImproving]=useState(false);
+  const [spent,setSpent]=useState(e.spent||"");
+  const [needsRes,setNeedsRes]=useState(e.needsReservation!==undefined?e.needsReservation:(place.needsReservation||false));
+  const [hours,setHours]=useState(e.hours||place.hours||"");
   const meta=CAT_META[place.category]||{color:"#ff3366"};
   const STATUS={quero:{label:T.wantGo,icon:"♡",sel:"♥",color:"#4da6ff"},fui:{label:T.beenThere,icon:"○",sel:"✓",color:"#00e676"}};
   const mapsUrl="https://www.google.com/maps/search/?api=1&query="+encodeURIComponent((isEN&&place.nameEN?place.nameEN:place.name)+" New York");
@@ -791,7 +814,7 @@ function DetailModal({ place, entry, places, entries, onClose, onSave, onDelete,
   const displayDesc=isEN&&place.descEN?place.descEN:place.desc;
   const displayRep=isEN&&place.repEN?place.repEN:place.rep;
 
-  const handleSave=async()=>{setSaving(true);await onSave({status,note,date,photos,stars,thumb,vibes,price,who,link,petFriendly,publicBathroom,season});setSaving(false);addToast(T.savedToast,"success");};
+  const handleSave=async()=>{setSaving(true);await onSave({status,note,date,photos,stars,thumb,vibes,price,who,link,petFriendly,publicBathroom,season,spent:spent?parseFloat(spent)||0:null,needsReservation:needsRes,hours});setSaving(false);addToast(T.savedToast,"success");};
   const handleDelete=async()=>{await onDelete();};
 
   const improveNote=async()=>{
@@ -822,6 +845,8 @@ function DetailModal({ place, entry, places, entries, onClose, onSave, onDelete,
                   {place.time&&<span style={{ fontSize:11,color:"#50506a",background:"#0f0f13",borderRadius:6,padding:"2px 8px" }}>⏱ {place.time}</span>}
                   {petFriendly&&<span style={{ fontSize:11,color:"#4ade80",background:"#4ade8020",borderRadius:6,padding:"2px 8px" }}>🐾</span>}
                   {publicBathroom&&<span style={{ fontSize:11,color:"#60a5fa",background:"#60a5fa20",borderRadius:6,padding:"2px 8px" }}>🚻</span>}
+                  {needsRes&&<span style={{ fontSize:11,color:"#f59e0b",background:"#f59e0b20",borderRadius:6,padding:"2px 8px" }}>📋 {isEN?"Reserve":"Reservar"}</span>}
+                  {hours&&<span style={{ fontSize:11,color:"#9090b0",background:"#0f0f13",borderRadius:6,padding:"2px 8px" }}>🕐 {hours.split(",")[0]}</span>}
                 </div>
               </div>
             </div>
@@ -848,6 +873,25 @@ function DetailModal({ place, entry, places, entries, onClose, onSave, onDelete,
         <div style={{ marginBottom:14 }}><div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.12em",marginBottom:8 }}>{T.vibe}</div><div style={{ display:"flex",flexWrap:"wrap",gap:6 }}>{VIBES.map(v=><button key={v} onClick={()=>setVibes(prev=>prev.includes(v)?prev.filter(x=>x!==v):[...prev,v])} style={{ padding:"6px 12px",borderRadius:20,background:vibes.includes(v)?"#ff336618":"#0f0f13",border:"1px solid "+(vibes.includes(v)?"#ff336660":"#2a2a38"),color:vibes.includes(v)?"#ff3366":"#50506a",fontSize:12,cursor:"pointer",transition:"all 0.15s" }}>{VIBE_EMOJI[v]} {VIBE_LABELS[v]}</button>)}</div></div>
         <div style={{ marginBottom:14 }}><div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.12em",marginBottom:8 }}>{T.facilities}</div><div style={{ display:"flex",gap:8 }}><button onClick={()=>setPetFriendly(!petFriendly)} style={{ flex:1,padding:"9px",borderRadius:10,background:petFriendly?"#4ade8018":"#0f0f13",border:"1px solid "+(petFriendly?"#4ade8060":"#2a2a38"),color:petFriendly?"#4ade80":"#50506a",fontSize:12,cursor:"pointer",transition:"all 0.15s" }}>{T.pet}</button><button onClick={()=>setPublicBathroom(!publicBathroom)} style={{ flex:1,padding:"9px",borderRadius:10,background:publicBathroom?"#60a5fa18":"#0f0f13",border:"1px solid "+(publicBathroom?"#60a5fa60":"#2a2a38"),color:publicBathroom?"#60a5fa":"#50506a",fontSize:12,cursor:"pointer",transition:"all 0.15s" }}>{T.bathroom}</button></div></div>
         {status==="fui"&&<div style={{ marginBottom:14 }}><div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.12em",marginBottom:8 }}>{T.rating}</div><div style={{ display:"flex",gap:4,marginBottom:10 }}>{[1,2,3,4,5].map(n=><span key={n} onClick={()=>setStars(stars===n?0:n)} style={{ fontSize:26,cursor:"pointer",color:n<=stars?"#ffd600":"#50506a",transition:"color 0.1s" }}>★</span>)}</div><div style={{ display:"flex",gap:8 }}><button onClick={()=>setThumb(thumb==="up"?null:"up")} style={{ flex:1,padding:"10px",borderRadius:10,background:thumb==="up"?"#00e67620":"#0f0f13",border:"1px solid "+(thumb==="up"?"#00e676":"#2a2a38"),fontSize:20,cursor:"pointer",transition:"all 0.15s" }}>👍</button><button onClick={()=>setThumb(thumb==="down"?null:"down")} style={{ flex:1,padding:"10px",borderRadius:10,background:thumb==="down"?"#ff336620":"#0f0f13",border:"1px solid "+(thumb==="down"?"#ff3366":"#2a2a38"),fontSize:20,cursor:"pointer",transition:"all 0.15s" }}>👎</button></div></div>}
+        {status==="fui"&&<div style={{ marginBottom:14 }}>
+          <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.12em",marginBottom:8 }}>{T.spending}</div>
+          <div style={{ display:"flex",alignItems:"center",gap:10,background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:10,padding:"10px 14px" }}>
+            <span style={{ fontSize:18 }}>💸</span>
+            <span style={{ fontSize:16,color:"#50506a",fontWeight:600 }}>$</span>
+            <input type="number" min="0" step="0.01" value={spent} onChange={ev=>setSpent(ev.target.value)} placeholder={T.spendingPlaceholder} style={{ flex:1,background:"none",border:"none",color:"#f0eeff",fontSize:16,fontWeight:600 }}/>
+            {spent&&<span style={{ fontSize:12,color:"#00e676" }}>${parseFloat(spent)||0} USD</span>}
+          </div>
+        </div>}
+        <div style={{ marginBottom:14 }}>
+          <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.12em",marginBottom:8 }}>{T.needsReservation}</div>
+          <button onClick={()=>setNeedsRes(!needsRes)} style={{ width:"100%",padding:"10px",borderRadius:10,background:needsRes?"#f59e0b20":"#0f0f13",border:"1px solid "+(needsRes?"#f59e0b60":"#2a2a38"),color:needsRes?"#f59e0b":"#50506a",fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8,transition:"all 0.15s" }}>
+            <span>{needsRes?"📋":"○"}</span><span>{needsRes?(isEN?"Yes, reservation needed":"Sim, precisa reservar"):(isEN?"No reservation needed":"Nao precisa reservar")}</span>
+          </button>
+        </div>
+        <div style={{ marginBottom:14 }}>
+          <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.12em",marginBottom:8 }}>{T.openingHours}</div>
+          <input value={hours} onChange={ev=>setHours(ev.target.value)} placeholder={T.hoursPlaceholder} style={{ width:"100%",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:10,padding:"10px 14px",color:"#f0eeff",fontSize:13 }}/>
+        </div>
         <div style={{ marginBottom:14 }}>
           <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8 }}>
             <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.12em" }}>{status==="fui"?T.howWasIt:T.notes}</div>
@@ -1148,6 +1192,131 @@ function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveList
   );
 }
 
+
+function StatsTab({ places, entries }) {
+  const visited = places.filter(p=>(entries[p.id]||{}).status==="fui");
+  const total = places.length;
+  const pct = total>0?Math.round((visited.length/total)*100):0;
+
+  // Total spent
+  const totalSpent = visited.reduce((sum,p)=>{
+    const e=entries[p.id]||{};
+    return sum+(e.spent||0);
+  },0);
+
+  // By category
+  const byCategory = {};
+  CATEGORIES.forEach(cat=>{
+    const catPlaces = places.filter(p=>p.category===cat);
+    const catVisited = catPlaces.filter(p=>(entries[p.id]||{}).status==="fui");
+    const catSpent = catVisited.reduce((s,p)=>s+((entries[p.id]||{}).spent||0),0);
+    byCategory[cat] = { total:catPlaces.length, visited:catVisited.length, spent:catSpent };
+  });
+
+  // By month
+  const byMonth = {};
+  visited.forEach(p=>{
+    const e=entries[p.id]||{};
+    if(e.date){
+      const m=e.date.slice(0,7);
+      byMonth[m]=(byMonth[m]||0)+1;
+    }
+  });
+  const months = Object.entries(byMonth).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,6);
+  const maxMonth = Math.max(...months.map(([,v])=>v),1);
+
+  // Who went more
+  const guiOnly = visited.filter(p=>(entries[p.id]||{}).who==="gui").length;
+  const gabOnly = visited.filter(p=>(entries[p.id]||{}).who==="gabriel").length;
+  const together = visited.filter(p=>(entries[p.id]||{}).who==="juntos"||(!(entries[p.id]||{}).who)).length;
+
+  if(!visited.length) return (
+    <div style={{ textAlign:"center",padding:"60px 20px",color:"#50506a" }}>
+      <div style={{ fontSize:40,marginBottom:12 }}>📊</div>
+      <div style={{ fontSize:14 }}>{isEN?"Visit places to see your stats!":"Visitem lugares para ver as estatisticas!"}</div>
+    </div>
+  );
+
+  return (
+    <div style={{ padding:"0 16px 80px" }}>
+
+      {/* Overview */}
+      <div style={{ background:"linear-gradient(135deg,#1a0008,#0a001a)",border:"1px solid #2a2a38",borderRadius:14,padding:"16px",marginBottom:12,position:"relative",overflow:"hidden" }}>
+        <div style={{ position:"absolute",top:0,left:0,right:0,height:2,background:"linear-gradient(90deg,#ff3366,#ff6b35,#ffd600)" }}/>
+        <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start" }}>
+          <div>
+            <div style={{ fontSize:11,color:"#50506a",letterSpacing:"0.1em",marginBottom:4 }}>{isEN?"EXPLORED":"EXPLORADO"}</div>
+            <div style={{ fontSize:36,fontWeight:800,background:"linear-gradient(90deg,#ff3366,#ffd600)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent" }}>{pct}%</div>
+            <div style={{ fontSize:12,color:"#9090b0",marginTop:2 }}>{visited.length} {isEN?"of":"de"} {total} {isEN?"places":"lugares"}</div>
+          </div>
+          {totalSpent>0&&<div style={{ textAlign:"right" }}>
+            <div style={{ fontSize:11,color:"#50506a",letterSpacing:"0.1em",marginBottom:4 }}>{isEN?"TOTAL SPENT":"TOTAL GASTO"}</div>
+            <div style={{ fontSize:28,fontWeight:700,color:"#00e676" }}>${totalSpent.toFixed(0)}</div>
+            <div style={{ fontSize:11,color:"#9090b0",marginTop:2 }}>{isEN?"avg":"media"} ${visited.length>0?(totalSpent/visited.filter(p=>(entries[p.id]||{}).spent).length||1).toFixed(0):0}/{isEN?"visit":"visita"}</div>
+          </div>}
+        </div>
+      </div>
+
+      {/* Who went */}
+      <div style={{ background:"#1a1a22",border:"1px solid #2a2a38",borderRadius:14,padding:"14px",marginBottom:12 }}>
+        <div style={{ fontSize:11,color:"#50506a",letterSpacing:"0.1em",marginBottom:10 }}>{isEN?"WHO WENT MORE":"QUEM FOI MAIS"}</div>
+        <div style={{ display:"flex",gap:8 }}>
+          {[["🧔","Gui",guiOnly,"#ff3366"],["👨","Gabriel",gabOnly,"#4da6ff"],["👫",isEN?"Together":"Juntos",together,"#00e676"]].map(([emoji,name,count,color])=>(
+            <div key={name} style={{ flex:1,background:color+"15",border:"1px solid "+color+"30",borderRadius:10,padding:"10px",textAlign:"center" }}>
+              <div style={{ fontSize:22 }}>{emoji}</div>
+              <div style={{ fontSize:20,fontWeight:700,color,marginTop:4 }}>{count}</div>
+              <div style={{ fontSize:10,color:"#9090b0",marginTop:2 }}>{name}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* By category */}
+      <div style={{ background:"#1a1a22",border:"1px solid #2a2a38",borderRadius:14,padding:"14px",marginBottom:12 }}>
+        <div style={{ fontSize:11,color:"#50506a",letterSpacing:"0.1em",marginBottom:10 }}>{isEN?"BY CATEGORY":"POR CATEGORIA"}</div>
+        {CATEGORIES.filter(cat=>byCategory[cat]?.total>0).sort((a,b)=>(byCategory[b]?.visited||0)-(byCategory[a]?.visited||0)).map(cat=>{
+          const { total:ct, visited:cv, spent:cs } = byCategory[cat]||{total:0,visited:0,spent:0};
+          const meta = CAT_META[cat]||{color:"#ff3366"};
+          const pctCat = ct>0?Math.round((cv/ct)*100):0;
+          return (
+            <div key={cat} style={{ marginBottom:10 }}>
+              <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4 }}>
+                <div style={{ fontSize:12,color:"#f0eeff",fontWeight:500 }}>{catLabel(cat)}</div>
+                <div style={{ display:"flex",gap:10,alignItems:"center" }}>
+                  {cs>0&&<span style={{ fontSize:11,color:"#00e676" }}>${cs.toFixed(0)}</span>}
+                  <span style={{ fontSize:11,color:"#9090b0" }}>{cv}/{ct}</span>
+                  <span style={{ fontSize:11,color:meta.color,fontWeight:600 }}>{pctCat}%</span>
+                </div>
+              </div>
+              <div style={{ height:5,background:"#2a2a38",borderRadius:3 }}>
+                <div style={{ height:"100%",width:pctCat+"%",background:meta.color,borderRadius:3,transition:"width 0.6s ease" }}/>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* By month */}
+      {months.length>0&&<div style={{ background:"#1a1a22",border:"1px solid #2a2a38",borderRadius:14,padding:"14px",marginBottom:12 }}>
+        <div style={{ fontSize:11,color:"#50506a",letterSpacing:"0.1em",marginBottom:14 }}>{isEN?"VISITS BY MONTH":"VISITAS POR MES"}</div>
+        <div style={{ display:"flex",gap:6,alignItems:"flex-end",height:80 }}>
+          {months.reverse().map(([month,count])=>{
+            const h = Math.round((count/maxMonth)*100);
+            return (
+              <div key={month} style={{ flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4 }}>
+                <div style={{ fontSize:10,color:"#ffd600",fontWeight:600 }}>{count}</div>
+                <div style={{ width:"100%",height:h+"%",minHeight:4,background:"linear-gradient(180deg,#ff3366,#ff6b35)",borderRadius:"4px 4px 0 0",transition:"height 0.6s ease" }}/>
+                <div style={{ fontSize:9,color:"#50506a",textAlign:"center" }}>{new Date(month+"-01").toLocaleDateString(isEN?"en-US":"pt-BR",{month:"short"})}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>}
+
+    </div>
+  );
+}
+
 const PlaceCard = memo(function PlaceCard({ place, entry, onSelect, onCheckIn, isEN, entries }) {
   const status = entry?.status;
   const meta = CAT_META[place.category]||{color:"#ff3366"};
@@ -1169,6 +1338,7 @@ const PlaceCard = memo(function PlaceCard({ place, entry, onSelect, onCheckIn, i
               {hasLink&&<span style={{ fontSize:10 }}>🔗</span>}
               {isPet&&<span style={{ fontSize:10 }}>🐾</span>}
               {hasBath&&<span style={{ fontSize:10 }}>🚻</span>}
+              {(entry?.needsReservation||place.needsReservation)&&<span style={{ fontSize:10 }}>📋</span>}
               {entry?.thumb==="up"&&<span style={{ fontSize:12 }}>👍</span>}
               {entry?.thumb==="down"&&<span style={{ fontSize:12 }}>👎</span>}
               {entry?.stars>0&&<span style={{ fontSize:10,color:"#ffd600" }}>{"★".repeat(entry.stars)}</span>}
@@ -1372,7 +1542,7 @@ export default function App() {
   const total=visiblePlaces.length;
   const visitedCount=Object.values(entries).filter(e=>e.status==="fui").length;
   const pct=total>0?Math.round((visitedCount/total)*100):0;
-  const TABS=T.tabs;
+  const TABS=isEN?["List","Map","Timeline","Curadoria","Stats"]:["Lista","Mapa","Linha do Tempo","Curadoria","Stats"];
   const NYC_REGIONS=["Manhattan","Brooklyn","Queens","Bronx","Staten Island","Jersey City"];
   const DAYTRIP_REGIONS=["Philadelphia","Cold Spring","Asbury Park","Princeton","Hudson NY","Catskills"];
   const clearFilters=()=>{setFilterVibes([]);setFilterPrices([]);setFilterSeasons([]);setFilterStars(0);setFilterThumb(null);setFilterPet(false);setFilterBathroom(false);setFilterRegion(null);};
@@ -1416,7 +1586,7 @@ export default function App() {
         </div>
 
         <div style={{ display:"flex",gap:0,background:"#1a1a22",borderRadius:10,padding:3,border:"1px solid #2a2a38",marginBottom:10 }}>
-          {TABS.map((label,i)=>{const keys=["list","map","timeline","curadoria"];return<button key={keys[i]} onClick={()=>setTab(keys[i])} style={{ flex:1,padding:"7px 4px",borderRadius:8,background:tab===keys[i]?"#ff3366":"none",border:"none",color:tab===keys[i]?"#fff":"#50506a",fontSize:11,cursor:"pointer",fontWeight:tab===keys[i]?600:400,transition:"all 0.15s" }}>{label}</button>;})}
+          {TABS.map((label,i)=>{const keys=["list","map","timeline","curadoria","stats"];return<button key={keys[i]} onClick={()=>setTab(keys[i])} style={{ flex:1,padding:"7px 4px",borderRadius:8,background:tab===keys[i]?"#ff3366":"none",border:"none",color:tab===keys[i]?"#fff":"#50506a",fontSize:11,cursor:"pointer",fontWeight:tab===keys[i]?600:400,transition:"all 0.15s" }}>{label}</button>;})}
         </div>
 
         {tab==="list"&&<>
