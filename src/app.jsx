@@ -1391,7 +1391,7 @@ export default function App() {
             <div style={{ fontSize:22,fontWeight:800,letterSpacing:"-0.02em",background:"linear-gradient(90deg,#ff3366,#ff6b35,#ffd600)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent" }}>{T.appTitle} 🗽</div>
           </div>
           <div style={{ display:"flex",gap:6 }}>
-            <HdrBtn icon={<Icons.Dice/>} label={T.roll} onClick={getSurprise}/>
+            <HdrBtn icon={<Icons.Sparkles/>} label={isEN?"Surprise":"Surpresa"} onClick={()=>setShowSurpresa(true)}/>
             <HdrBtn icon={<Icons.MapPin/>} label={T.nearby} onClick={handleNearby}/>
             <HdrBtn icon={<Icons.Bot/>} label={T.plan} onClick={()=>setShowPlanner(true)}/>
             <HdrBtn icon={<Icons.Share/>} label={T.share} onClick={()=>setShowShare(true)}/>
