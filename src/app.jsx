@@ -499,7 +499,7 @@ function MapTab({ places, entries, onSelect }) {
   const mapRef=useRef(null),inst=useRef(null),markers=useRef([]);
   const [ready,setReady]=useState(false);
   useEffect(()=>{if(window.L){setReady(true);return;}const link=document.createElement("link");link.rel="stylesheet";link.href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";document.head.appendChild(link);const script=document.createElement("script");script.src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";script.onload=()=>setReady(true);document.head.appendChild(script);},[]);
-  useEffect(()=>{if(!ready||!mapRef.current)return;if(!inst.current){inst.current=window.L.map(mapRef.current,{center:[40.730,-73.990],zoom:12});window.L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{attribution:"CartoDB"}).addTo(inst.current);if(navigator.geolocation){navigator.geolocation.getCurrentPosition(pos=>{if(!inst.current)return;const ui=window.L.divIcon({html:"<div style='width:14px;height:14px;border-radius:50%;background:#ff3366;border:2px solid #fff;box-shadow:0 0 0 5px #ff336640'></div>",className:"",iconSize:[14,14],iconAnchor:[7,7]});window.L.marker([pos.coords.latitude,pos.coords.longitude],{icon:ui,zIndexOffset:1000}).addTo(inst.current);},{enableHighAccuracy:false});}}markers.current.forEach(m=>m.remove());markers.current=[];places.forEach(p=>{if(!p.lat||!p.lng)return;const meta=CAT_META[p.category]||{color:"#ff3366"};const icon=window.L.divIcon({html:"<div style='width:28px;height:28px;border-radius:50%;background:"+meta.color+"30;border:2px solid "+meta.color+";display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 8px #00000080'>"+p.emoji+"</div>",className:"",iconSize:[28,28],iconAnchor:[14,14]});const m=window.L.marker([p.lat,p.lng],{icon}).addTo(inst.current);m.on("click",()=>onSelect(p));markers.current.push(m);});},[ready,places,entries]);
+  useEffect(()=>{if(!ready||!mapRef.current)return;if(!inst.current){inst.current=window.L.map(mapRef.current,{center:[40.730,-73.990],zoom:12});window.L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{attribution:"CartoDB"}).addTo(inst.current);}markers.current.forEach(m=>m.remove());markers.current=[];if(navigator.geolocation){navigator.geolocation.getCurrentPosition(pos=>{if(!inst.current)return;const userDot=document.createElement("div");userDot.style.cssText="width:14px;height:14px;border-radius:50%;background:#ff3366;border:2px solid white;box-shadow:0 0 0 5px rgba(255,51,102,0.25)";const ui=window.L.divIcon({html:userDot.outerHTML,className:"",iconSize:[14,14],iconAnchor:[7,7]});window.L.marker([pos.coords.latitude,pos.coords.longitude],{icon:ui,zIndexOffset:1000}).addTo(inst.current);},{enableHighAccuracy:false});}places.forEach(p=>{if(!p.lat||!p.lng)return;const meta=CAT_META[p.category]||{color:"#ff3366"};const icon=window.L.divIcon({html:"<div style='width:28px;height:28px;border-radius:50%;background:"+meta.color+"30;border:2px solid "+meta.color+";display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 8px #00000080'>"+p.emoji+"</div>",className:"",iconSize:[28,28],iconAnchor:[14,14]});const m=window.L.marker([p.lat,p.lng],{icon}).addTo(inst.current);m.on("click",()=>onSelect(p));markers.current.push(m);});},[ready,places,entries]);
   if(!ready)return<div style={{ height:"60vh",display:"flex",alignItems:"center",justifyContent:"center",color:"#50506a" }}>Loading map...</div>;
   return <div style={{ padding:"0 16px 16px" }}><div style={{ fontSize:11,color:"#50506a",marginBottom:8,letterSpacing:"0.08em" }}>TAP A PIN FOR DETAILS</div><div style={{ borderRadius:14,overflow:"hidden",border:"1px solid #2a2a38" }}><div ref={mapRef} style={{ height:"62vh",width:"100%" }}/></div></div>;
 }
@@ -1022,6 +1022,45 @@ function ShareModal({ places, entries, onClose, addToast }) {
 
 
 
+
+function BugReportModal({ onClose, addToast }) {
+  const [type, setType] = useState("bug");
+  const [msg, setMsg] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const send = async () => {
+    if(!msg.trim()) return;
+    setSending(true);
+    const subject = type==="bug" ? "Bug Report - NYC Bucket List" : "Sugestao - NYC Bucket List";
+    const body = msg.trim()+"%0A%0A---%0AApp: NYC Bucket List%0AData: "+new Date().toLocaleString("pt-BR")+(navigator.userAgent?"%0ADevice: "+encodeURIComponent(navigator.userAgent.slice(0,80)):"");
+    window.open("mailto:guibrandao.pagamentos@gmail.com?subject="+encodeURIComponent(subject)+"&body="+body);
+    setTimeout(()=>{
+      setSending(false);
+      addToast(type==="bug"?"Bug reportado! Obrigado":"Sugestao enviada! Obrigado","success");
+      onClose();
+    },500);
+  };
+
+  return (
+    <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:400,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={onClose}>
+      <div className="modal" style={{ background:"#1a1a22",borderTop:"1px solid #2a2a38",borderRadius:"20px 20px 0 0",padding:"20px 16px 48px",maxWidth:560,width:"100%" }} onClick={e=>e.stopPropagation()}>
+        <div style={{ width:36,height:3,background:"#2a2a38",borderRadius:2,margin:"0 auto 16px" }}/>
+        <div style={{ fontSize:15,fontWeight:700,color:"#f0eeff",marginBottom:14 }}>Feedback</div>
+        <div style={{ display:"flex",gap:8,marginBottom:14 }}>
+          {[["bug","🐛 Reportar bug"],["suggest","💡 Sugestao"]].map(([v,l])=>(
+            <button key={v} onClick={()=>setType(v)} style={{ flex:1,padding:"10px",borderRadius:10,background:type===v?"#ff336620":"#0f0f13",border:"1px solid "+(type===v?"#ff3366":"#2a2a38"),color:type===v?"#ff3366":"#9090b0",fontSize:13,cursor:"pointer",fontFamily:"inherit" }}>{l}</button>
+          ))}
+        </div>
+        <textarea value={msg} onChange={e=>setMsg(e.target.value)} placeholder={type==="bug"?"Descreva o bug: o que aconteceu, em qual tela, o que esperava...":"Sua sugestao de melhoria..."} rows={5} style={{ width:"100%",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:10,padding:"10px 14px",color:"#f0eeff",fontSize:13,resize:"none",marginBottom:14 }}/>
+        <div style={{ fontSize:11,color:"#50506a",marginBottom:14 }}>Vai abrir seu app de email com a mensagem pronta.</div>
+        <button onClick={send} disabled={!msg.trim()||sending} style={{ width:"100%",padding:"13px",background:msg.trim()&&!sending?"#ff3366":"#2a2a38",border:"none",borderRadius:12,color:msg.trim()&&!sending?"#fff":"#50506a",fontSize:14,fontWeight:700,cursor:msg.trim()&&!sending?"pointer":"default" }}>
+          {sending?"Abrindo email...":"Enviar feedback"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveLists, lists }) {
   const [step, setStep] = useState("form");
   const [result, setResult] = useState("");
@@ -1468,6 +1507,7 @@ export default function App() {
   const [showPlanner, setShowPlanner] = useState(false);
   const [showNearby, setShowNearby] = useState(false);
   const [showSurpresa, setShowSurpresa] = useState(false);
+  const [showBugReport, setShowBugReport] = useState(false);
   const currentWeather = window._nycWeather||null;
   const scrollPosRef = useRef(0);
 
@@ -1668,6 +1708,7 @@ export default function App() {
             <HdrBtn icon={<Icons.MapPin/>} label={T.nearby} onClick={handleNearby}/>
             <HdrBtn icon={<Icons.Bot/>} label={T.plan} onClick={()=>setShowPlanner(true)}/>
             <HdrBtn icon={<Icons.Share/>} label={T.share} onClick={()=>setShowShare(true)}/>
+              <button onClick={()=>setShowBugReport(true)} title="Feedback" style={{ background:"#1a1a22",border:"1px solid #2a2a38",borderRadius:10,width:36,height:36,color:"#50506a",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center" }}>🐛</button>
           </div>
         </div>
 
@@ -1777,6 +1818,7 @@ export default function App() {
     {showShare&&<ShareModal places={visiblePlaces} entries={entries} onClose={()=>setShowShare(false)} addToast={addToast}/>}
     {showSurpresa&&<SurpresaModal places={visiblePlaces} entries={entries} weather={currentWeather} onClose={()=>setShowSurpresa(false)} addToast={addToast} onSaveLists={saveLists} lists={lists}/>}
     {showPlanner&&<PlannerChatModal places={visiblePlaces} entries={entries} onClose={()=>setShowPlanner(false)} addToast={addToast} userLat={userLat} userLng={userLng}/>}
+    {showBugReport&&<BugReportModal onClose={()=>setShowBugReport(false)} addToast={addToast}/>}
     {showNearby&&userLat&&<NearbyDrawer userLat={userLat} userLng={userLng} places={visiblePlaces} entries={entries} onSelect={setSelected} onClose={()=>setShowNearby(false)}/>}
   </div>;
 }
