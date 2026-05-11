@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, onValue, set, remove } from "firebase/database";
 
@@ -923,7 +923,7 @@ function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveList
     exclusoes: []
   });
 
-  const set = (key, val) => setParams(prev => ({...prev, [key]: val}));
+  const setP = (key, val) => setParams(prev => ({...prev, [key]: val}));
   const toggleExclusao = cat => setParams(prev => ({...prev, exclusoes: prev.exclusoes.includes(cat)?prev.exclusoes.filter(x=>x!==cat):[...prev.exclusoes,cat]}));
 
   const detectLoc = () => {
@@ -1072,63 +1072,63 @@ function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveList
         <div style={{ marginBottom:14 }}>
           <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:8 }}>{isEN?"WHAT TIME ARE YOU LEAVING?":"QUE HORAS VAO SAIR?"}</div>
           <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
-            {[["agora",isEN?"Now":"Agora"],["manha",isEN?"Morning":"Manha"],["tarde",isEN?"Afternoon":"Tarde"],["noite",isEN?"Evening":"Noite"]].map(([v,l])=>CHIP(l,params.horaSaida===v,()=>set("horaSaida",v)))}
+            {[["agora",isEN?"Now":"Agora"],["manha",isEN?"Morning":"Manha"],["tarde",isEN?"Afternoon":"Tarde"],["noite",isEN?"Evening":"Noite"]].map(([v,l])=>CHIP(l,params.horaSaida===v,()=>setP("horaSaida",v)))}
           </div>
         </div>
 
         <div style={{ marginBottom:14 }}>
           <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:8 }}>{isEN?"HOW MUCH TIME DO YOU HAVE?":"QUANTO TEMPO VOCES TEM?"} *</div>
           <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
-            {[["2h","2h"],["4h","4h"],["manha inteira",isEN?"Half day":"Meio dia"],["dia inteiro",isEN?"Full day":"Dia inteiro"]].map(([v,l])=>CHIP(l,params.horas===v,()=>set("horas",v)))}
+            {[["2h","2h"],["4h","4h"],["manha inteira",isEN?"Half day":"Meio dia"],["dia inteiro",isEN?"Full day":"Dia inteiro"]].map(([v,l])=>CHIP(l,params.horas===v,()=>setP("horas",v)))}
           </div>
         </div>
 
         <div style={{ marginBottom:14 }}>
           <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:8 }}>{isEN?"HOW ARE YOU FEELING?":"QUAL O HUMOR DE HOJE?"}</div>
           <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
-            {[["animados","⚡ "+(isEN?"Energetic":"Animados")],["tranquilos","😌 "+(isEN?"Chill":"Tranquilos")],["cansados","😴 "+(isEN?"Tired":"Cansados")],["romantico","💑 "+(isEN?"Romantic":"Romantico")]].map(([v,l])=>CHIP(l,params.humor===v,()=>set("humor",v)))}
+            {[["animados","⚡ "+(isEN?"Energetic":"Animados")],["tranquilos","😌 "+(isEN?"Chill":"Tranquilos")],["cansados","😴 "+(isEN?"Tired":"Cansados")],["romantico","💑 "+(isEN?"Romantic":"Romantico")]].map(([v,l])=>CHIP(l,params.humor===v,()=>setP("humor",v)))}
           </div>
         </div>
 
         <div style={{ marginBottom:14 }}>
           <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:8 }}>{isEN?"INDOOR OR OUTDOOR?":"INDOOR OU OUTDOOR?"} *</div>
           <div style={{ display:"flex",gap:6 }}>
-            {[["indoor",isEN?"Indoor":"Indoor"],["outdoor",isEN?"Outdoor":"Outdoor"],["tanto faz",isEN?"Either":"Tanto faz"]].map(([v,l])=>CHIP(l,params.ambiente===v,()=>set("ambiente",v),"#4da6ff"))}
+            {[["indoor",isEN?"Indoor":"Indoor"],["outdoor",isEN?"Outdoor":"Outdoor"],["tanto faz",isEN?"Either":"Tanto faz"]].map(([v,l])=>CHIP(l,params.ambiente===v,()=>setP("ambiente",v),"#4da6ff"))}
           </div>
         </div>
 
         <div style={{ marginBottom:14 }}>
           <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:8 }}>{isEN?"BUDGET FOR THE DAY?":"BUDGET DO DIA?"} *</div>
           <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
-            {[["gratis",isEN?"Free only":"So gratis"],["barato","< $30"],["moderado","< $80"],["sem limite",isEN?"No limit":"Sem limite"]].map(([v,l])=>CHIP(l,params.budget===v,()=>set("budget",v),"#ffd600"))}
+            {[["gratis",isEN?"Free only":"So gratis"],["barato","< $30"],["moderado","< $80"],["sem limite",isEN?"No limit":"Sem limite"]].map(([v,l])=>CHIP(l,params.budget===v,()=>setP("budget",v),"#ffd600"))}
           </div>
         </div>
 
         <div style={{ marginBottom:14 }}>
           <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:8 }}>{isEN?"WHO IS GOING?":"QUEM VAI?"}</div>
           <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
-            {[["so eu","🧘 "+(isEN?"Just me":"So eu")],["nos dois","👫 "+(isEN?"Both of us":"Nos dois")],["amigos","👯 "+(isEN?"With friends":"Com amigos")],["cachorro","🐾 "+(isEN?"With dog":"Com o dog")]].map(([v,l])=>CHIP(l,params.quem===v,()=>set("quem",v)))}
+            {[["so eu","🧘 "+(isEN?"Just me":"So eu")],["nos dois","👫 "+(isEN?"Both of us":"Nos dois")],["amigos","👯 "+(isEN?"With friends":"Com amigos")],["cachorro","🐾 "+(isEN?"With dog":"Com o dog")]].map(([v,l])=>CHIP(l,params.quem===v,()=>setP("quem",v)))}
           </div>
         </div>
 
         <div style={{ marginBottom:14 }}>
           <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:8 }}>{isEN?"SPECIAL OCCASION?":"E UMA OCASIAO ESPECIAL?"}</div>
           <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
-            {[["dia normal",isEN?"Normal day":"Dia normal"],["date night","💑 Date night"],["aniversario","🎂 "+(isEN?"Anniversary":"Aniversario")],["amigos visitando","✈️ "+(isEN?"Friends visiting":"Amigos visitando")]].map(([v,l])=>CHIP(l,params.ocasiao===v,()=>set("ocasiao",v)))}
+            {[["dia normal",isEN?"Normal day":"Dia normal"],["date night","💑 Date night"],["aniversario","🎂 "+(isEN?"Anniversary":"Aniversario")],["amigos visitando","✈️ "+(isEN?"Friends visiting":"Amigos visitando")]].map(([v,l])=>CHIP(l,params.ocasiao===v,()=>setP("ocasiao",v)))}
           </div>
         </div>
 
         <div style={{ marginBottom:14 }}>
           <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:8 }}>{isEN?"HOW FAR ARE YOU WILLING TO GO?":"ATE ONDE TOPAM IR?"}</div>
           <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
-            {[["manhattan",isEN?"Manhattan only":"So Manhattan"],["nodaytrip",isEN?"Any neighborhood":"Qualquer bairro"],["topam tudo",isEN?"Including daytrips":"Topam daytrip"]].map(([v,l])=>CHIP(l,params.raio===v,()=>set("raio",v)))}
+            {[["manhattan",isEN?"Manhattan only":"So Manhattan"],["nodaytrip",isEN?"Any neighborhood":"Qualquer bairro"],["topam tudo",isEN?"Including daytrips":"Topam daytrip"]].map(([v,l])=>CHIP(l,params.raio===v,()=>setP("raio",v)))}
           </div>
         </div>
 
         <div style={{ marginBottom:14 }}>
           <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:8 }}>{isEN?"INCLUDE MEAL IN THE ROUTE?":"INCLUIR REFEICAO NO ROTEIRO?"}</div>
           <div style={{ display:"flex",gap:6 }}>
-            {[["sim",isEN?"Yes please":"Sim, com fome"],["nao",isEN?"Already eaten":"Ja comemos"]].map(([v,l])=>CHIP(l,params.refeicao===v,()=>set("refeicao",v)))}
+            {[["sim",isEN?"Yes please":"Sim, com fome"],["nao",isEN?"Already eaten":"Ja comemos"]].map(([v,l])=>CHIP(l,params.refeicao===v,()=>setP("refeicao",v)))}
           </div>
         </div>
 
@@ -1148,7 +1148,7 @@ function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveList
   );
 }
 
-const PlaceCard = React.memo(function PlaceCard({ place, entry, onSelect, onCheckIn, isEN, entries }) {
+const PlaceCard = memo(function PlaceCard({ place, entry, onSelect, onCheckIn, isEN, entries }) {
   const status = entry?.status;
   const meta = CAT_META[place.category]||{color:"#ff3366"};
   const displayPrice = entry?.price||place.price;
