@@ -553,8 +553,9 @@ function NearbyDrawer({ userLat, userLng, places, entries, onSelect, onClose }) 
   return <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:400,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={onClose}><div className="modal" style={{ background:"#1a1a22",borderTop:"1px solid #2a2a38",borderRadius:"20px 20px 0 0",padding:"20px 16px 40px",maxWidth:560,width:"100%",maxHeight:"75vh",overflowY:"auto" }} onClick={e=>e.stopPropagation()}><div style={{ width:36,height:3,background:"#2a2a38",borderRadius:2,margin:"0 auto 16px" }}/><div style={{ fontSize:15,fontWeight:700,color:"#f0eeff",marginBottom:4 }}>{T.nearbyTitle}</div><div style={{ fontSize:12,color:"#9090b0",marginBottom:14 }}>{T.nearbyRadius}</div>{!nearby.length?<div style={{ color:"#50506a",fontSize:13,textAlign:"center",padding:"30px 0" }}>{T.noneNearby}</div>:<div style={{ display:"flex",flexDirection:"column",gap:8 }}>{nearby.map(p=>{const meta=CAT_META[p.category]||{color:"#ff3366"};return<div key={p.id} onClick={()=>{onClose();setTimeout(()=>onSelect(p),150);}} style={{ display:"flex",alignItems:"center",gap:12,padding:"12px",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:12,cursor:"pointer" }}><div style={{ width:40,height:40,borderRadius:10,background:meta.color+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0 }}>{p.emoji}</div><div style={{ flex:1 }}><div style={{ fontSize:14,color:"#f0eeff",fontWeight:600 }}>{isEN&&p.nameEN?p.nameEN:p.name}</div><div style={{ fontSize:11,color:"#50506a",marginTop:2 }}>{catLabel(p.category)} · {PRICE_EMOJI[p.price]||"?"}</div></div><div style={{ textAlign:"right",flexShrink:0 }}>{p.mins!==null?<div style={{ display:"flex",alignItems:"center",gap:4,color:p.estimated?"#ffd600":"#00e676",fontSize:13,fontWeight:600 }}><Icons.Walk/>{p.estimated?"~":""}{p.mins} {T.walkMin}</div>:<div className="pulsing" style={{ fontSize:11,color:"#50506a" }}>{T.calc}</div>}<div style={{ fontSize:10,color:"#50506a",marginTop:2 }}>{p.distKm<1?(p.distKm*1000).toFixed(0)+"m":(p.distKm.toFixed(1)+"km")}{p.estimated&&p.mins!==null?" est.":""}</div></div></div>;})} </div>}</div></div>;
 }
 
-function PlannerChatModal({ places, entries, onClose, addToast, userLat, userLng }) {
-  const [msgs,setMsgs]=useState([{role:"assistant",content:T.chatGreeting}]);
+function PlannerChatModal({ places, entries, onClose, addToast, userLat, userLng, onOpenPlace }) {
+  const MAX_INTERACTIONS = 5;
+  const [msgs,setMsgs]=useState([{role:"assistant",content:T.chatGreeting,linkedPlaces:[]}]);
   const [input,setInput]=useState("");
   const [loading,setLoading]=useState(false);
   const [selected,setSelected]=useState([]);
@@ -564,6 +565,7 @@ function PlannerChatModal({ places, entries, onClose, addToast, userLat, userLng
   const [filterQ,setFilterQ]=useState("");
   const [startLoc,setStartLoc]=useState("Jersey City, NJ");
   const [locLoading,setLocLoading]=useState(false);
+  const userMsgCount = msgs.filter(m=>m.role==="user").length;
   const bottomRef=useRef(null);
   useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth"});},[msgs]);
 
@@ -587,25 +589,48 @@ function PlannerChatModal({ places, entries, onClose, addToast, userLat, userLng
     return lines.join("\n");
   };
 
+  const parseLinkedPlaces = (text) => {
+    const match = text.match(/\[lugares:\s*([^\]]+)\]/i);
+    if(!match) return [];
+    return match[1].split(",").map(n=>n.trim()).map(name=>{
+      return places.find(p=>(isEN&&p.nameEN?p.nameEN:p.name).toLowerCase()===name.toLowerCase())||null;
+    }).filter(Boolean);
+  };
+
+  const buildContextSummary = () => {
+    const conv=msgs.map(m=>(m.role==="user"?"Voce: ":"IA: ")+m.content).join("\n");
+    return (isEN?"Context from NYC Bucket List:\n":"Contexto do NYC Bucket List:\n")+conv+"\n\nLugares disponiveis:\n"+buildCatalog();
+  };
+
   const send=async()=>{
-    if(!input.trim()||loading)return;
+    if(!input.trim()||loading||userMsgCount>=MAX_INTERACTIONS)return;
     const userMsg=input.trim();setInput("");
-    const newMsgs=[...msgs,{role:"user",content:userMsg}];
+    const newMsgs=[...msgs,{role:"user",content:userMsg,linkedPlaces:[]}];
     setMsgs(newMsgs);setLoading(true);
     const selNames=selected.map(id=>{const p=places.find(x=>x.id===id);return p?(isEN&&p.nameEN?p.nameEN:p.name):"";}).filter(Boolean).join(", ");
     const lang=isEN?"English":"portugues brasileiro";
     const visitedNames=visitedPlaces.map(p=>isEN&&p.nameEN?p.nameEN:p.name).join(", ");
     const catalog=buildCatalog();
-    const ctx=`Voce e uma assistente pessoal de Gui e Gabriel para o NYC Bucket List deles.
-REGRA PRINCIPAL: SOMENTE sugira lugares que existem na LISTA ABAIXO. Nunca invente ou mencione lugares fora desta lista.
-Quando perguntarem o que fazer, filtre pelos criterios pedidos e responda apenas com opcoes da lista que ainda nao foram visitadas.
-Usuario mora em Jersey City, NJ. Partida padrao: ${startLoc}.
-Ja visitados (NAO sugerir): ${visitedNames||"nenhum ainda"}.
-${selNames?"Selecionados para o roteiro: "+selNames+".":""}
-LISTA COMPLETA DISPONIVEL (nome | categoria | preco | tempo | status):
-${catalog}
-Responda em ${lang}. Seja conciso, pratico e personalizado para Gui e Gabriel.`;
-    try{const r=await fetch(AI_PROXY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:[{role:"user",content:ctx+"\n\nQuestion: "+userMsg}]})});const d=await r.json();setMsgs([...newMsgs,{role:"assistant",content:d.content?.[0]?.text||"Error."}]);}catch{setMsgs([...newMsgs,{role:"assistant",content:isEN?"Connection error. Try again.":"Erro ao conectar."}]);}
+    const isLast=userMsgCount+1>=MAX_INTERACTIONS;
+    const ctx="Voce e assistente pessoal de Gui e Gabriel para o NYC Bucket List.\n"+
+      "REGRAS:\n"+
+      "1. SOMENTE sugira lugares da LISTA ABAIXO. Nunca invente lugares.\n"+
+      "2. NUNCA sugira: "+( visitedNames||"nenhum visitado ainda")+".\n"+
+      "3. Use o NOME EXATO da lista ao citar um lugar.\n"+
+      "4. Prefira metro + caminhada a pe.\n"+
+      "5. No final liste os lugares citados: [lugares: Nome1, Nome2]\n"+
+      (isLast?"6. ULTIMA INTERACAO: Faca um resumo e sugira copiar o contexto para continuar em outro chat de IA.\n":"")+
+      "Partida: "+startLoc+".\n"+
+      (selNames?"Selecionados: "+selNames+".\n":"")+
+      "LISTA:\n"+catalog;
+    try{
+      const r=await fetch(AI_PROXY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:[{role:"user",content:ctx+"\n\nPergunta: "+userMsg}]})});
+      const d=await r.json();
+      const text=d.content?.[0]?.text||"Erro.";
+      const linked=parseLinkedPlaces(text);
+      const display=text.replace(/\[lugares:[^\]]+\]/gi,"").trim();
+      setMsgs([...newMsgs,{role:"assistant",content:display,linkedPlaces:linked}]);
+    }catch{setMsgs([...newMsgs,{role:"assistant",content:isEN?"Connection error.":"Erro ao conectar.",linkedPlaces:[]}]);}
     setLoading(false);
   };
 
