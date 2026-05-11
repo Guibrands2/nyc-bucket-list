@@ -343,7 +343,16 @@ function haversineKm(lat1,lng1,lat2,lng2){const R=6371,dLat=(lat2-lat1)*Math.PI/
 const _osrmCache = {};
 async function walkingMins(fromLat,fromLng,toLat,toLng){
   const key = [fromLat.toFixed(4),fromLng.toFixed(4),toLat.toFixed(4),toLng.toFixed(4)].join(",");
-  if(_osrmCache[key]!==undefined) return _osrmCache[key];try{const r=await fetch("https://router.project-osrm.org/route/v1/foot/"+fromLng+","+fromLat+";"+toLng+","+toLat+"?overview=false");const d=await r.json();if(d.routes?.[0]){const m=Math.round(d.routes[0].duration/60);_osrmCache[key]=m;return m;}}catch{}const fb=Math.round(haversineKm(fromLat,fromLng,toLat,toLng)/5*60);_osrmCache[key]=fb;return fb;}
+  if(_osrmCache[key]!==undefined) return _osrmCache[key];try{
+    const r=await fetch("https://router.project-osrm.org/route/v1/foot/"+fromLng+","+fromLat+";"+toLng+","+toLat+"?overview=false",{signal:AbortSignal.timeout(4000)});
+    const d=await r.json();
+    if(d.routes?.[0]){const m=Math.round(d.routes[0].duration/60);_osrmCache[key]={mins:m,estimated:false};return{mins:m,estimated:false};}
+  }catch{}
+  // NYC grid correction: real walking ~40% longer than straight line + 80m/min pace
+  const fb=Math.round(haversineKm(fromLat,fromLng,toLat,toLng)*1.4/80*1000);
+  _osrmCache[key]={mins:fb,estimated:true};
+  return{mins:fb,estimated:true};
+}
 
 function citymapperUrl(place, userLat, userLng) {
   if (!place.lat || !place.lng) return null;
@@ -505,14 +514,32 @@ function PhotoGallery({ photos, onChange }) {
   const fileRef=useRef();
   const [uploading,setUploading]=useState(false),[progress,setProgress]=useState(0);
   const handleAdd=ev=>{const files=Array.from(ev.target.files);if(!files.length)return;setUploading(true);setProgress(0);let loaded=0;files.forEach(file=>{const reader=new FileReader();reader.onprogress=e=>{if(e.lengthComputable)setProgress(Math.round((e.loaded/e.total)*100));};reader.onload=e=>{onChange(prev=>prev.length<4?[...prev,e.target.result]:prev);loaded++;if(loaded===files.length){setUploading(false);setProgress(0);}};reader.readAsDataURL(file);});ev.target.value="";};
-  return <div><div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:8 }}>{photos.map((p,i)=><div key={i} style={{ position:"relative",aspectRatio:"4/3" }}><img src={p} alt="" style={{ width:"100%",height:"100%",objectFit:"cover",borderRadius:10 }}/><button onClick={()=>onChange(prev=>prev.filter((_,j)=>j!==i))} style={{ position:"absolute",top:6,right:6,background:"#000c",border:"none",borderRadius:"50%",width:22,height:22,color:"#fff",cursor:"pointer",fontSize:12,display:"flex",alignItems:"center",justifyContent:"center" }}>×</button></div>)}{photos.length<4&&<div onClick={()=>!uploading&&fileRef.current.click()} style={{ aspectRatio:"4/3",background:"#0f0f13",border:"1px dashed #2a2a38",borderRadius:10,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",cursor:uploading?"default":"pointer",color:"#50506a",fontSize:12,gap:4,position:"relative",overflow:"hidden" }}>{uploading?<><div style={{ fontSize:11,color:"#9090b0" }}>{isEN?"Loading":"Carregando"} {progress}%</div><div style={{ position:"absolute",bottom:0,left:0,height:3,width:progress+"%",background:"#ff3366",transition:"width 0.1s" }}/></>:<><span style={{ fontSize:22 }}>+</span><span>{isEN?"Photo":"Foto"} {photos.length+1}/4</span></>}</div>}</div><input ref={fileRef} type="file" accept="image/*" multiple onChange={handleAdd} style={{ display:"none" }}/></div>;
+  return <div>
+    <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:8 }}>
+      {photos.map((p,i)=><div key={i} style={{ position:"relative",aspectRatio:"4/3" }}><img src={p} alt="" style={{ width:"100%",height:"100%",objectFit:"cover",borderRadius:10 }}/><button onClick={()=>onChange(prev=>prev.filter((_,j)=>j!==i))} style={{ position:"absolute",top:6,right:6,background:"#000c",border:"none",borderRadius:"50%",width:22,height:22,color:"#fff",cursor:"pointer",fontSize:12,display:"flex",alignItems:"center",justifyContent:"center" }}>×</button></div>)}
+      {photos.length<4&&<div onClick={()=>!uploading&&fileRef.current.click()} style={{ aspectRatio:"4/3",background:"#0f0f13",border:"1px dashed "+(uploading?"#ff3366":"#2a2a38"),borderRadius:10,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",cursor:uploading?"default":"pointer",color:"#50506a",fontSize:12,gap:6,position:"relative",overflow:"hidden",transition:"border-color 0.2s" }}>
+        {uploading?<>
+          <div style={{ fontSize:22 }}>📸</div>
+          <div style={{ fontSize:13,color:"#f0eeff",fontWeight:700 }}>{progress}%</div>
+          <div style={{ width:"70%",height:6,background:"#2a2a38",borderRadius:3,overflow:"hidden" }}>
+            <div style={{ height:"100%",width:progress+"%",background:"linear-gradient(90deg,#ff3366,#ff6b35)",borderRadius:3,transition:"width 0.15s ease" }}/>
+          </div>
+          <div style={{ fontSize:10,color:"#9090b0" }}>{isEN?"Loading photo...":"Carregando foto..."}</div>
+        </>:<>
+          <span style={{ fontSize:24 }}>+</span>
+          <span style={{ fontSize:11 }}>{isEN?"Photo":"Foto"} {photos.length+1}/4</span>
+        </>}
+      </div>}
+    </div>
+    <input ref={fileRef} type="file" accept="image/*" multiple onChange={handleAdd} style={{ display:"none" }}/>
+  </div>;
 }
 
 function NearbyInModal({ place, places, entries, onSelect }) {
   const [nearby,setNearby]=useState([]);
-  useEffect(()=>{if(!place.lat||!place.lng)return;const cands=places.filter(p=>p.id!==place.id&&p.lat&&p.lng&&(entries[p.id]||{}).status!=="fui").map(p=>({...p,distKm:haversineKm(place.lat,place.lng,p.lat,p.lng)})).sort((a,b)=>a.distKm-b.distKm).slice(0,4);setNearby(cands.map(p=>({...p,mins:null})));cands.forEach(async(p,i)=>{const mins=await walkingMins(place.lat,place.lng,p.lat,p.lng);setNearby(prev=>prev.map((x,j)=>j===i?{...x,mins}:x));});},[place.id]);
+  useEffect(()=>{if(!place.lat||!place.lng)return;const cands=places.filter(p=>p.id!==place.id&&p.lat&&p.lng&&(entries[p.id]||{}).status!=="fui").map(p=>({...p,distKm:haversineKm(place.lat,place.lng,p.lat,p.lng)})).sort((a,b)=>a.distKm-b.distKm).slice(0,4);setNearby(cands.map(p=>({...p,mins:null,estimated:false})));cands.forEach(async(p,i)=>{const res=await walkingMins(place.lat,place.lng,p.lat,p.lng);setNearby(prev=>prev.map((x,j)=>j===i?{...x,mins:res.mins,estimated:res.estimated}:x));});},[place.id]);
   if(!nearby.length) return null;
-  return <div style={{ marginBottom:16 }}><div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.12em",marginBottom:8 }}>{T.nearbyWalk}</div><div style={{ display:"flex",flexDirection:"column",gap:6 }}>{nearby.map(p=>{const meta=CAT_META[p.category]||{color:"#ff3366"};return<div key={p.id} onClick={()=>onSelect(p)} style={{ display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:10,cursor:"pointer" }}><div style={{ width:36,height:36,borderRadius:8,background:meta.color+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0 }}>{p.emoji}</div><div style={{ flex:1 }}><div style={{ fontSize:13,color:"#f0eeff",fontWeight:500 }}>{isEN&&p.nameEN?p.nameEN:p.name}</div><div style={{ fontSize:11,color:"#50506a" }}>{catLabel(p.category)}</div></div><div style={{ textAlign:"right",flexShrink:0 }}>{p.mins!==null?<div style={{ display:"flex",alignItems:"center",gap:4,color:"#00e676",fontSize:12,fontWeight:600 }}><Icons.Walk/>{p.mins} {T.walkMin}</div>:<div className="pulsing" style={{ fontSize:11,color:"#50506a" }}>{T.calc}</div>}<div style={{ fontSize:10,color:"#50506a" }}>{p.distKm<1?(p.distKm*1000).toFixed(0)+"m":(p.distKm.toFixed(1)+"km")}</div></div></div>;})} </div></div>;
+  return <div style={{ marginBottom:16 }}><div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.12em",marginBottom:8 }}>{T.nearbyWalk}</div><div style={{ display:"flex",flexDirection:"column",gap:6 }}>{nearby.map(p=>{const meta=CAT_META[p.category]||{color:"#ff3366"};return<div key={p.id} onClick={()=>onSelect(p)} style={{ display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:10,cursor:"pointer" }}><div style={{ width:36,height:36,borderRadius:8,background:meta.color+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0 }}>{p.emoji}</div><div style={{ flex:1 }}><div style={{ fontSize:13,color:"#f0eeff",fontWeight:500 }}>{isEN&&p.nameEN?p.nameEN:p.name}</div><div style={{ fontSize:11,color:"#50506a" }}>{catLabel(p.category)}</div></div><div style={{ textAlign:"right",flexShrink:0 }}>{p.mins!==null?<div style={{ display:"flex",alignItems:"center",gap:4,color:p.estimated?"#ffd600":"#00e676",fontSize:12,fontWeight:600 }}><Icons.Walk/>{p.estimated?"~":""}{p.mins} {T.walkMin}</div>:<div className="pulsing" style={{ fontSize:11,color:"#50506a" }}>{T.calc}</div>}<div style={{ fontSize:10,color:"#50506a" }}>{p.distKm<1?(p.distKm*1000).toFixed(0)+"m":(p.distKm.toFixed(1)+"km")}{p.estimated&&p.mins!==null?" ~est":""}</div></div></div>;})} </div></div>;
 }
 
 function CheckInModal({ place, onClose, onSave, addToast }) {
@@ -522,8 +549,8 @@ function CheckInModal({ place, onClose, onSave, addToast }) {
 
 function NearbyDrawer({ userLat, userLng, places, entries, onSelect, onClose }) {
   const [nearby,setNearby]=useState([]);
-  useEffect(()=>{const cands=places.filter(p=>p.lat&&p.lng&&(entries[p.id]||{}).status!=="fui").map(p=>({...p,distKm:haversineKm(userLat,userLng,p.lat,p.lng)})).filter(p=>p.distKm<3).sort((a,b)=>a.distKm-b.distKm).slice(0,10);setNearby(cands.map(p=>({...p,mins:null})));cands.forEach(async(p,i)=>{const mins=await walkingMins(userLat,userLng,p.lat,p.lng);setNearby(prev=>prev.map((x,j)=>j===i?{...x,mins}:x));});},[]);
-  return <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:400,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={onClose}><div className="modal" style={{ background:"#1a1a22",borderTop:"1px solid #2a2a38",borderRadius:"20px 20px 0 0",padding:"20px 16px 40px",maxWidth:560,width:"100%",maxHeight:"75vh",overflowY:"auto" }} onClick={e=>e.stopPropagation()}><div style={{ width:36,height:3,background:"#2a2a38",borderRadius:2,margin:"0 auto 16px" }}/><div style={{ fontSize:15,fontWeight:700,color:"#f0eeff",marginBottom:4 }}>{T.nearbyTitle}</div><div style={{ fontSize:12,color:"#9090b0",marginBottom:14 }}>{T.nearbyRadius}</div>{!nearby.length?<div style={{ color:"#50506a",fontSize:13,textAlign:"center",padding:"30px 0" }}>{T.noneNearby}</div>:<div style={{ display:"flex",flexDirection:"column",gap:8 }}>{nearby.map(p=>{const meta=CAT_META[p.category]||{color:"#ff3366"};return<div key={p.id} onClick={()=>{onClose();setTimeout(()=>onSelect(p),150);}} style={{ display:"flex",alignItems:"center",gap:12,padding:"12px",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:12,cursor:"pointer" }}><div style={{ width:40,height:40,borderRadius:10,background:meta.color+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0 }}>{p.emoji}</div><div style={{ flex:1 }}><div style={{ fontSize:14,color:"#f0eeff",fontWeight:600 }}>{isEN&&p.nameEN?p.nameEN:p.name}</div><div style={{ fontSize:11,color:"#50506a",marginTop:2 }}>{catLabel(p.category)} · {PRICE_EMOJI[p.price]||"?"}</div></div><div style={{ textAlign:"right",flexShrink:0 }}>{p.mins!==null?<div style={{ display:"flex",alignItems:"center",gap:4,color:"#00e676",fontSize:13,fontWeight:600 }}><Icons.Walk/>{p.mins} {T.walkMin}</div>:<div className="pulsing" style={{ fontSize:11,color:"#50506a" }}>{T.calc}</div>}<div style={{ fontSize:10,color:"#50506a",marginTop:2 }}>{p.distKm<1?(p.distKm*1000).toFixed(0)+"m":(p.distKm.toFixed(1)+"km")}</div></div></div>;})} </div>}</div></div>;
+  useEffect(()=>{const cands=places.filter(p=>p.lat&&p.lng&&(entries[p.id]||{}).status!=="fui").map(p=>({...p,distKm:haversineKm(userLat,userLng,p.lat,p.lng)})).filter(p=>p.distKm<3).sort((a,b)=>a.distKm-b.distKm).slice(0,10);setNearby(cands.map(p=>({...p,mins:null,estimated:false})));cands.forEach(async(p,i)=>{const res=await walkingMins(userLat,userLng,p.lat,p.lng);setNearby(prev=>prev.map((x,j)=>j===i?{...x,mins:res.mins,estimated:res.estimated}:x));});},[]);
+  return <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:400,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={onClose}><div className="modal" style={{ background:"#1a1a22",borderTop:"1px solid #2a2a38",borderRadius:"20px 20px 0 0",padding:"20px 16px 40px",maxWidth:560,width:"100%",maxHeight:"75vh",overflowY:"auto" }} onClick={e=>e.stopPropagation()}><div style={{ width:36,height:3,background:"#2a2a38",borderRadius:2,margin:"0 auto 16px" }}/><div style={{ fontSize:15,fontWeight:700,color:"#f0eeff",marginBottom:4 }}>{T.nearbyTitle}</div><div style={{ fontSize:12,color:"#9090b0",marginBottom:14 }}>{T.nearbyRadius}</div>{!nearby.length?<div style={{ color:"#50506a",fontSize:13,textAlign:"center",padding:"30px 0" }}>{T.noneNearby}</div>:<div style={{ display:"flex",flexDirection:"column",gap:8 }}>{nearby.map(p=>{const meta=CAT_META[p.category]||{color:"#ff3366"};return<div key={p.id} onClick={()=>{onClose();setTimeout(()=>onSelect(p),150);}} style={{ display:"flex",alignItems:"center",gap:12,padding:"12px",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:12,cursor:"pointer" }}><div style={{ width:40,height:40,borderRadius:10,background:meta.color+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0 }}>{p.emoji}</div><div style={{ flex:1 }}><div style={{ fontSize:14,color:"#f0eeff",fontWeight:600 }}>{isEN&&p.nameEN?p.nameEN:p.name}</div><div style={{ fontSize:11,color:"#50506a",marginTop:2 }}>{catLabel(p.category)} · {PRICE_EMOJI[p.price]||"?"}</div></div><div style={{ textAlign:"right",flexShrink:0 }}>{p.mins!==null?<div style={{ display:"flex",alignItems:"center",gap:4,color:p.estimated?"#ffd600":"#00e676",fontSize:13,fontWeight:600 }}><Icons.Walk/>{p.estimated?"~":""}{p.mins} {T.walkMin}</div>:<div className="pulsing" style={{ fontSize:11,color:"#50506a" }}>{T.calc}</div>}<div style={{ fontSize:10,color:"#50506a",marginTop:2 }}>{p.distKm<1?(p.distKm*1000).toFixed(0)+"m":(p.distKm.toFixed(1)+"km")}{p.estimated&&p.mins!==null?" est.":""}</div></div></div>;})} </div>}</div></div>;
 }
 
 function PlannerChatModal({ places, entries, onClose, addToast, userLat, userLng }) {
@@ -604,7 +631,40 @@ Responda em ${lang}. Seja conciso, pratico e personalizado para Gui e Gabriel.`;
       </div>
     </div>
     <div style={{ flex:1,overflowY:"auto",padding:"12px 16px" }}>
-      {msgs.map((m,i)=><div key={i} style={{ marginBottom:10,display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start" }}>{m.role==="assistant"&&<div style={{ width:28,height:28,borderRadius:"50%",background:"#ff336620",border:"1px solid #ff336640",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0,marginRight:8,alignSelf:"flex-end" }}>🤖</div>}<div style={{ maxWidth:"80%",padding:"10px 14px",borderRadius:m.role==="user"?"18px 18px 4px 18px":"18px 18px 18px 4px",background:m.role==="user"?"#ff3366":"#0f0f13",border:m.role==="user"?"none":"1px solid #2a2a38",color:"#f0eeff",fontSize:13,lineHeight:1.6,whiteSpace:"pre-wrap" }}>{m.content}</div></div>)}
+      {/* Interaction counter */}
+      <div style={{ textAlign:"center",marginBottom:10 }}>
+        <span style={{ fontSize:10,color:"#50506a",background:"#1a1a22",borderRadius:20,padding:"3px 10px" }}>
+          {userMsgCount}/{MAX_INTERACTIONS} {isEN?"interactions":"interacoes"} · {MAX_INTERACTIONS-userMsgCount} {isEN?"remaining":"restantes"}
+        </span>
+      </div>
+      {msgs.map((m,i)=>(
+        <div key={i} style={{ marginBottom:12,display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start",flexDirection:"column",alignItems:m.role==="user"?"flex-end":"flex-start" }}>
+          <div style={{ display:"flex",alignItems:"flex-end",gap:8,justifyContent:m.role==="user"?"flex-end":"flex-start" }}>
+            {m.role==="assistant"&&<div style={{ width:28,height:28,borderRadius:"50%",background:"#ff336620",border:"1px solid #ff336640",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0 }}>🤖</div>}
+            <div style={{ maxWidth:"80%",padding:"10px 14px",borderRadius:m.role==="user"?"18px 18px 4px 18px":"18px 18px 18px 4px",background:m.role==="user"?"#ff3366":"#0f0f13",border:m.role==="user"?"none":"1px solid #2a2a38",color:"#f0eeff",fontSize:13,lineHeight:1.6,whiteSpace:"pre-wrap" }}>{m.content}</div>
+          </div>
+          {/* Linked place chips */}
+          {m.linkedPlaces&&m.linkedPlaces.length>0&&(
+            <div style={{ marginTop:6,marginLeft:36,display:"flex",flexWrap:"wrap",gap:5 }}>
+              {m.linkedPlaces.map(p=>{
+                const meta=CAT_META[p.category]||{color:"#ff3366"};
+                return <button key={p.id} onClick={()=>onOpenPlace(p)} style={{ display:"flex",alignItems:"center",gap:5,padding:"4px 10px",background:meta.color+"15",border:"1px solid "+meta.color+"40",borderRadius:20,color:meta.color,fontSize:11,cursor:"pointer",fontFamily:"inherit" }}>
+                  <span>{p.emoji}</span><span>{isEN&&p.nameEN?p.nameEN:p.name}</span><span style={{ opacity:0.6 }}>↗</span>
+                </button>;
+              })}
+            </div>
+          )}
+          {/* Last message: copy context button */}
+          {m.role==="assistant"&&userMsgCount>=MAX_INTERACTIONS&&i===msgs.length-1&&(
+            <div style={{ marginTop:10,marginLeft:36,background:"#1a1a22",border:"1px solid #2a2a38",borderRadius:12,padding:"12px" }}>
+              <div style={{ fontSize:12,color:"#9090b0",marginBottom:8 }}>{isEN?"Continue this conversation in a full AI chat:":"Continue essa conversa num chat de IA completo:"}</div>
+              <button onClick={()=>{navigator.clipboard.writeText(buildContextSummary());addToast(isEN?"Context copied!":"Contexto copiado!","success");}} style={{ width:"100%",padding:"9px",background:"#ff3366",border:"none",borderRadius:8,color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit" }}>
+                {isEN?"Copy context to paste in Claude / ChatGPT":"Copiar contexto para colar no Claude / ChatGPT"}
+              </button>
+            </div>
+          )}
+        </div>
+      ))}
       {loading&&<div style={{ display:"flex",alignItems:"flex-end",gap:8,marginBottom:10 }}><div style={{ width:28,height:28,borderRadius:"50%",background:"#ff336620",border:"1px solid #ff336640",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14 }}>🤖</div><div style={{ padding:"10px 14px",borderRadius:"18px 18px 18px 4px",background:"#0f0f13",border:"1px solid #2a2a38" }}><span className="pulsing" style={{ color:"#9090b0",fontSize:13 }}>{T.typing}</span></div></div>}
       <div ref={bottomRef}/>
     </div>
@@ -619,8 +679,8 @@ Responda em ${lang}. Seja conciso, pratico e personalizado para Gui e Gabriel.`;
       </div>
       {selected.length>0&&<button onClick={genPlan} style={{ width:"100%",padding:"10px",background:"#ff3366",border:"none",borderRadius:10,color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer",marginBottom:8 }}>{T.genRoute} ({selected.length}) →</button>}
       <div style={{ display:"flex",gap:8 }}>
-        <input autoFocus value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder={T.askNYC} style={{ flex:1,background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:20,padding:"9px 14px",color:"#f0eeff",fontSize:13 }}/>
-        <button onClick={send} disabled={!input.trim()||loading} style={{ background:input.trim()&&!loading?"#ff3366":"#2a2a38",border:"none",borderRadius:20,padding:"9px 14px",color:input.trim()&&!loading?"#fff":"#50506a",cursor:input.trim()&&!loading?"pointer":"default",fontSize:14,fontWeight:600,transition:"all 0.15s" }}>↑</button>
+        <input autoFocus value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder={userMsgCount>=MAX_INTERACTIONS?(isEN?"Limit reached - copy context above":"Limite atingido - copie o contexto acima"):T.askNYC} disabled={userMsgCount>=MAX_INTERACTIONS} style={{ flex:1,background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:20,padding:"9px 14px",color:userMsgCount>=MAX_INTERACTIONS?"#50506a":"#f0eeff",fontSize:13,opacity:userMsgCount>=MAX_INTERACTIONS?0.5:1 }}/>
+        <button onClick={send} disabled={!input.trim()||loading||userMsgCount>=MAX_INTERACTIONS} style={{ background:input.trim()&&!loading&&userMsgCount<MAX_INTERACTIONS?"#ff3366":"#2a2a38",border:"none",borderRadius:20,padding:"9px 14px",color:input.trim()&&!loading&&userMsgCount<MAX_INTERACTIONS?"#fff":"#50506a",cursor:input.trim()&&!loading&&userMsgCount<MAX_INTERACTIONS?"pointer":"default",fontSize:14,fontWeight:600,transition:"all 0.15s" }}>↑</button>
       </div>
     </div>
   </div></div>;
@@ -1109,7 +1169,7 @@ export default function App() {
     {checkIn&&<CheckInModal place={checkIn} onClose={()=>setCheckIn(null)} onSave={async data=>{await handleSave(checkIn.id,data);}} addToast={addToast}/>}
     {showAdd&&<AddModal onClose={()=>setShowAdd(false)} onAdd={handleAdd} addToast={addToast}/>}
     {showShare&&<ShareModal places={visiblePlaces} entries={entries} onClose={()=>setShowShare(false)} addToast={addToast}/>}
-    {showPlanner&&<PlannerChatModal places={visiblePlaces} entries={entries} onClose={()=>setShowPlanner(false)} addToast={addToast} userLat={userLat} userLng={userLng}/>}
+    {showPlanner&&<PlannerChatModal places={visiblePlaces} entries={entries} onClose={()=>setShowPlanner(false)} addToast={addToast} userLat={userLat} userLng={userLng} onOpenPlace={p=>{setShowPlanner(false);setTimeout(()=>setSelected(p),200);}}/>}
     {showNearby&&userLat&&<NearbyDrawer userLat={userLat} userLng={userLng} places={visiblePlaces} entries={entries} onSelect={setSelected} onClose={()=>setShowNearby(false)}/>}
   </div>;
 }
