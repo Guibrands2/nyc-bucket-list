@@ -553,9 +553,10 @@ function NearbyDrawer({ userLat, userLng, places, entries, onSelect, onClose }) 
   return <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:400,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={onClose}><div className="modal" style={{ background:"#1a1a22",borderTop:"1px solid #2a2a38",borderRadius:"20px 20px 0 0",padding:"20px 16px 40px",maxWidth:560,width:"100%",maxHeight:"75vh",overflowY:"auto" }} onClick={e=>e.stopPropagation()}><div style={{ width:36,height:3,background:"#2a2a38",borderRadius:2,margin:"0 auto 16px" }}/><div style={{ fontSize:15,fontWeight:700,color:"#f0eeff",marginBottom:4 }}>{T.nearbyTitle}</div><div style={{ fontSize:12,color:"#9090b0",marginBottom:14 }}>{T.nearbyRadius}</div>{!nearby.length?<div style={{ color:"#50506a",fontSize:13,textAlign:"center",padding:"30px 0" }}>{T.noneNearby}</div>:<div style={{ display:"flex",flexDirection:"column",gap:8 }}>{nearby.map(p=>{const meta=CAT_META[p.category]||{color:"#ff3366"};return<div key={p.id} onClick={()=>{onClose();setTimeout(()=>onSelect(p),150);}} style={{ display:"flex",alignItems:"center",gap:12,padding:"12px",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:12,cursor:"pointer" }}><div style={{ width:40,height:40,borderRadius:10,background:meta.color+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0 }}>{p.emoji}</div><div style={{ flex:1 }}><div style={{ fontSize:14,color:"#f0eeff",fontWeight:600 }}>{isEN&&p.nameEN?p.nameEN:p.name}</div><div style={{ fontSize:11,color:"#50506a",marginTop:2 }}>{catLabel(p.category)} · {PRICE_EMOJI[p.price]||"?"}</div></div><div style={{ textAlign:"right",flexShrink:0 }}>{p.mins!==null?<div style={{ display:"flex",alignItems:"center",gap:4,color:p.estimated?"#ffd600":"#00e676",fontSize:13,fontWeight:600 }}><Icons.Walk/>{p.estimated?"~":""}{p.mins} {T.walkMin}</div>:<div className="pulsing" style={{ fontSize:11,color:"#50506a" }}>{T.calc}</div>}<div style={{ fontSize:10,color:"#50506a",marginTop:2 }}>{p.distKm<1?(p.distKm*1000).toFixed(0)+"m":(p.distKm.toFixed(1)+"km")}{p.estimated&&p.mins!==null?" est.":""}</div></div></div>;})} </div>}</div></div>;
 }
 
-function PlannerChatModal({ places, entries, onClose, addToast, userLat, userLng, onOpenPlace }) {
+function PlannerChatModal({ places, entries, onClose, addToast, userLat, userLng }) {
   const MAX_INTERACTIONS = 5;
   const [msgs,setMsgs]=useState([{role:"assistant",content:T.chatGreeting,linkedPlaces:[]}]);
+  const [previewPlace,setPreviewPlace]=useState(null);
   const [input,setInput]=useState("");
   const [loading,setLoading]=useState(false);
   const [selected,setSelected]=useState([]);
@@ -644,7 +645,42 @@ function PlannerChatModal({ places, entries, onClose, addToast, userLat, userLng
 
   if(showPlan)return <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:300,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={()=>setShowPlan(false)}><div className="modal" style={{ background:"#1a1a22",borderTop:"1px solid #2a2a38",borderRadius:"20px 20px 0 0",padding:"20px 16px 40px",maxWidth:560,width:"100%",height:"88vh",display:"flex",flexDirection:"column" }} onClick={e=>e.stopPropagation()}><div style={{ width:36,height:3,background:"#2a2a38",borderRadius:2,margin:"0 auto 14px" }}/><div style={{ fontSize:15,fontWeight:700,color:"#f0eeff",marginBottom:2 }}>{T.routeTitle}</div><div style={{ fontSize:12,color:"#9090b0",marginBottom:12 }}>{T.departingFrom} {startLoc}</div>{planLoading?<div style={{ textAlign:"center",padding:"40px 0" }}><div className="pulsing" style={{ fontSize:36,marginBottom:12 }}>🤖</div><div style={{ fontSize:13,color:"#9090b0" }}>{T.generating}</div></div>:<><div style={{ flex:1,overflowY:"auto",background:"#0f0f13",borderRadius:12,padding:"14px",fontSize:13,color:"#f0eeff",lineHeight:1.7,whiteSpace:"pre-wrap",marginBottom:14 }}>{planResult}</div><div style={{ display:"flex",gap:8 }}><button onClick={()=>{navigator.clipboard.writeText(planResult);addToast(T.routeCopied,"success");}} style={{ flex:1,padding:"12px",background:"#ff3366",border:"none",borderRadius:10,color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer" }}>{T.copyRoute}</button><button onClick={()=>setShowPlan(false)} style={{ flex:1,padding:"12px",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:10,color:"#9090b0",fontSize:13,cursor:"pointer" }}>{T.newRoute}</button></div></>}</div></div>;
 
-  return <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:300,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={onClose}><div className="modal" style={{ background:"#1a1a22",borderTop:"1px solid #2a2a38",borderRadius:"20px 20px 0 0",maxWidth:560,width:"100%",height:"90vh",display:"flex",flexDirection:"column" }} onClick={e=>e.stopPropagation()}>
+  return <>
+    {previewPlace&&(
+      <div style={{ position:"fixed",inset:0,background:"#000000c0",zIndex:500,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={()=>setPreviewPlace(null)}>
+        <div className="modal" style={{ background:"#1a1a22",borderTop:"1px solid #2a2a38",borderRadius:"20px 20px 0 0",padding:"20px 16px 40px",maxWidth:560,width:"100%",maxHeight:"80vh",overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
+          <div style={{ width:36,height:3,background:"#2a2a38",borderRadius:2,margin:"0 auto 16px" }}/>
+          <div style={{ display:"flex",alignItems:"center",gap:12,marginBottom:14 }}>
+            <span style={{ fontSize:32 }}>{previewPlace.emoji}</span>
+            <div>
+              <div style={{ fontSize:17,fontWeight:700,color:"#f0eeff" }}>{isEN&&previewPlace.nameEN?previewPlace.nameEN:previewPlace.name}</div>
+              <div style={{ display:"flex",gap:6,marginTop:4,flexWrap:"wrap" }}>
+                <span style={{ fontSize:11,color:(CAT_META[previewPlace.category]||{color:"#ff3366"}).color,background:(CAT_META[previewPlace.category]||{color:"#ff3366"}).color+"20",borderRadius:6,padding:"2px 8px" }}>{catLabel(previewPlace.category)}</span>
+                {previewPlace.price&&<span style={{ fontSize:11,color:"#9090b0",background:"#0f0f13",borderRadius:6,padding:"2px 8px" }}>{PRICE_EMOJI[previewPlace.price]}</span>}
+                {previewPlace.time&&<span style={{ fontSize:11,color:"#50506a",background:"#0f0f13",borderRadius:6,padding:"2px 8px" }}>⏱ {previewPlace.time}</span>}
+              </div>
+            </div>
+          </div>
+          <div style={{ fontSize:13,color:"#9090b0",lineHeight:1.6,marginBottom:10,padding:"10px 12px",background:"#0f0f13",borderRadius:10,borderLeft:"2px solid "+(CAT_META[previewPlace.category]||{color:"#ff3366"}).color }}>
+            {isEN&&previewPlace.descEN?previewPlace.descEN:previewPlace.desc}
+          </div>
+          {(isEN&&previewPlace.repEN?previewPlace.repEN:previewPlace.rep)&&(
+            <div style={{ fontSize:12,color:"#ffd600",lineHeight:1.5,marginBottom:16,padding:"8px 12px",background:"#ffd60010",borderRadius:10,borderLeft:"2px solid #ffd600" }}>
+              ⭐ {isEN&&previewPlace.repEN?previewPlace.repEN:previewPlace.rep}
+            </div>
+          )}
+          <div style={{ display:"flex",gap:8 }}>
+            <button onClick={()=>{setSelected(prev=>prev.includes(previewPlace.id)?prev.filter(x=>x!==previewPlace.id):prev.length<8?[...prev,previewPlace.id]:prev);}} style={{ flex:1,padding:"12px",background:selected.includes(previewPlace.id)?"#00e67620":"#ff336620",border:"1px solid "+(selected.includes(previewPlace.id)?"#00e676":"#ff3366"),borderRadius:10,color:selected.includes(previewPlace.id)?"#00e676":"#ff3366",fontSize:13,fontWeight:600,cursor:"pointer" }}>
+              {selected.includes(previewPlace.id)?"✓ "+(isEN?"In route":"No roteiro"):"+ "+(isEN?"Add to route":"Adicionar ao roteiro")}
+            </button>
+            <button onClick={()=>setPreviewPlace(null)} style={{ padding:"12px 16px",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:10,color:"#9090b0",fontSize:13,cursor:"pointer" }}>
+              {isEN?"Close":"Fechar"}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:300,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={onClose}><div className="modal" style={{ background:"#1a1a22",borderTop:"1px solid #2a2a38",borderRadius:"20px 20px 0 0",maxWidth:560,width:"100%",height:"90vh",display:"flex",flexDirection:"column" }} onClick={e=>e.stopPropagation()}>
     <div style={{ padding:"14px 16px 12px",borderBottom:"1px solid #2a2a38" }}>
       <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10 }}>
         <div><div style={{ fontSize:15,fontWeight:700,color:"#f0eeff" }}>{T.chatTitle}</div><div style={{ fontSize:11,color:"#9090b0" }}>{T.chatSub}</div></div>
@@ -673,9 +709,15 @@ function PlannerChatModal({ places, entries, onClose, addToast, userLat, userLng
             <div style={{ marginTop:6,marginLeft:36,display:"flex",flexWrap:"wrap",gap:5 }}>
               {m.linkedPlaces.map(p=>{
                 const meta=CAT_META[p.category]||{color:"#ff3366"};
-                return <button key={p.id} onClick={()=>onOpenPlace(p)} style={{ display:"flex",alignItems:"center",gap:5,padding:"4px 10px",background:meta.color+"15",border:"1px solid "+meta.color+"40",borderRadius:20,color:meta.color,fontSize:11,cursor:"pointer",fontFamily:"inherit" }}>
-                  <span>{p.emoji}</span><span>{isEN&&p.nameEN?p.nameEN:p.name}</span><span style={{ opacity:0.6 }}>↗</span>
-                </button>;
+                const inSel=selected.includes(p.id);
+                return <div key={p.id} style={{ display:"flex",alignItems:"center",background:meta.color+"15",border:"1px solid "+meta.color+"40",borderRadius:20,overflow:"hidden" }}>
+                  <button onClick={()=>setPreviewPlace(p)} style={{ display:"flex",alignItems:"center",gap:5,padding:"4px 10px",background:"none",border:"none",color:meta.color,fontSize:11,cursor:"pointer",fontFamily:"inherit" }}>
+                    <span>{p.emoji}</span><span>{isEN&&p.nameEN?p.nameEN:p.name}</span><span style={{ opacity:0.6 }}>↗</span>
+                  </button>
+                  <button onClick={()=>setSelected(prev=>inSel?prev.filter(x=>x!==p.id):prev.length<8?[...prev,p.id]:prev)} style={{ padding:"4px 8px 4px 4px",background:inSel?meta.color+"40":"none",border:"none",color:inSel?meta.color:"#9090b0",fontSize:13,cursor:"pointer",fontFamily:"inherit",borderLeft:"1px solid "+meta.color+"30" }}>
+                    {inSel?"✓":"+"}
+                  </button>
+                </div>;
               })}
             </div>
           )}
@@ -708,7 +750,8 @@ function PlannerChatModal({ places, entries, onClose, addToast, userLat, userLng
         <button onClick={send} disabled={!input.trim()||loading||userMsgCount>=MAX_INTERACTIONS} style={{ background:input.trim()&&!loading&&userMsgCount<MAX_INTERACTIONS?"#ff3366":"#2a2a38",border:"none",borderRadius:20,padding:"9px 14px",color:input.trim()&&!loading&&userMsgCount<MAX_INTERACTIONS?"#fff":"#50506a",cursor:input.trim()&&!loading&&userMsgCount<MAX_INTERACTIONS?"pointer":"default",fontSize:14,fontWeight:600,transition:"all 0.15s" }}>↑</button>
       </div>
     </div>
-  </div></div>;
+  </div></div>
+  </>;
 }
 
 function EditNameModal({ place, onClose, onSave }) {
@@ -1194,7 +1237,7 @@ export default function App() {
     {checkIn&&<CheckInModal place={checkIn} onClose={()=>setCheckIn(null)} onSave={async data=>{await handleSave(checkIn.id,data);}} addToast={addToast}/>}
     {showAdd&&<AddModal onClose={()=>setShowAdd(false)} onAdd={handleAdd} addToast={addToast}/>}
     {showShare&&<ShareModal places={visiblePlaces} entries={entries} onClose={()=>setShowShare(false)} addToast={addToast}/>}
-    {showPlanner&&<PlannerChatModal places={visiblePlaces} entries={entries} onClose={()=>setShowPlanner(false)} addToast={addToast} userLat={userLat} userLng={userLng} onOpenPlace={p=>{setShowPlanner(false);setTimeout(()=>setSelected(p),200);}}/>}
+    {showPlanner&&<PlannerChatModal places={visiblePlaces} entries={entries} onClose={()=>setShowPlanner(false)} addToast={addToast} userLat={userLat} userLng={userLng}/>}
     {showNearby&&userLat&&<NearbyDrawer userLat={userLat} userLng={userLng} places={visiblePlaces} entries={entries} onSelect={setSelected} onClose={()=>setShowNearby(false)}/>}
   </div>;
 }
