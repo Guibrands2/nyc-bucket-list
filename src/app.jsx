@@ -1487,6 +1487,7 @@ export default function App() {
         {filteredPlaces.map(place=>(
           <PlaceCard key={place.id} place={place} entry={entries[place.id]} onSelect={setSelected} onCheckIn={setCheckIn} isEN={isEN} entries={entries}/>
         ))}
+      </>}
     </div>
 
     <button onClick={()=>setShowAdd(true)} style={{ position:"fixed",bottom:24,right:20,width:52,height:52,background:"#ff3366",border:"none",borderRadius:"50%",color:"#fff",fontSize:24,cursor:"pointer",boxShadow:"0 4px 20px #ff336660",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700 }}>+</button>
