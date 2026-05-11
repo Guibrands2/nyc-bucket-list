@@ -373,6 +373,9 @@ function useSwipeTabs(tab, setTab) {
   useEffect(() => {
     const onStart = e => { startX.current=e.touches[0].clientX; startY.current=e.touches[0].clientY; };
     const onEnd = e => {
+      const target = e.target;
+      // Don't swipe if touching the map
+      if(target.closest&&(target.closest(".leaflet-container")||target.closest(".leaflet-pane"))) return;
       const dx = e.changedTouches[0].clientX - startX.current;
       const dy = Math.abs(e.changedTouches[0].clientY - startY.current);
       if(Math.abs(dx)>60&&dy<40) {
@@ -496,12 +499,67 @@ function WeatherWidget() {
 }
 
 function MapTab({ places, entries, onSelect }) {
-  const mapRef=useRef(null),inst=useRef(null),markers=useRef([]);
-  const [ready,setReady]=useState(false);
-  useEffect(()=>{if(window.L){setReady(true);return;}const link=document.createElement("link");link.rel="stylesheet";link.href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";document.head.appendChild(link);const script=document.createElement("script");script.src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";script.onload=()=>setReady(true);document.head.appendChild(script);},[]);
-  useEffect(()=>{if(!ready||!mapRef.current)return;if(!inst.current){inst.current=window.L.map(mapRef.current,{center:[40.730,-73.990],zoom:12});window.L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{attribution:"CartoDB"}).addTo(inst.current);}markers.current.forEach(m=>m.remove());markers.current=[];if(navigator.geolocation){navigator.geolocation.getCurrentPosition(pos=>{if(!inst.current)return;const userDot=document.createElement("div");userDot.style.cssText="width:14px;height:14px;border-radius:50%;background:#ff3366;border:2px solid white;box-shadow:0 0 0 5px rgba(255,51,102,0.25)";const ui=window.L.divIcon({html:userDot.outerHTML,className:"",iconSize:[14,14],iconAnchor:[7,7]});window.L.marker([pos.coords.latitude,pos.coords.longitude],{icon:ui,zIndexOffset:1000}).addTo(inst.current);},{enableHighAccuracy:false});}places.forEach(p=>{if(!p.lat||!p.lng)return;const meta=CAT_META[p.category]||{color:"#ff3366"};const icon=window.L.divIcon({html:"<div style='width:28px;height:28px;border-radius:50%;background:"+meta.color+"30;border:2px solid "+meta.color+";display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 8px #00000080'>"+p.emoji+"</div>",className:"",iconSize:[28,28],iconAnchor:[14,14]});const m=window.L.marker([p.lat,p.lng],{icon}).addTo(inst.current);m.on("click",()=>onSelect(p));markers.current.push(m);});},[ready,places,entries]);
-  if(!ready)return<div style={{ height:"60vh",display:"flex",alignItems:"center",justifyContent:"center",color:"#50506a" }}>Loading map...</div>;
-  return <div style={{ padding:"0 16px 16px" }}><div style={{ fontSize:11,color:"#50506a",marginBottom:8,letterSpacing:"0.08em" }}>TAP A PIN FOR DETAILS</div><div style={{ borderRadius:14,overflow:"hidden",border:"1px solid #2a2a38" }}><div ref={mapRef} style={{ height:"62vh",width:"100%" }}/></div></div>;
+  const mapRef = useRef(null);
+  const inst = useRef(null);
+  const markers = useRef([]);
+  const userMarker = useRef(null);
+  const [ready, setReady] = useState(false);
+
+  // Load Leaflet once
+  useEffect(() => {
+    if (window.L) { setReady(true); return; }
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+    document.head.appendChild(link);
+    const script = document.createElement("script");
+    script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+    script.onload = () => setReady(true);
+    document.head.appendChild(script);
+  }, []);
+
+  // Init map once Leaflet is ready
+  useEffect(() => {
+    if (!ready || !mapRef.current || inst.current) return;
+    inst.current = window.L.map(mapRef.current, { center:[40.730,-73.990], zoom:12, zoomControl:true });
+    window.L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { attribution:"© CartoDB" }).addTo(inst.current);
+    // User location dot - separate from markers
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        if (!inst.current) return;
+        const dot = window.L.circleMarker([pos.coords.latitude, pos.coords.longitude], {
+          radius: 8, fillColor:"#ff3366", color:"#fff", weight:2, opacity:1, fillOpacity:1
+        }).addTo(inst.current);
+        userMarker.current = dot;
+      }, () => {}, { enableHighAccuracy: false, timeout: 5000 });
+    }
+  }, [ready]);
+
+  // Update markers when places change
+  useEffect(() => {
+    if (!inst.current) return;
+    markers.current.forEach(m => m.remove());
+    markers.current = [];
+    places.forEach(p => {
+      if (!p.lat || !p.lng) return;
+      const meta = CAT_META[p.category] || { color:"#ff3366" };
+      const html = "<div style="width:28px;height:28px;border-radius:50%;background:"+meta.color+"30;border:2px solid "+meta.color+";display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,0.5)">"+p.emoji+"</div>";
+      const icon = window.L.divIcon({ html, className:"", iconSize:[28,28], iconAnchor:[14,14] });
+      const m = window.L.marker([p.lat, p.lng], { icon }).addTo(inst.current);
+      m.on("click", () => onSelect(p));
+      markers.current.push(m);
+    });
+  }, [ready, places]);
+
+  if (!ready) return <div style={{ height:"60vh", display:"flex", alignItems:"center", justifyContent:"center", color:"#50506a" }}>Carregando mapa...</div>;
+  return (
+    <div style={{ padding:"0 16px 16px" }}>
+      <div style={{ fontSize:11, color:"#50506a", marginBottom:8, letterSpacing:"0.08em" }}>TOQUE EM UM PIN PARA DETALHES</div>
+      <div style={{ borderRadius:14, border:"1px solid #2a2a38", overflow:"hidden" }}>
+        <div ref={mapRef} style={{ height:"62vh", width:"100%" }}/>
+      </div>
+    </div>
+  );
 }
 
 function TimelineTab({ places, entries, onSelect }) {
