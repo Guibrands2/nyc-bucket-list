@@ -543,7 +543,7 @@ function MapTab({ places, entries, onSelect }) {
     places.forEach(p => {
       if (!p.lat || !p.lng) return;
       const meta = CAT_META[p.category] || { color:"#ff3366" };
-      const html = "<div style="width:28px;height:28px;border-radius:50%;background:"+meta.color+"30;border:2px solid "+meta.color+";display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,0.5)">"+p.emoji+"</div>";
+      const html = "<div style='width:28px;height:28px;border-radius:50%;background:"+meta.color+"30;border:2px solid "+meta.color+";display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,0.5)'>"+p.emoji+"</div>";
       const icon = window.L.divIcon({ html, className:"", iconSize:[28,28], iconAnchor:[14,14] });
       const m = window.L.marker([p.lat, p.lng], { icon }).addTo(inst.current);
       m.on("click", () => onSelect(p));
