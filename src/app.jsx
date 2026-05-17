@@ -1096,6 +1096,8 @@ function ShareModal({ places, entries, onClose, addToast }) {
       <div style={{ background:"#0f0f13",borderRadius:10,padding:"12px",marginBottom:14,maxHeight:160,overflowY:"auto" }}>{recs.map(p=>{const e=entries[p.id]||{};return<div key={p.id} style={{ display:"flex",alignItems:"center",gap:10,padding:"6px 0",borderBottom:"1px solid #2a2a38" }}><span style={{ fontSize:16 }}>{p.emoji}</span><div style={{ flex:1 }}><div style={{ fontSize:13,color:"#f0eeff" }}>{isEN&&p.nameEN?p.nameEN:p.name}</div><div style={{ fontSize:11,color:"#50506a" }}>{e.stars>0&&"★".repeat(e.stars)} {e.thumb==="up"?"👍":""}</div></div></div>;})}</div>
       <button onClick={()=>copy(T.favoritesList+"\n\n"+recs.map(p=>{const e=entries[p.id]||{};return p.emoji+" "+(isEN&&p.nameEN?p.nameEN:p.name)+(e.stars?" "+"★".repeat(e.stars):"");}).join("\n")+"\n\n"+url)} style={{ width:"100%",padding:"13px",background:"#ff3366",border:"none",borderRadius:10,color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",marginBottom:8 }}>{T.copyWhatsApp}</button>
       <button onClick={()=>copy(url)} style={{ width:"100%",padding:"13px",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:10,color:"#f0eeff",fontSize:13,cursor:"pointer" }}>{T.copyLink}</button>
+          <div style={{ height:1,background:"#2a2a38",margin:"14px 0" }}/>
+          <a href={"mailto:guibrandao.pagamentos@gmail.com?subject="+encodeURIComponent("Feedback - NYC Bucket List")+"&body="+encodeURIComponent(isEN?"Describe your bug or suggestion:\n\n":"Descreva seu bug ou sugestao:\n\n")} style={{ width:"100%",padding:"11px",background:"none",border:"1px solid #2a2a38",borderRadius:10,color:"#50506a",fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6,textDecoration:"none",boxSizing:"border-box" }}>🐛 {isEN?"Report bug / suggestion":"Reportar bug ou sugestao"}</a>
     </>}
   </div></div>;
 }
@@ -1103,43 +1105,6 @@ function ShareModal({ places, entries, onClose, addToast }) {
 
 
 
-function BugReportModal({ onClose, addToast }) {
-  const [type, setType] = useState("bug");
-  const [msg, setMsg] = useState("");
-  const [sending, setSending] = useState(false);
-
-  const send = async () => {
-    if(!msg.trim()) return;
-    setSending(true);
-    const subject = type==="bug" ? "Bug Report - NYC Bucket List" : "Sugestao - NYC Bucket List";
-    const body = msg.trim()+"%0A%0A---%0AApp: NYC Bucket List%0AData: "+new Date().toLocaleString("pt-BR")+(navigator.userAgent?"%0ADevice: "+encodeURIComponent(navigator.userAgent.slice(0,80)):"");
-    window.open("mailto:guibrandao.pagamentos@gmail.com?subject="+encodeURIComponent(subject)+"&body="+body);
-    setTimeout(()=>{
-      setSending(false);
-      addToast(type==="bug"?"Bug reportado! Obrigado":"Sugestao enviada! Obrigado","success");
-      onClose();
-    },500);
-  };
-
-  return (
-    <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:400,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={onClose}>
-      <div className="modal" style={{ background:"#1a1a22",borderTop:"1px solid #2a2a38",borderRadius:"20px 20px 0 0",padding:"20px 16px 48px",maxWidth:560,width:"100%" }} onClick={e=>e.stopPropagation()}>
-        <div style={{ width:36,height:3,background:"#2a2a38",borderRadius:2,margin:"0 auto 16px" }}/>
-        <div style={{ fontSize:15,fontWeight:700,color:"#f0eeff",marginBottom:14 }}>Feedback</div>
-        <div style={{ display:"flex",gap:8,marginBottom:14 }}>
-          {[["bug","🐛 Reportar bug"],["suggest","💡 Sugestao"]].map(([v,l])=>(
-            <button key={v} onClick={()=>setType(v)} style={{ flex:1,padding:"10px",borderRadius:10,background:type===v?"#ff336620":"#0f0f13",border:"1px solid "+(type===v?"#ff3366":"#2a2a38"),color:type===v?"#ff3366":"#9090b0",fontSize:13,cursor:"pointer",fontFamily:"inherit" }}>{l}</button>
-          ))}
-        </div>
-        <textarea value={msg} onChange={e=>setMsg(e.target.value)} placeholder={type==="bug"?"Descreva o bug: o que aconteceu, em qual tela, o que esperava...":"Sua sugestao de melhoria..."} rows={5} style={{ width:"100%",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:10,padding:"10px 14px",color:"#f0eeff",fontSize:13,resize:"none",marginBottom:14 }}/>
-        <div style={{ fontSize:11,color:"#50506a",marginBottom:14 }}>Vai abrir seu app de email com a mensagem pronta.</div>
-        <button onClick={send} disabled={!msg.trim()||sending} style={{ width:"100%",padding:"13px",background:msg.trim()&&!sending?"#ff3366":"#2a2a38",border:"none",borderRadius:12,color:msg.trim()&&!sending?"#fff":"#50506a",fontSize:14,fontWeight:700,cursor:msg.trim()&&!sending?"pointer":"default" }}>
-          {sending?"Abrindo email...":"Enviar feedback"}
-        </button>
-      </div>
-    </div>
-  );
-}
 
 function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveLists, lists }) {
   const [step, setStep] = useState("form");
@@ -1820,15 +1785,10 @@ export default function App() {
   const [showPlanner, setShowPlanner] = useState(false);
   const [showNearby, setShowNearby] = useState(false);
   const [showSurpresa, setShowSurpresa] = useState(false);
-  const [showBugReport, setShowBugReport] = useState(false);
   const [events, setEvents] = useState([]);
   const [showAddEvent, setShowAddEvent] = useState(false);
   const currentWeather = window._nycWeather||null;
-  useEffect(() => {
-    const handler = () => setShowBugReport(true);
-    document.addEventListener("openBugReport", handler);
-    return () => document.removeEventListener("openBugReport", handler);
-  }, []);
+
   const scrollPosRef = useRef(0);
 
   const openModal = (place) => {
@@ -2151,7 +2111,6 @@ export default function App() {
     {showSurpresa&&<SurpresaModal places={visiblePlaces} entries={entries} weather={currentWeather} onClose={()=>setShowSurpresa(false)} addToast={addToast} onSaveLists={saveLists} lists={lists}/>}
     {showPlanner&&<PlannerChatModal places={visiblePlaces} entries={entries} onClose={()=>setShowPlanner(false)} addToast={addToast} userLat={userLat} userLng={userLng}/>}
     {showAddEvent&&<AddEventModal onClose={()=>setShowAddEvent(false)} onSave={async ev=>{await set(ref(db,"events/"+ev.id),ev);addToast(isEN?"Event added!":"Evento adicionado!","success");setShowAddEvent(false);}} addToast={addToast}/>}
-    {showBugReport&&<BugReportModal onClose={()=>setShowBugReport(false)} addToast={addToast}/>}
     <BottomNav tab={tab} setTab={setTab} onSurpresa={()=>setShowSurpresa(true)} onNearby={handleNearby} onShare={()=>setShowShare(true)} onPlanner={()=>setShowPlanner(true)}/>
     {showNearby&&userLat&&<NearbyDrawer userLat={userLat} userLng={userLng} places={visiblePlaces} entries={entries} onSelect={setSelected} onClose={()=>setShowNearby(false)}/>}
   </div>;
