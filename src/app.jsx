@@ -365,7 +365,14 @@ function SeasonalBanner({ places, entries, onSelect }) {
   );
 }
 
-const TAB_KEYS = ["list","map","timeline","curadoria","stats"];
+function useDragToDismiss(onDismiss) {
+  const startY = useRef(0);
+  const onTouchStart = e => { startY.current = e.touches[0].clientY; };
+  const onTouchEnd = e => { if(e.changedTouches[0].clientY - startY.current > 90) onDismiss(); };
+  return { onTouchStart, onTouchEnd };
+}
+
+const TAB_KEYS = ["list","map","timeline","curadoria","stats","eventos"];
 
 function useSwipeTabs(tab, setTab) {
   const startX = useRef(0);
@@ -407,6 +414,13 @@ const injectCSS = () => {
     .btn { transition: all 0.12s ease; cursor: pointer; border: none; }
     .hdr-btn:hover { background: #2a2a38 !important; }
     .hdr-btn { transition: background 0.12s ease; }
+    .hdr-btn:active { transform: scale(0.92); opacity: 0.8; }
+    .card:active { transform: scale(0.98); background: #20202a !important; }
+    .pill-btn:active { opacity: 0.7; transform: scale(0.95); }
+    .tab-btn:active { opacity: 0.8; }
+    .modal-drag { cursor: grab; }
+    @keyframes slideUp { from { transform:translateY(30px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+    .slide-up { animation: slideUp 0.22s ease forwards; }
     @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
     @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
     @keyframes slideIn { from { transform:translateY(100%); } to { transform:translateY(0); } }
@@ -824,7 +838,7 @@ function PlannerChatModal({ places, entries, onClose, addToast, userLat, userLng
         </div>
       </div>
     )}
-    <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:300,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={onClose}><div className="modal" style={{ background:"#1a1a22",borderTop:"1px solid #2a2a38",borderRadius:"20px 20px 0 0",maxWidth:560,width:"100%",height:"90vh",display:"flex",flexDirection:"column" }} onClick={e=>e.stopPropagation()}>
+    <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:300,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={onClose}><div className="modal" onTouchStart={e=>{window._chatDragY=e.touches[0].clientY;}} onTouchEnd={e=>{if(e.changedTouches[0].clientY-window._chatDragY>90)onClose();}} style={{ background:"#1a1a22",borderTop:"1px solid #2a2a38",borderRadius:"20px 20px 0 0",maxWidth:560,width:"100%",height:"90vh",display:"flex",flexDirection:"column" }} onClick={e=>e.stopPropagation()}>
     <div style={{ padding:"14px 16px 12px",borderBottom:"1px solid #2a2a38" }}>
       <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10 }}>
         <div><div style={{ fontSize:15,fontWeight:700,color:"#f0eeff" }}>{T.chatTitle}</div><div style={{ fontSize:11,color:"#9090b0" }}>{T.chatSub}</div></div>
@@ -907,6 +921,7 @@ function EditNameModal({ place, onClose, onSave }) {
 }
 
 function DetailModal({ place, entry, places, entries, onClose, onSave, onDelete, onSelectNearby, onEditPlace, addToast, userLat, userLng }) {
+  const drag = useDragToDismiss(onClose);
   const e=entry||{};
   const [note,setNote]=useState(e.note||"");
   const [date,setDate]=useState(e.date||new Date().toISOString().split("T")[0]);
@@ -950,8 +965,8 @@ function DetailModal({ place, entry, places, entries, onClose, onSave, onDelete,
 
   return <>
     <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:300,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={onClose}>
-      <div className="modal" style={{ background:"#1a1a22",borderTop:"1px solid #2a2a38",borderRadius:"20px 20px 0 0",padding:"20px 16px 48px",maxWidth:560,width:"100%",maxHeight:"94vh",overflowY:"auto" }} onClick={ev=>ev.stopPropagation()}>
-        <div style={{ width:36,height:3,background:"#2a2a38",borderRadius:2,margin:"0 auto 16px" }}/>
+      <div className="modal" onTouchStart={drag.onTouchStart} onTouchEnd={drag.onTouchEnd} style={{ background:"#1a1a22",borderTop:"1px solid #2a2a38",borderRadius:"20px 20px 0 0",padding:"20px 16px 48px",maxWidth:560,width:"100%",maxHeight:"94vh",overflowY:"auto" }} onClick={ev=>ev.stopPropagation()}>
+        <div style={{ width:44,height:4,background:"#3a3a48",borderRadius:2,margin:"0 auto 16px",cursor:"grab" }}/>
         <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14 }}>
           <div style={{ flex:1 }}>
             <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:6 }}>
@@ -1672,11 +1687,11 @@ const PlaceCard = memo(function PlaceCard({ place, entry, onSelect, onCheckIn, i
   const displayName = isEN&&place.nameEN?place.nameEN:place.name;
   return (
     <div style={{ position:"relative" }}>
-      <div className="card" onClick={()=>onSelect(place)} style={{ background:"#1a1a22",border:"1px solid "+(status==="fui"?meta.color+"40":"#2a2a38"),borderRadius:12,marginBottom:8,padding:"12px 14px",cursor:"pointer",display:"flex",gap:12 }}>
-        {fp?<img src={fp} alt="" style={{ width:54,height:54,borderRadius:8,objectFit:"cover",flexShrink:0 }}/>:<div style={{ width:54,height:54,borderRadius:8,background:meta.color+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0 }}>{place.emoji}</div>}
+      <div className="card" onClick={()=>onSelect(place)} style={{ background:"#1a1a22",border:"1px solid "+(status==="fui"?meta.color+"40":"#2a2a38"),borderRadius:14,marginBottom:10,padding:"14px 16px",cursor:"pointer",display:"flex",gap:14 }}>
+        {fp?<img src={fp} alt="" style={{ width:60,height:60,borderRadius:10,objectFit:"cover",flexShrink:0 }}/>:<div style={{ width:60,height:60,borderRadius:10,background:meta.color+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,flexShrink:0 }}>{place.emoji}</div>}
         <div style={{ flex:1,minWidth:0 }}>
           <div style={{ display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:8 }}>
-            <div style={{ fontSize:14,fontWeight:600,color:"#f0eeff",lineHeight:1.3 }}>{displayName}</div>
+            <div style={{ fontSize:15,fontWeight:600,color:"#f0eeff",lineHeight:1.3 }}>{displayName}</div>
             <div style={{ display:"flex",alignItems:"center",gap:4,flexShrink:0 }}>
               {hasLink&&<span style={{ fontSize:10 }}>🔗</span>}
               {isPet&&<span style={{ fontSize:10 }}>🐾</span>}
@@ -1700,7 +1715,7 @@ const PlaceCard = memo(function PlaceCard({ place, entry, onSelect, onCheckIn, i
           {status==="fui"&&entry?.date&&<div style={{ fontSize:10,color:"#50506a",marginTop:2 }}>{new Date(entry.date+"T12:00:00").toLocaleDateString(isEN?"en-US":"pt-BR")}</div>}
         </div>
       </div>
-      {status!=="fui"&&<button onClick={ev=>{ev.stopPropagation();onCheckIn(place);}} style={{ position:"absolute",bottom:16,right:12,background:"#00e67612",border:"1px solid #00e67630",borderRadius:8,padding:"3px 8px",color:"#00e676",fontSize:10,cursor:"pointer",fontFamily:"inherit" }}>{T.checkin}</button>}
+      {status!=="fui"&&<button onClick={ev=>{ev.stopPropagation();onCheckIn(place);}} style={{ position:"absolute",bottom:18,right:14,background:"#00e67618",border:"1px solid #00e67650",borderRadius:10,padding:"5px 10px",color:"#00e676",fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:600 }}>{T.checkin}</button>}
     </div>
   );
 }, (prev, next) => {
@@ -1741,6 +1756,11 @@ export default function App() {
   const [events, setEvents] = useState([]);
   const [showAddEvent, setShowAddEvent] = useState(false);
   const currentWeather = window._nycWeather||null;
+  useEffect(() => {
+    const handler = () => setShowBugReport(true);
+    document.addEventListener("openBugReport", handler);
+    return () => document.removeEventListener("openBugReport", handler);
+  }, []);
   const scrollPosRef = useRef(0);
 
   const openModal = (place) => {
@@ -1953,7 +1973,6 @@ export default function App() {
             <HdrBtn icon={<Icons.MapPin/>} label={T.nearby} onClick={handleNearby}/>
             <HdrBtn icon={<Icons.Bot/>} label={T.plan} onClick={()=>setShowPlanner(true)}/>
             <HdrBtn icon={<Icons.Share/>} label={T.share} onClick={()=>setShowShare(true)}/>
-              <button onClick={()=>setShowBugReport(true)} title="Feedback" style={{ background:"#1a1a22",border:"1px solid #2a2a38",borderRadius:10,width:36,height:36,color:"#50506a",cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center" }}>🐛</button>
           </div>
         </div>
 
@@ -1975,7 +1994,7 @@ export default function App() {
         </div>
 
         <div style={{ display:"flex",gap:0,background:"#1a1a22",borderRadius:10,padding:3,border:"1px solid #2a2a38",marginBottom:10 }}>
-          {TABS.map((label,i)=>{const keys=["list","map","timeline","curadoria","stats"];return<button key={keys[i]} onClick={()=>setTab(keys[i])} style={{ flex:1,padding:"7px 4px",borderRadius:8,background:tab===keys[i]?"#ff3366":"none",border:"none",color:tab===keys[i]?"#fff":"#50506a",fontSize:11,cursor:"pointer",fontWeight:tab===keys[i]?600:400,transition:"all 0.15s" }}>{label}</button>;})}
+          {TABS.map((label,i)=>{const keys=["list","map","timeline","curadoria","stats"];return<button key={keys[i]} onClick={()=>setTab(keys[i])} className="tab-btn" style={{ flex:1,padding:"8px 2px",borderRadius:8,background:tab===keys[i]?"#ff3366":"none",border:"none",color:tab===keys[i]?"#fff":"#50506a",fontSize:10,cursor:"pointer",fontWeight:tab===keys[i]?700:400,transition:"all 0.15s",letterSpacing:"-0.01em" }}>{label}</button>;})}
         </div>
 
         {tab==="list"&&<>
@@ -1987,7 +2006,7 @@ export default function App() {
 
           <div style={{ display:"flex",gap:5,marginBottom:8,overflowX:"auto",scrollbarWidth:"none" }}>
             {[["todos",T.all],["quero",T.want],["fui",T.been]].map(([key,label])=><button key={key} onClick={()=>setActiveFilter(activeFilter===key&&key!=="todos"?"todos":key)} className="btn" style={{ padding:"5px 12px",borderRadius:20,background:activeFilter===key?"#ff3366":"#1a1a22",border:"1px solid "+(activeFilter===key?"#ff3366":"#2a2a38"),color:activeFilter===key?"#fff":"#50506a",fontSize:12,whiteSpace:"nowrap" }}>{label}</button>)}
-            <button onClick={()=>setShowFilters(!showFilters)} className="btn" style={{ padding:"5px 12px",borderRadius:20,background:activeFiltersCount>0?"#ffd60020":"#1a1a22",border:"1px solid "+(activeFiltersCount>0?"#ffd600":"#2a2a38"),color:activeFiltersCount>0?"#ffd600":"#50506a",fontSize:12,whiteSpace:"nowrap" }}>{activeFiltersCount>0?T.filters+" ("+activeFiltersCount+")":T.filters}</button>
+            <button onClick={()=>setShowFilters(!showFilters)} className="btn" style={{ padding:"5px 14px",borderRadius:20,background:activeFiltersCount>0?"#ffd60020":"#1a1a22",border:"1px solid "+(activeFiltersCount>0?"#ffd600":"#2a2a38"),color:activeFiltersCount>0?"#ffd600":"#50506a",fontSize:12,whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4 }}>{activeFiltersCount>0&&<span style={{ width:6,height:6,borderRadius:"50%",background:"#ffd600",display:"inline-block" }}/>}{activeFiltersCount>0?T.filters+" ("+activeFiltersCount+")":T.filters}</button>
             <select value={sortBy} onChange={ev=>setSortBy(ev.target.value)} style={{ background:"#1a1a22",border:"1px solid #2a2a38",borderRadius:20,padding:"5px 10px",color:"#50506a",fontSize:12 }}>
               {T.sortOpts.map((o,i)=><option key={i} value={["default","az","za","stars","pending","date","cat"][i]}>{o}</option>)}
             </select>
