@@ -425,6 +425,16 @@ const injectCSS = () => {
     .nav-item:active { opacity:0.7; transform:scale(0.92); }
     .card-want { border-color:#4da6ff !important; background:linear-gradient(to right,#4da6ff08,#1a1a22) !important; }
     .card-been { background:linear-gradient(to right,var(--cc,#ff3366)12,#1a1a22) !important; }
+    .swipe-card { touch-action: pan-y; user-select: none; transition: transform 0.15s ease; }
+    .swipe-card.swiping { transition: none; }
+    .swipe-hint-right { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#4da6ff; font-size:20px; opacity:0; transition:opacity 0.15s; pointer-events:none; }
+    .swipe-hint-left { position:absolute; right:12px; top:50%; transform:translateY(-50%); color:#00e676; font-size:20px; opacity:0; transition:opacity 0.15s; pointer-events:none; }
+    .quick-actions-overlay { position:fixed; inset:0; background:#000000c0; z-index:250; display:flex; align-items:flex-end; justify-content:center; }
+    .mood-chip { padding:8px 14px; border-radius:22px; border:1.5px solid #2a2a38; background:#1a1a22; color:#9090b0; font-size:12px; font-family:inherit; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:5px; transition:all 0.15s; }
+    .mood-chip.active { border-color:#ff336680; background:#ff336618; color:#ff3366; }
+    .mood-chip:active { transform:scale(0.94); }
+    .nearby-banner { position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:#1a1a22; border:1px solid #00e67650; border-radius:20px; padding:10px 16px; display:flex; align-items:center; gap:10px; z-index:140; box-shadow:0 4px 20px #00000060; max-width:340px; cursor:pointer; animation:slideUp 0.3s ease; }
+    .cat-bar { position:sticky; top:0; z-index:80; background:#0f0f13; padding:0 0 8px; margin:0 -16px; padding-left:16px; }
     .modal-drag { cursor: grab; }
     @keyframes slideUp { from { transform:translateY(30px); opacity:0; } to { transform:translateY(0); opacity:1; } }
     .slide-up { animation: slideUp 0.22s ease forwards; }
@@ -1708,63 +1718,160 @@ function StatsTab({ places, entries }) {
   );
 }
 
-const PlaceCard = memo(function PlaceCard({ place, entry, onSelect, onCheckIn, isEN, entries }) {
+
+function QuickActionSheet({ place, entry, onClose, onToggleWant, onCheckIn, onSaveToCuradoria }) {
+  const status = entry?.status;
+  const meta = CAT_META[place.category]||{color:"#ff3366"};
+  const isWant = status==="quero";
+  const isBeen = status==="fui";
+  const actions = [
+    !isBeen && [isWant?"💔":"♥", isWant?(isEN?"Remove from wishlist":"Tirar da wishlist"):(isEN?"Add to wishlist":"Quero ir"), ()=>{ onToggleWant(place); onClose(); }],
+    !isBeen && ["✓", isEN?"Check-in now":"Check-in agora", ()=>{ onCheckIn(place); onClose(); }],
+    ["📋", isEN?"Save to curadoria":"Salvar em curadoria", ()=>{ onSaveToCuradoria(place); onClose(); }],
+    ["↗", isEN?"Share":"Compartilhar", ()=>{ navigator.share?navigator.share({title:isEN&&place.nameEN?place.nameEN:place.name,url:window.location.href}):navigator.clipboard.writeText(window.location.href); onClose(); }],
+  ].filter(Boolean);
+
+  return (
+    <div style={{ position:"fixed",inset:0,background:"#000000c0",zIndex:250,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={onClose}>
+      <div className="modal slide-up" style={{ background:"#1a1a22",borderTop:"1px solid #2a2a38",borderRadius:"20px 20px 0 0",padding:"16px 16px 48px",maxWidth:560,width:"100%" }} onClick={e=>e.stopPropagation()}>
+        <div style={{ width:44,height:4,background:"#3a3a48",borderRadius:2,margin:"0 auto 16px" }}/>
+        <div style={{ display:"flex",alignItems:"center",gap:12,padding:"0 4px 14px",borderBottom:"1px solid #2a2a38",marginBottom:12 }}>
+          <div style={{ width:44,height:44,borderRadius:10,background:meta.color+"20",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22 }}>{place.emoji}</div>
+          <div>
+            <div style={{ fontSize:14,fontWeight:700,color:"#f0eeff" }}>{isEN&&place.nameEN?place.nameEN:place.name}</div>
+            <div style={{ fontSize:11,color:meta.color }}>{catLabel(place.category)}</div>
+          </div>
+        </div>
+        {actions.map(([icon,label,fn],i)=>(
+          <button key={i} onClick={fn} style={{ width:"100%",display:"flex",alignItems:"center",gap:14,padding:"14px 8px",background:"none",border:"none",borderRadius:10,color:"#f0eeff",fontSize:14,cursor:"pointer",fontFamily:"inherit",textAlign:"left" }}>
+            <span style={{ fontSize:22,width:32,textAlign:"center" }}>{icon}</span>{label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const PlaceCard = memo(function PlaceCard({ place, entry, onSelect, onCheckIn, isEN, onToggleWant, onQuickAction }) {
   const status = entry?.status;
   const meta = CAT_META[place.category]||{color:"#ff3366"};
   const displayPrice = entry?.price||place.price;
   const fp = entry?.photos?.[0]||null;
   const pc = entry?.photos?.length||0;
   const isPet = entry?.petFriendly!==undefined?entry.petFriendly:place.petFriendly;
-  const hasBath = entry?.publicBathroom!==undefined?entry.publicBathroom:place.publicBathroom;
-  const hasLink = entry?.link||place.link;
+  const needsRes = entry?.needsReservation||place.needsReservation;
   const displayName = isEN&&place.nameEN?place.nameEN:place.name;
+  const isBeen = status==="fui";
+  const isWant = status==="quero";
+
+  // Swipe + long press state
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const touchStartT = useRef(0);
+  const longPressTimer = useRef(null);
+  const cardRef = useRef(null);
+  const [swipeDx, setSwipeDx] = useState(0);
+  const [swiping, setSwiping] = useState(false);
+
+  const onTouchStart = e => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    touchStartT.current = Date.now();
+    longPressTimer.current = setTimeout(() => {
+      if(navigator.vibrate) navigator.vibrate(40);
+      onQuickAction(place);
+    }, 500);
+  };
+  const onTouchMove = e => {
+    clearTimeout(longPressTimer.current);
+    const dx = e.touches[0].clientX - touchStartX.current;
+    const dy = Math.abs(e.touches[0].clientY - touchStartY.current);
+    if(dy > 10) { setSwipeDx(0); setSwiping(false); return; }
+    if(Math.abs(dx) > 8) { setSwiping(true); setSwipeDx(Math.max(-80, Math.min(80, dx))); }
+  };
+  const onTouchEnd = e => {
+    clearTimeout(longPressTimer.current);
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    const dt = Date.now() - touchStartT.current;
+    if(Math.abs(dx) > 60) {
+      if(dx > 0 && !isBeen) { onToggleWant(place); if(navigator.vibrate) navigator.vibrate([30,20,60]); }
+      else if(dx < 0 && !isBeen) { onCheckIn(place); if(navigator.vibrate) navigator.vibrate(50); }
+    }
+    setSwipeDx(0); setSwiping(false);
+  };
+
   return (
-    <div style={{ position:"relative" }}>
-      <div className="card" onClick={()=>onSelect(place)} style={{ background:"#1a1a22",border:"1px solid "+(status==="fui"?meta.color+"40":"#2a2a38"),borderRadius:14,marginBottom:10,padding:"14px 16px",cursor:"pointer",display:"flex",gap:14 }}>
-        {fp?<img src={fp} alt="" style={{ width:60,height:60,borderRadius:10,objectFit:"cover",flexShrink:0 }}/>:<div style={{ width:60,height:60,borderRadius:10,background:meta.color+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,flexShrink:0 }}>{place.emoji}</div>}
-        <div style={{ flex:1,minWidth:0 }}>
-          <div style={{ display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:8 }}>
-            <div style={{ fontSize:15,fontWeight:600,color:"#f0eeff",lineHeight:1.3 }}>{displayName}</div>
-            <div style={{ display:"flex",alignItems:"center",gap:4,flexShrink:0 }}>
-              {hasLink&&<span style={{ fontSize:10 }}>🔗</span>}
-              {isPet&&<span style={{ fontSize:10 }}>🐾</span>}
-              {hasBath&&<span style={{ fontSize:10 }}>🚻</span>}
-              {(entry?.needsReservation||place.needsReservation)&&<span style={{ fontSize:10 }}>📋</span>}
-              {entry?.thumb==="up"&&<span style={{ fontSize:12 }}>👍</span>}
-              {entry?.thumb==="down"&&<span style={{ fontSize:12 }}>👎</span>}
+    <div style={{ position:"relative", marginBottom:10, overflow:"hidden", borderRadius:14 }}>
+      {/* Swipe hint left - ♥ */}
+      <div style={{ position:"absolute",left:0,top:0,bottom:0,width:60,background:"#4da6ff20",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"14px 0 0 14px",opacity:swipeDx>20?Math.min(1,(swipeDx-20)/40):0,transition:swiping?"none":"opacity 0.2s" }}>
+        <span style={{ fontSize:22 }}>♥</span>
+      </div>
+      {/* Swipe hint right - check-in */}
+      <div style={{ position:"absolute",right:0,top:0,bottom:0,width:60,background:"#00e67620",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"0 14px 14px 0",opacity:swipeDx<-20?Math.min(1,(-swipeDx-20)/40):0,transition:swiping?"none":"opacity 0.2s" }}>
+        <span style={{ fontSize:22 }}>✓</span>
+      </div>
+      <div
+        ref={cardRef}
+        className="card swipe-card"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        onClick={()=>{ if(Math.abs(swipeDx)<5) onSelect(place); }}
+        style={{
+          background: isBeen ? meta.color+"0a" : "#1a1a22",
+          border: "1px solid "+(isBeen?meta.color+"50":isWant?"#4da6ff30":"#2a2a38"),
+          borderLeft: "3px solid "+(isBeen?meta.color:isWant?"#4da6ff":"#2a2a38"),
+          borderRadius:14, padding:"14px 14px 14px 13px", cursor:"pointer", display:"flex", gap:14,
+          transform: swipeDx ? `translateX(${swipeDx}px)` : "none",
+          transition: swiping ? "none" : "transform 0.2s ease"
+        }}
+      >
+        <div style={{ position:"relative", flexShrink:0 }}>
+          {fp ? <img src={fp} alt="" style={{ width:62,height:62,borderRadius:10,objectFit:"cover" }}/>
+              : <div style={{ width:62,height:62,borderRadius:10,background:meta.color+(isBeen?"25":"15"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:26 }}>{place.emoji}</div>}
+          {isBeen&&<div style={{ position:"absolute",bottom:-4,right:-4,width:18,height:18,borderRadius:"50%",background:meta.color,border:"2px solid #1a1a22",display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,color:"#fff",fontWeight:700 }}>✓</div>}
+          {isWant&&!isBeen&&<div style={{ position:"absolute",bottom:-4,right:-4,width:18,height:18,borderRadius:"50%",background:"#4da6ff",border:"2px solid #1a1a22",display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,color:"#fff" }}>♥</div>}
+        </div>
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:6, marginBottom:4 }}>
+            <div style={{ fontSize:14,fontWeight:600,color:"#f0eeff",lineHeight:1.25,flex:1 }}>{displayName}</div>
+            <div style={{ display:"flex",gap:3,flexShrink:0,alignItems:"center" }}>
+              {needsRes&&<span style={{ fontSize:10 }}>📋</span>}
+              {entry?.thumb==="up"&&<span style={{ fontSize:11 }}>👍</span>}
               {entry?.stars>0&&<span style={{ fontSize:10,color:"#ffd600" }}>{"★".repeat(entry.stars)}</span>}
-              {pc>0&&<span style={{ fontSize:10,color:"#50506a" }}>📷{pc>1?pc:""}</span>}
-              <span style={{ fontSize:15,color:status==="fui"?meta.color:status==="quero"?"#4da6ff":"#50506a" }}>{status==="fui"?"✓":status==="quero"?"♥":"○"}</span>
+              {pc>0&&<span style={{ fontSize:10,color:"#50506a" }}>📷</span>}
             </div>
           </div>
-          <div style={{ display:"flex",gap:4,alignItems:"center",marginTop:4,flexWrap:"wrap" }}>
-            <span style={{ fontSize:10,color:meta.color,background:meta.color+"18",borderRadius:5,padding:"1px 6px" }}>{catLabel(place.category)}</span>
-            {displayPrice&&<span style={{ fontSize:10,color:"#50506a" }}>{PRICE_EMOJI[displayPrice]}</span>}
-            {place.time&&<span style={{ fontSize:10,color:"#50506a" }}>⏱ {place.time}</span>}
-            {entry?.who&&entry.who!=="juntos"&&<span style={{ fontSize:10 }}>{WHO_EMOJI[entry.who]}</span>}
-            {entry?.vibes&&entry.vibes.map(v=><span key={v} style={{ fontSize:10 }}>{VIBE_EMOJI[v]}</span>)}
+          <div style={{ display:"flex",gap:5,alignItems:"center",flexWrap:"wrap" }}>
+            <span style={{ fontSize:10,color:meta.color,background:meta.color+"18",borderRadius:6,padding:"2px 7px",fontWeight:500 }}>{catLabel(place.category)}</span>
+            {displayPrice&&<span style={{ fontSize:10,color:"#9090b0" }}>{PRICE_EMOJI[displayPrice]}</span>}
+            {place.time&&<span style={{ fontSize:10,color:"#50506a" }}>· {place.time}</span>}
+            {isPet&&<span style={{ fontSize:10 }}>🐾</span>}
           </div>
-          {entry?.note&&<div style={{ fontSize:11,color:"#9090b0",marginTop:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{entry.note}</div>}
-          {status==="fui"&&entry?.date&&<div style={{ fontSize:10,color:"#50506a",marginTop:2 }}>{new Date(entry.date+"T12:00:00").toLocaleDateString(isEN?"en-US":"pt-BR")}</div>}
+          {entry?.note&&<div style={{ fontSize:11,color:"#9090b0",marginTop:5,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontStyle:"italic" }}>"{entry.note}"</div>}
+          {isBeen&&entry?.date&&<div style={{ fontSize:10,color:meta.color+"aa",marginTop:3 }}>Visitado {new Date(entry.date+"T12:00:00").toLocaleDateString(isEN?"en-US":"pt-BR",{month:"short",day:"numeric",year:"numeric"})}</div>}
         </div>
       </div>
-      {status!=="fui"&&<button onClick={ev=>{ev.stopPropagation();onCheckIn(place);}} style={{ position:"absolute",bottom:18,right:14,background:"#00e67618",border:"1px solid #00e67650",borderRadius:10,padding:"5px 10px",color:"#00e676",fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:600 }}>{T.checkin}</button>}
+      {!isBeen&&swipeDx===0&&<button onClick={ev=>{ev.stopPropagation();onCheckIn(place);}} style={{ position:"absolute",bottom:14,right:12,background:"#00e67615",border:"1px solid #00e67640",borderRadius:20,padding:"4px 10px",color:"#00e676",fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:600 }}>✓ check-in</button>}
     </div>
   );
-}, (prev, next) => {
-  return prev.place===next.place && prev.entry===next.entry && prev.isEN===next.isEN;
-});
+}, (prev, next) => prev.place===next.place && prev.entry===next.entry && prev.isEN===next.isEN);
 
+// ─── APP ─────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [places, setPlaces] = useState(INITIAL_PLACES);
+  const [loading, setLoading] = useState(true);
   const [entries, setEntries] = useState({});
+  const [customPlaces, setCustomPlaces] = useState([]);
   const [lists, setLists] = useState([]);
   const [removedIds, setRemovedIds] = useState([]);
   const [customEdits, setCustomEdits] = useState({});
+  const [events, setEvents] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [checkIn, setCheckIn] = useState(null);
   const [tab, setTab] = useState("list");
   useSwipeTabs(tab, setTab);
-  const [activeCategory, setActiveCategory] = useState("Todos");
   const [activeFilter, setActiveFilter] = useState("todos");
+  const [activeCategory, setActiveCategory] = useState("Todos");
   const [filterVibes, setFilterVibes] = useState([]);
   const [filterPrices, setFilterPrices] = useState([]);
   const [filterSeasons, setFilterSeasons] = useState([]);
@@ -1773,71 +1880,32 @@ export default function App() {
   const [filterPet, setFilterPet] = useState(false);
   const [filterBathroom, setFilterBathroom] = useState(false);
   const [filterRegion, setFilterRegion] = useState(null);
+  const [sortBy, setSortBy] = useState("default");
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const searchDebounce = useRef(null);
-  const [sortBy, setSortBy] = useState("default");
-  const [selected, setSelected] = useState(null);
-  const [checkIn, setCheckIn] = useState(null);
-  const [showAdd, setShowAdd] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [showAdd, setShowAdd] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [showPlanner, setShowPlanner] = useState(false);
   const [showNearby, setShowNearby] = useState(false);
   const [showSurpresa, setShowSurpresa] = useState(false);
-  const [events, setEvents] = useState([]);
   const [showAddEvent, setShowAddEvent] = useState(false);
-  const currentWeather = window._nycWeather||null;
-
-  const scrollPosRef = useRef(0);
-
-  const openModal = (place) => {
-    scrollPosRef.current = window.scrollY;
-    setSelected(place);
-  };
-  const closeModal = () => {
-    setSelected(null);
-    requestAnimationFrame(()=>window.scrollTo(0,scrollPosRef.current));
-  };
-  const [userLat, setUserLat] = useState(null);
-  const [userLng, setUserLng] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [placeOfDay, setPlaceOfDay] = useState(null);
   const placeOfDayFixed = useRef(false);
   const [toasts, setToasts] = useState([]);
   const removeTimers = useRef({});
+  const [userLat, setUserLat] = useState(null);
+  const [userLng, setUserLng] = useState(null);
+  const [quickAction, setQuickAction] = useState(null);
+  const [activeMood, setActiveMood] = useState(null);
+  const [nearbyAlert, setNearbyAlert] = useState(null);
+  const scrollPosRef = useRef(0);
+  const currentWeather = window._nycWeather||null;
 
-  // Bounding boxes for NYC regions + daytrip cities
-  const REGIONS = {
-    "Manhattan":    { lat:[40.700,40.882], lng:[-74.020,-73.907] },
-    "Brooklyn":     { lat:[40.570,40.740], lng:[-74.042,-73.855] },
-    "Queens":       { lat:[40.541,40.800], lng:[-73.962,-73.700] },
-    "Bronx":        { lat:[40.785,40.917], lng:[-73.933,-73.748] },
-    "Staten Island":{ lat:[40.477,40.651], lng:[-74.260,-74.034] },
-    "Jersey City":  { lat:[40.666,40.775], lng:[-74.120,-74.020] },
-    "Philadelphia": { lat:[39.860,40.140], lng:[-75.280,-74.960] },
-    "Cold Spring":  { lat:[41.380,41.470], lng:[-73.990,-73.910] },
-    "Asbury Park":  { lat:[40.190,40.250], lng:[-74.040,-74.000] },
-    "Princeton":    { lat:[40.320,40.400], lng:[-74.710,-74.630] },
-    "Hudson NY":    { lat:[42.220,42.290], lng:[-73.830,-73.760] },
-    "Catskills":    { lat:[41.900,42.300], lng:[-74.500,-73.900] },
-  };
-
-  const inRegion = (place, regionKey) => {
-    if (!place.lat || !place.lng) return false;
-    const r = REGIONS[regionKey];
-    if (!r) return false;
-    return place.lat >= r.lat[0] && place.lat <= r.lat[1] && place.lng >= r.lng[0] && place.lng <= r.lng[1];
-  };
-
-  useEffect(() => { injectCSS(); }, []);
-
-  const addToast = useCallback((message, type="success", onUndo=null) => {
-    const id = Date.now();
-    setToasts(prev => [...prev, { id, message, type, onUndo }]);
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 6000);
-  }, []);
+  const openModal = (place) => { scrollPosRef.current = window.scrollY; setSelected(place); };
+  const closeModal = () => { setSelected(null); requestAnimationFrame(()=>window.scrollTo(0,scrollPosRef.current)); };
 
   useEffect(() => {
     const timers = removeTimers.current;
@@ -1845,139 +1913,184 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    injectCSS();
     const u1=onValue(ref(db,"entries"),snap=>{if(snap.val())setEntries(snap.val());setLoading(false);});
-    const u2=onValue(ref(db,"customPlaces"),snap=>{if(snap.val()){const c=Object.values(snap.val());setPlaces(prev=>{const ids=new Set(prev.map(p=>p.id));return[...prev,...c.filter(p=>!ids.has(p.id))];});}});
+    const u2=onValue(ref(db,"customPlaces"),snap=>{if(snap.val())setCustomPlaces(Object.values(snap.val()));else setCustomPlaces([]);});
     const u3=onValue(ref(db,"lists"),snap=>{if(snap.val())setLists(Object.values(snap.val()));});
-    const u4=onValue(ref(db,"removedIds"),snap=>{if(snap.val())setRemovedIds(Object.keys(snap.val()));});
+    const u4=onValue(ref(db,"removedIds"),snap=>{if(snap.val())setRemovedIds(Object.keys(snap.val()));else setRemovedIds([]);});
     const u5=onValue(ref(db,"customEdits"),snap=>{if(snap.val())setCustomEdits(snap.val());});
     const u6=onValue(ref(db,"events"),snap=>{
       if(snap.val()){
         const evs=Object.values(snap.val());
-        // Auto-archive past events
         const today=new Date().toISOString().split("T")[0];
-        evs.forEach(async ev=>{
-          if(ev.date<today&&!ev.archived){
-            await set(ref(db,"events/"+ev.id),{...ev,archived:true});
-          }
-        });
+        evs.forEach(async ev=>{if(ev.date<today&&!ev.archived)await set(ref(db,"events/"+ev.id),{...ev,archived:true});});
         setEvents(evs);
-      } else { setEvents([]); }
+      } else setEvents([]);
     });
     setTimeout(()=>setLoading(false),3000);
-    return()=>{u1();u2();u3();u4();u5();};
-  },[]);
+    return()=>{u1();u2();u3();u4();u5();u6();};
+  }, []);
+
+  const places = useMemo(()=>[...INITIAL_PLACES,...customPlaces],[customPlaces]);
+  const effectivePlaces = useMemo(()=>places.map(p=>{const ed=customEdits[p.id];return ed?{...p,...ed}:p;}),[places,customEdits]);
+  const visiblePlaces = useMemo(()=>effectivePlaces.filter(p=>!removedIds.includes(p.id)),[effectivePlaces,removedIds]);
 
   useEffect(()=>{
-    if(placeOfDayFixed.current) return;
-    const visible=places.filter(p=>!removedIds.includes(p.id));
+    if(placeOfDayFixed.current)return;
+    const visible=visiblePlaces.filter(p=>!removedIds.includes(p.id));
     if(!visible.length)return;
-    const candidates=visible.filter(p=>{const e=entries[p.id];return !e||!e.status||e.status==="quero";});
+    const candidates=visible.filter(p=>{const e=entries[p.id];return!e||!e.status||e.status==="quero";});
     if(!candidates.length)return;
     const seed=new Date().toDateString();let h=0;
     for(let i=0;i<seed.length;i++)h=((h<<5)-h)+seed.charCodeAt(i);
     setPlaceOfDay(candidates[Math.abs(h)%candidates.length]);
     placeOfDayFixed.current=true;
-  },[places,entries,removedIds]);
+  },[visiblePlaces,entries,removedIds]);
 
-  const handleSave=async(placeId,data)=>{
+  const addToast = useCallback((message,type,onUndo)=>{
+    const id=Date.now();
+    setToasts(prev=>[...prev,{id,message,type,onUndo}]);
+  },[]);
+
+  const handleSave = async(placeId,data)=>{
     setSyncing(true);
     const prev_entry=entries[placeId];
     setEntries(prev=>({...prev,[placeId]:data}));
-    try{
-      await set(ref(db,"entries/"+placeId),data);
-    }catch(err){
-      setEntries(prev=>({...prev,[placeId]:prev_entry}));
-      addToast(isEN?"Save failed. Check your connection.":"Erro ao salvar. Verifique sua conexao.","error");
-    }
+    try{ await set(ref(db,"entries/"+placeId),data); }
+    catch(err){ setEntries(prev=>({...prev,[placeId]:prev_entry})); addToast(isEN?"Save failed. Check connection.":"Erro ao salvar.","error"); }
     setSyncing(false);
   };
-  const handleAdd=async place=>{setPlaces(prev=>[...prev,place]);await set(ref(db,"customPlaces/"+place.id),place);};
 
-  const handleEditPlace=async updated=>{
-    setCustomEdits(prev=>({...prev,[updated.id]:{name:updated.name,nameEN:updated.nameEN,emoji:updated.emoji,desc:updated.desc,descEN:updated.descEN}}));
-    setPlaces(prev=>prev.map(p=>p.id===updated.id?updated:p));
-    if(selected?.id===updated.id)setSelected(updated);
-    await set(ref(db,"customEdits/"+updated.id),{name:updated.name,nameEN:updated.nameEN,emoji:updated.emoji,desc:updated.desc,descEN:updated.descEN});
-    addToast(T.savedToast,"success");
-  };
-
-  const handleDelete=useCallback(async(placeId,placeName)=>{
-    setRemovedIds(prev=>[...prev,placeId]);setSelected(null);
+  const handleDelete = useCallback(async(placeId,placeName)=>{
+    setRemovedIds(prev=>[...prev,placeId]); setSelected(null);
     let undone=false;
     const undo=()=>{undone=true;setRemovedIds(prev=>prev.filter(x=>x!==placeId));if(removeTimers.current[placeId])clearTimeout(removeTimers.current[placeId]);};
     addToast(placeName+" "+T.removedToast,"error",undo);
     removeTimers.current[placeId]=setTimeout(async()=>{
       if(undone)return;
-      setPlaces(prev=>prev.filter(p=>p.id!==placeId));
+      setPlaces && null;
       setEntries(prev=>{const ne={...prev};delete ne[placeId];return ne;});
-      try{await remove(ref(db,"customPlaces/"+placeId));await remove(ref(db,"entries/"+placeId));await set(ref(db,"removedIds/"+placeId),true);}catch(err){addToast(isEN?"Remove failed.":"Erro ao remover.","error");}
+      try{await remove(ref(db,"customPlaces/"+placeId));await remove(ref(db,"entries/"+placeId));await set(ref(db,"removedIds/"+placeId),true);}
+      catch{addToast(isEN?"Remove failed.":"Erro ao remover.","error");}
       setRemovedIds(prev=>prev.filter(x=>x!==placeId));
     },5000);
   },[addToast]);
 
-  const saveLists=async newLists=>{setLists(newLists);const obj={};newLists.forEach(l=>{obj[l.id]=l;});await set(ref(db,"lists"),obj);};
+  const handleEditPlace = useCallback(async(placeId,edits)=>{
+    setCustomEdits(prev=>({...prev,[placeId]:edits}));
+    await set(ref(db,"customEdits/"+placeId),edits);
+  },[]);
 
-  const getSurprise=()=>{const visible=places.filter(p=>!removedIds.includes(p.id));const c=visible.filter(p=>{const e=entries[p.id];return !e||!e.status||e.status==="quero";});if(c.length){setSelected(c[Math.floor(Math.random()*c.length)]);addToast(T.surpriseToast,"info");}};
+  const handleToggleWant = useCallback(async(place)=>{
+    const e=entries[place.id]||{};
+    const newStatus=e.status==="quero"?null:"quero";
+    await handleSave(place.id,{...e,status:newStatus});
+  },[entries]);
 
-  const handleNearby=()=>{navigator.geolocation.getCurrentPosition(pos=>{setUserLat(pos.coords.latitude);setUserLng(pos.coords.longitude);setShowNearby(true);},()=>addToast(T.locationErr,"error"));};
+  const handleSaveToCuradoria = useCallback((place)=>{
+    if(!lists.length){addToast(isEN?"Create a curadoria first":"Crie uma curadoria primeiro","error");return;}
+    const first=lists[0];
+    const pids=Array.isArray(first.placeIds)?first.placeIds:Object.values(first.placeIds||{});
+    if(!pids.includes(place.id)){
+      saveLists(lists.map(l=>l.id===first.id?{...l,placeIds:[...pids,place.id]}:l));
+      addToast((isEN&&place.nameEN?place.nameEN:place.name)+" → "+first.name,"success");
+    }
+  },[lists,addToast]);
 
-  const effectivePlaces=useMemo(()=>places.map(p=>{const edits=customEdits[p.id];return edits?{...p,...edits}:p;}),[places,customEdits]);
-  const toggleArr=(arr,setArr,val)=>setArr(prev=>prev.includes(val)?prev.filter(x=>x!==val):[...prev,val]);
+  const saveLists = useCallback(async(newLists)=>{
+    setLists(newLists);
+    const obj={};newLists.forEach(l=>obj[l.id]=l);
+    await set(ref(db,"lists"),obj);
+  },[]);
 
-  const activeFiltersCount=[filterVibes.length>0,filterPrices.length>0,filterSeasons.length>0,filterStars>0,filterThumb,filterPet,filterBathroom,filterRegion].filter(Boolean).length;
-  const hasAnyFilter=activeFiltersCount>0||activeCategory!=="Todos"||activeFilter!=="todos"||!!search;
-  const visiblePlaces=useMemo(()=>effectivePlaces.filter(p=>!removedIds.includes(p.id)),[effectivePlaces,removedIds]);
+  const getSurprise = useCallback(()=>{
+    const candidates=visiblePlaces.filter(p=>{const e=entries[p.id]||{};return!e.status||e.status==="quero";});
+    if(!candidates.length)return;
+    const pick=candidates[Math.floor(Math.random()*candidates.length)];
+    openModal(pick);
+  },[visiblePlaces,entries]);
 
-  const filteredPlaces=useMemo(()=>visiblePlaces.filter(p=>{
-    const entry=entries[p.id]||{};
-    const sl=normalize(search);
-    const pname=normalize(isEN&&p.nameEN?p.nameEN:p.name);
-    const pdesc=normalize(isEN&&p.descEN?p.descEN:p.desc||"");
-    const pcat=normalize(catLabel(p.category));
-    const searchOk=!search||pname.includes(sl)||pdesc.includes(sl)||pcat.includes(sl);
-    const catOk=activeCategory==="Todos"||p.category===activeCategory;
-    const st=entry.status;
-    const statusOk=activeFilter==="todos"?true:activeFilter==="quero"?(!st||st==="quero"):st==="fui";
-    const vibeOk=filterVibes.length===0||(entry.vibes&&filterVibes.every(v=>entry.vibes.includes(v)));
-    const priceOk=filterPrices.length===0||filterPrices.includes(entry.price||p.price);
-    const starsOk=filterStars===0||(entry.stars&&entry.stars>=filterStars);
-    const thumbOk=!filterThumb||entry.thumb===filterThumb;
-    const petOk=!filterPet||(entry.petFriendly!==undefined?entry.petFriendly:p.petFriendly);
-    const bathOk=!filterBathroom||(entry.publicBathroom!==undefined?entry.publicBathroom:p.publicBathroom);
-    const seasonOk=filterSeasons.length===0||filterSeasons.includes(entry.season||p.season);
-    const regionOk=!filterRegion||inRegion(p,filterRegion);
-    return searchOk&&catOk&&statusOk&&vibeOk&&priceOk&&starsOk&&thumbOk&&petOk&&bathOk&&seasonOk&&regionOk;
+  const handleNearby = useCallback(()=>{
+    if(userLat&&userLng){setShowNearby(true);return;}
+    navigator.geolocation?.getCurrentPosition(pos=>{setUserLat(pos.coords.latitude);setUserLng(pos.coords.longitude);setShowNearby(true);},()=>addToast(T.gpsError,"error"));
+  },[userLat,userLng,addToast]);
+
+  // Geofencing
+  useEffect(()=>{
+    if(!userLat||!userLng)return;
+    const nearby=visiblePlaces.find(p=>{
+      if(!p.lat||!p.lng)return false;
+      const e=entries[p.id]||{};
+      if(e.status==="fui")return false;
+      return haversineKm(userLat,userLng,p.lat,p.lng)<0.2;
+    });
+    setNearbyAlert(nearby||null);
+  },[userLat,userLng,visiblePlaces,entries]);
+
+  const MOODS = [
+    {id:"2h",label:"⚡ 2h livres",filter:p=>["30min","1h","2h"].includes(p.time)},
+    {id:"rain",label:"☔ Chovendo",filter:p=>["Museus","Observatorios","Entretenimento","Bares","Livrarias","Lojas","Dispensaries"].includes(p.category)},
+    {id:"date",label:"💑 Date night",filter:p=>["Bares","Comida","Entretenimento"].includes(p.category)},
+    {id:"free",label:"🆓 Sem grana",filter:p=>p.price==="gratis"},
+    {id:"dog",label:"🐾 Com o dog",filter:p=>p.petFriendly},
+  ];
+  const activeMoodFilter = activeMood?MOODS.find(m=>m.id===activeMood):null;
+  const moodFilteredPlaces = useMemo(()=>activeMoodFilter?visiblePlaces.filter(activeMoodFilter.filter):visiblePlaces,[visiblePlaces,activeMood]);
+
+  const hasAnyFilter = activeFilter!=="todos"||activeCategory!=="Todos"||search||filterVibes.length||filterPrices.length||filterSeasons.length||filterStars>0||filterThumb||filterPet||filterBathroom||filterRegion||activeMood;
+  const clearFilters = ()=>{setActiveFilter("todos");setActiveCategory("Todos");setSearch("");setSearchInput("");setFilterVibes([]);setFilterPrices([]);setFilterSeasons([]);setFilterStars(0);setFilterThumb(null);setFilterPet(false);setFilterBathroom(false);setFilterRegion(null);setActiveMood(null);};
+
+  const filteredPlaces = useMemo(()=>moodFilteredPlaces.filter(p=>{
+    const e=entries[p.id]||{};
+    if(activeFilter==="quero"&&e.status!=="quero")return false;
+    if(activeFilter==="fui"&&e.status!=="fui")return false;
+    if(activeCategory!=="Todos"&&p.category!==activeCategory)return false;
+    if(filterRegion){
+      const r=REGIONS[filterRegion];
+      if(!r)return false;
+      if(p.lat&&p.lng){if(p.lat<r.minLat||p.lat>r.maxLat||p.lng<r.minLng||p.lng>r.maxLng)return false;}
+      else return false;
+    }
+    if(search){
+      const q=normalize(search);
+      const nm=normalize(isEN&&p.nameEN?p.nameEN:p.name);
+      const nm2=normalize(p.name);
+      const nm3=normalize(p.nameEN||"");
+      if(!nm.includes(q)&&!nm2.includes(q)&&!nm3.includes(q))return false;
+    }
+    if(filterVibes.length&&(!e.vibes||!filterVibes.some(v=>e.vibes.includes(v))))return false;
+    if(filterPrices.length){const dp=e.price||p.price;if(!filterPrices.includes(dp))return false;}
+    if(filterSeasons.length){const ds=e.season||p.season;if(!filterSeasons.includes(ds))return false;}
+    if(filterStars>0&&(e.stars||0)<filterStars)return false;
+    if(filterThumb&&e.thumb!==filterThumb)return false;
+    if(filterPet&&!p.petFriendly)return false;
+    if(filterBathroom&&!p.publicBathroom)return false;
+    return true;
   }).sort((a,b)=>{
-    if(sortBy==="az"||activeCategory!=="Todos") return (isEN&&a.nameEN?a.nameEN:a.name).localeCompare(isEN&&b.nameEN?b.nameEN:b.name);
-    if(sortBy==="za") return (isEN&&b.nameEN?b.nameEN:b.name).localeCompare(isEN&&a.nameEN?a.nameEN:a.name);
-    if(sortBy==="stars") return ((entries[b.id]||{}).stars||0)-((entries[a.id]||{}).stars||0);
-    if(sortBy==="pending"){const sa=(entries[a.id]||{}).status,sb=(entries[b.id]||{}).status;return !sa?-1:!sb?1:0;}
-    if(sortBy==="date"){const da=(entries[a.id]||{}).date||"",db2=(entries[b.id]||{}).date||"";return db2.localeCompare(da);}
-    if(sortBy==="cat") return a.category.localeCompare(b.category);
+    if(sortBy==="az")return(isEN&&a.nameEN?a.nameEN:a.name).localeCompare(isEN&&b.nameEN?b.nameEN:b.name);
+    if(sortBy==="cat")return a.category.localeCompare(b.category);
     return 0;
-  }),[visiblePlaces,search,activeCategory,activeFilter,filterVibes,filterPrices,filterSeasons,filterStars,filterThumb,filterPet,filterBathroom,filterRegion,sortBy,entries]);
+  }),[moodFilteredPlaces,search,activeCategory,activeFilter,filterVibes,filterPrices,filterSeasons,filterStars,filterThumb,filterPet,filterBathroom,filterRegion,sortBy,entries,activeMood]);
 
-  const total=visiblePlaces.length;
-  const visitedCount=Object.values(entries).filter(e=>e.status==="fui").length;
-  const pct=total>0?Math.round((visitedCount/total)*100):0;
+  const visitedCount = useMemo(()=>visiblePlaces.filter(p=>(entries[p.id]||{}).status==="fui").length,[visiblePlaces,entries]);
+  const total = visiblePlaces.length;
+  const pct = total>0?Math.round((visitedCount/total)*100):0;
+  const activeFiltersCount = [activeCategory!=="Todos",activeFilter!=="todos",filterVibes.length>0,filterPrices.length>0,filterSeasons.length>0,filterStars>0,filterThumb,filterPet,filterBathroom,filterRegion].filter(Boolean).length;
   const TABS=isEN?["List","Map","Timeline","Curadoria","Stats","Events"]:["Lista","Mapa","Linha do Tempo","Curadoria","Stats","Eventos"];
-  const NYC_REGIONS=["Manhattan","Brooklyn","Queens","Bronx","Staten Island","Jersey City"];
-  const DAYTRIP_REGIONS=["Philadelphia","Cold Spring","Asbury Park","Princeton","Hudson NY","Catskills"];
-  const clearFilters=()=>{setFilterVibes([]);setFilterPrices([]);setFilterSeasons([]);setFilterStars(0);setFilterThumb(null);setFilterPet(false);setFilterBathroom(false);setFilterRegion(null);};
 
   if(loading)return(
     <div style={{ minHeight:"100vh",background:"#0f0f13",color:"#f0eeff",fontFamily:"'Inter',system-ui,sans-serif" }}>
       <div style={{ background:"#0f0f13",borderBottom:"1px solid #2a2a38",padding:"14px 16px" }}>
-        <div style={{ height:22,width:160,background:"#1a1a22",borderRadius:8,marginBottom:8,animation:"pulse 1.5s ease infinite" }}/>
+        <div style={{ height:22,width:160,background:"#1a1a22",borderRadius:8,marginBottom:8 }}/>
         <div style={{ height:8,background:"#1a1a22",borderRadius:4 }}/>
       </div>
       <div style={{ maxWidth:600,margin:"0 auto",padding:"16px" }}>
         {[1,2,3,4,5,6].map(i=>(
           <div key={i} style={{ background:"#1a1a22",borderRadius:12,marginBottom:8,padding:"12px 14px",display:"flex",gap:12,opacity:1-(i*0.08) }}>
-            <div style={{ width:54,height:54,borderRadius:8,background:"#2a2a38",flexShrink:0,animation:"pulse 1.5s ease infinite" }}/>
+            <div style={{ width:54,height:54,borderRadius:8,background:"#2a2a38",flexShrink:0 }}/>
             <div style={{ flex:1 }}>
-              <div style={{ height:14,width:"60%",background:"#2a2a38",borderRadius:6,marginBottom:8,animation:"pulse 1.5s ease infinite" }}/>
-              <div style={{ height:10,width:"40%",background:"#2a2a38",borderRadius:6,animation:"pulse 1.5s ease infinite" }}/>
+              <div style={{ height:14,width:"60%",background:"#2a2a38",borderRadius:6,marginBottom:8 }}/>
+              <div style={{ height:10,width:"40%",background:"#2a2a38",borderRadius:6 }}/>
             </div>
           </div>
         ))}
@@ -1985,133 +2098,147 @@ export default function App() {
     </div>
   );
 
-  return <div style={{ minHeight:"100vh",background:"#0f0f13",color:"#f0eeff",fontFamily:"'Inter', system-ui, sans-serif" }}>
-    {toasts.map(t=><Toast key={t.id} message={t.message} type={t.type} onDone={()=>setToasts(prev=>prev.filter(x=>x.id!==t.id))} onUndo={t.onUndo}/>)}
-
-    <div style={{ background:"#0f0f13f8",backdropFilter:"blur(12px)",borderBottom:"1px solid #2a2a38",position:"sticky",top:0,zIndex:100 }}>
-      <div style={{ maxWidth:600,margin:"0 auto",padding:"14px 16px 0" }}>
-
-        <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12 }}>
-          <div onClick={()=>window.location.reload()} style={{ cursor:"pointer" }}>
-            <div style={{ fontSize:11,color:"#50506a",letterSpacing:"0.18em",marginBottom:1 }}>{T.byGuiGab} {syncing&&<span className="pulsing" style={{ color:"#ff3366" }}>· {T.saving}</span>}</div>
-            <div style={{ fontSize:22,fontWeight:800,letterSpacing:"-0.02em",background:"linear-gradient(90deg,#ff3366,#ff6b35,#ffd600)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent" }}>{T.appTitle} 🗽</div>
+  return (
+    <div style={{ minHeight:"100vh",background:"#0f0f13",color:"#f0eeff",fontFamily:"'Inter',system-ui,sans-serif",paddingBottom:80 }}>
+      <div style={{ maxWidth:600,margin:"0 auto" }}>
+        {/* Header */}
+        <div style={{ padding:"14px 16px 8px",position:"sticky",top:0,background:"#0f0f13",zIndex:100,borderBottom:"1px solid #1a1a22" }}>
+          <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10 }}>
+            <div onClick={()=>window.location.reload()} style={{ cursor:"pointer" }}>
+              <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.15em" }}>{T.byGuiGab} {syncing&&<span className="pulsing" style={{ color:"#ff3366" }}>·</span>}</div>
+              <div style={{ fontSize:20,fontWeight:800,letterSpacing:"-0.02em",background:"linear-gradient(90deg,#ff3366,#ff6b35,#ffd600)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",lineHeight:1.2 }}>{T.appTitle} 🗽</div>
+            </div>
+            <button onClick={()=>setShowAdd(true)} style={{ background:"#ff3366",border:"none",borderRadius:12,padding:"8px 16px",display:"flex",alignItems:"center",gap:6,cursor:"pointer",fontSize:13,color:"#fff",fontWeight:700 }}>
+              <span style={{ fontSize:18 }}>+</span> {isEN?"Add":"Adicionar"}
+            </button>
           </div>
-          <div style={{ display:"flex",gap:6 }}>
-            <HdrBtn icon={<Icons.Sparkles/>} label={isEN?"Surprise":"Surpresa"} onClick={()=>setShowSurpresa(true)}/>
-            <HdrBtn icon={<Icons.MapPin/>} label={T.nearby} onClick={handleNearby}/>
-            <HdrBtn icon={<Icons.Bot/>} label={T.plan} onClick={()=>setShowPlanner(true)}/>
-            <HdrBtn icon={<Icons.Share/>} label={T.share} onClick={()=>setShowShare(true)}/>
-          </div>
-        </div>
-
-        <div style={{ background:"#1a1a22",border:"1px solid #2a2a38",borderRadius:12,padding:"10px 14px",marginBottom:10 }}>
-          <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6 }}>
-            <div style={{ fontSize:11,color:"#50506a",letterSpacing:"0.08em" }}>{T.explored}</div>
-            <div style={{ display:"flex",gap:8,alignItems:"center" }}>
-              {hasAnyFilter&&filteredPlaces.length!==total&&<div style={{ fontSize:11,color:"#ffd600" }}>{filteredPlaces.length} / {total}</div>}
-              <div style={{ fontSize:13,fontWeight:700,color:"#ff3366" }}>{pct}%</div>
+          {/* Progress bar */}
+          <div style={{ marginBottom:8 }}>
+            <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5 }}>
+              <div style={{ display:"flex",gap:10 }}>
+                <span style={{ fontSize:11,color:"#00e676",fontWeight:600 }}>✓ {visitedCount}</span>
+                <span style={{ fontSize:11,color:"#50506a" }}>{total-visitedCount} {T.onList}</span>
+                {hasAnyFilter&&filteredPlaces.length!==total&&<span style={{ fontSize:11,color:"#ffd600" }}>· {filteredPlaces.length} {isEN?"shown":"exibidos"}</span>}
+              </div>
+              <span style={{ fontSize:12,fontWeight:700,color:"#ff3366" }}>{pct}%</span>
+            </div>
+            <div style={{ height:3,background:"#2a2a38",borderRadius:2 }}>
+              <div style={{ height:"100%",width:pct+"%",background:"linear-gradient(90deg,#ff3366,#ff6b35,#ffd600)",borderRadius:2,transition:"width 0.6s ease" }}/>
             </div>
           </div>
-          <div style={{ height:4,background:"#2a2a38",borderRadius:2 }}>
-            <div style={{ height:"100%",width:pct+"%",background:"linear-gradient(90deg,#ff3366,#ff6b35,#ffd600)",borderRadius:2,transition:"width 0.6s ease" }}/>
-          </div>
-          <div style={{ display:"flex",gap:14,marginTop:6 }}>
-            <span style={{ fontSize:11,color:"#00e676" }}>✓ {visitedCount} {T.visited}</span>
-            <span style={{ fontSize:11,color:"#50506a" }}>{total-visitedCount} {T.onList}</span>
-          </div>
-        </div>
-
-        <div style={{ display:"flex",gap:0,background:"#1a1a22",borderRadius:10,padding:3,border:"1px solid #2a2a38",marginBottom:10 }}>
-
-        </div>
-
-        {tab==="list"&&<>
-          <div style={{ position:"relative",marginBottom:8 }}>
-            <span style={{ position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",color:"#50506a",fontSize:13 }}>🔍</span>
-            <input value={searchInput} onChange={ev=>{setSearchInput(ev.target.value);clearTimeout(searchDebounce.current);searchDebounce.current=setTimeout(()=>setSearch(ev.target.value),200);}} placeholder={T.search} style={{ width:"100%",background:"#1a1a22",border:"1px solid #2a2a38",borderRadius:10,padding:"9px 34px 9px 34px",color:"#f0eeff",fontSize:13 }}/>
-            {searchInput&&<button onClick={()=>{setSearchInput("");setSearch("");}} style={{ position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"#50506a",cursor:"pointer",fontSize:16 }}>×</button>}
-          </div>
-
-          <div style={{ display:"flex",gap:5,marginBottom:8,overflowX:"auto",scrollbarWidth:"none" }}>
-            {[["todos",T.all],["quero",T.want],["fui",T.been]].map(([key,label])=><button key={key} onClick={()=>setActiveFilter(activeFilter===key&&key!=="todos"?"todos":key)} className="btn" style={{ padding:"5px 12px",borderRadius:20,background:activeFilter===key?"#ff3366":"#1a1a22",border:"1px solid "+(activeFilter===key?"#ff3366":"#2a2a38"),color:activeFilter===key?"#fff":"#50506a",fontSize:12,whiteSpace:"nowrap" }}>{label}</button>)}
-            <button onClick={()=>setShowFilters(!showFilters)} className="btn" style={{ padding:"5px 14px",borderRadius:20,background:activeFiltersCount>0?"#ffd60020":"#1a1a22",border:"1px solid "+(activeFiltersCount>0?"#ffd600":"#2a2a38"),color:activeFiltersCount>0?"#ffd600":"#50506a",fontSize:12,whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4 }}>{activeFiltersCount>0&&<span style={{ width:6,height:6,borderRadius:"50%",background:"#ffd600",display:"inline-block" }}/>}{activeFiltersCount>0?T.filters+" ("+activeFiltersCount+")":T.filters}</button>
-            <select value={sortBy} onChange={ev=>setSortBy(ev.target.value)} style={{ background:"#1a1a22",border:"1px solid #2a2a38",borderRadius:20,padding:"5px 10px",color:"#50506a",fontSize:12 }}>
-              {T.sortOpts.map((o,i)=><option key={i} value={["default","az","za","stars","pending","date","cat"][i]}>{o}</option>)}
-            </select>
-          </div>
-
-          {showFilters&&<div style={{ background:"#1a1a22",border:"1px solid #2a2a38",borderRadius:12,padding:"12px",marginBottom:8 }}>
-            <div style={{ marginBottom:10 }}>
-              <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.12em",marginBottom:6 }}>REGION / BAIRRO</div>
-              <div style={{ marginBottom:6 }}>
-                <div style={{ fontSize:10,color:"#50506a",marginBottom:4 }}>NYC</div>
-                <div style={{ display:"flex",gap:5,flexWrap:"wrap" }}>{NYC_REGIONS.map(r=><button key={r} onClick={()=>setFilterRegion(filterRegion===r?null:r)} className="btn" style={{ padding:"4px 10px",borderRadius:20,background:filterRegion===r?"#4da6ff20":"#0f0f13",border:"1px solid "+(filterRegion===r?"#4da6ff":"#2a2a38"),color:filterRegion===r?"#4da6ff":"#50506a",fontSize:11 }}>{r}</button>)}</div>
-              </div>
-              <div>
-                <div style={{ fontSize:10,color:"#50506a",marginBottom:4 }}>Daytrips</div>
-                <div style={{ display:"flex",gap:5,flexWrap:"wrap" }}>{DAYTRIP_REGIONS.map(r=><button key={r} onClick={()=>setFilterRegion(filterRegion===r?null:r)} className="btn" style={{ padding:"4px 10px",borderRadius:20,background:filterRegion===r?"#4da6ff20":"#0f0f13",border:"1px solid "+(filterRegion===r?"#4da6ff":"#2a2a38"),color:filterRegion===r?"#4da6ff":"#50506a",fontSize:11 }}>{r}</button>)}</div>
-              </div>
-            </div>
-            <div style={{ marginBottom:10 }}><div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.12em",marginBottom:6 }}>VIBE {T.multiSelect}</div><div style={{ display:"flex",gap:5,flexWrap:"wrap" }}>{VIBES.map(v=><button key={v} onClick={()=>toggleArr(filterVibes,setFilterVibes,v)} className="btn" style={{ padding:"4px 10px",borderRadius:20,background:filterVibes.includes(v)?"#ff336620":"#0f0f13",border:"1px solid "+(filterVibes.includes(v)?"#ff3366":"#2a2a38"),color:filterVibes.includes(v)?"#ff3366":"#50506a",fontSize:11 }}>{VIBE_EMOJI[v]} {VIBE_LABELS[v]}</button>)}</div></div>
-            <div style={{ marginBottom:10 }}><div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.12em",marginBottom:6 }}>{T.price} {T.multiSelect}</div><div style={{ display:"flex",gap:5 }}>{PRICE_LEVELS.map(p=><button key={p} onClick={()=>toggleArr(filterPrices,setFilterPrices,p)} className="btn" style={{ flex:1,padding:"6px",borderRadius:8,background:filterPrices.includes(p)?"#ffd60020":"#0f0f13",border:"1px solid "+(filterPrices.includes(p)?"#ffd600":"#2a2a38"),color:filterPrices.includes(p)?"#ffd600":"#50506a",fontSize:12 }}>{PRICE_EMOJI[p]}</button>)}</div></div>
-            <div style={{ marginBottom:10 }}><div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.12em",marginBottom:6 }}>{T.bestSeason} {T.multiSelect}</div><div style={{ display:"flex",gap:5,flexWrap:"wrap" }}>{SEASONS.map(s=><button key={s} onClick={()=>toggleArr(filterSeasons,setFilterSeasons,s)} className="btn" style={{ padding:"5px 10px",borderRadius:20,background:filterSeasons.includes(s)?"#ffd60020":"#0f0f13",border:"1px solid "+(filterSeasons.includes(s)?"#ffd600":"#2a2a38"),color:filterSeasons.includes(s)?"#ffd600":"#50506a",fontSize:11 }}>{SEASON_EMOJI[s]} {SEASON_LABELS[s]}</button>)}</div></div>
-            <div style={{ marginBottom:10 }}><div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.12em",marginBottom:6 }}>{T.minRating}</div><div style={{ display:"flex",gap:4 }}>{[1,2,3,4,5].map(n=><span key={n} onClick={()=>setFilterStars(filterStars===n?0:n)} style={{ fontSize:22,cursor:"pointer",color:n<=filterStars?"#ffd600":"#50506a" }}>★</span>)}</div></div>
-            <div style={{ marginBottom:10 }}><div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.12em",marginBottom:6 }}>{T.thumb}</div><div style={{ display:"flex",gap:6 }}>{[["up",T.recommended],["down",T.notRec]].map(([key,label])=><button key={key} onClick={()=>setFilterThumb(filterThumb===key?null:key)} className="btn" style={{ flex:1,padding:"7px",borderRadius:8,background:filterThumb===key?"#ff336620":"#0f0f13",border:"1px solid "+(filterThumb===key?"#ff3366":"#2a2a38"),color:filterThumb===key?"#ff3366":"#50506a",fontSize:12 }}>{label}</button>)}</div></div>
-            <div style={{ marginBottom:activeFiltersCount>0?10:0 }}><div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.12em",marginBottom:6 }}>{T.facilities}</div><div style={{ display:"flex",gap:6 }}><button onClick={()=>setFilterPet(!filterPet)} className="btn" style={{ flex:1,padding:"7px",borderRadius:8,background:filterPet?"#4ade8020":"#0f0f13",border:"1px solid "+(filterPet?"#4ade80":"#2a2a38"),color:filterPet?"#4ade80":"#50506a",fontSize:12 }}>{T.pet}</button><button onClick={()=>setFilterBathroom(!filterBathroom)} className="btn" style={{ flex:1,padding:"7px",borderRadius:8,background:filterBathroom?"#60a5fa20":"#0f0f13",border:"1px solid "+(filterBathroom?"#60a5fa":"#2a2a38"),color:filterBathroom?"#60a5fa":"#50506a",fontSize:12 }}>{T.bathroom}</button></div></div>
-            {activeFiltersCount>0&&<button onClick={clearFilters} style={{ width:"100%",padding:"7px",background:"none",border:"1px solid #2a2a38",borderRadius:8,color:"#50506a",fontSize:12,cursor:"pointer" }}>{T.clearFilters}</button>}
+          {/* Search */}
+          {tab==="list"&&<div style={{ position:"relative",marginBottom:10 }}>
+            <span style={{ position:"absolute",left:13,top:"50%",transform:"translateY(-50%)",color:"#50506a",fontSize:15 }}>🔍</span>
+            <input value={searchInput} onChange={ev=>{setSearchInput(ev.target.value);clearTimeout(searchDebounce.current);searchDebounce.current=setTimeout(()=>setSearch(ev.target.value),200);}} placeholder={T.search} style={{ width:"100%",background:"#1a1a22",border:"1.5px solid "+(searchInput?"#ff336650":"#2a2a38"),borderRadius:12,padding:"11px 36px 11px 38px",color:"#f0eeff",fontSize:14,transition:"border-color 0.2s" }}/>
+            {searchInput&&<button onClick={()=>{setSearchInput("");setSearch("");}} style={{ position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",background:"#2a2a38",border:"none",borderRadius:"50%",width:20,height:20,color:"#9090b0",cursor:"pointer",fontSize:12,display:"flex",alignItems:"center",justifyContent:"center" }}>×</button>}
           </div>}
+        </div>
 
-          <div style={{ display:"flex",gap:5,overflowX:"auto",scrollbarWidth:"none",paddingBottom:10 }}>
-            {["Todos",...CATEGORIES].map(cat=>{const meta=CAT_META[cat],active=activeCategory===cat;return<button key={cat} onClick={()=>{if(cat==="Todos"){setActiveCategory("Todos");setSortBy("default");}else{setActiveCategory(activeCategory===cat?"Todos":cat);if(activeCategory!==cat)setSortBy("az");}}} className="btn" style={{ padding:"4px 10px",borderRadius:20,background:active?(meta?meta.color:"#ff3366")+"20":"#1a1a22",border:"1px solid "+(active?(meta?meta.color:"#ff3366")+"60":"#2a2a38"),color:active?(meta?meta.color:"#ff3366"):"#50506a",fontSize:10,whiteSpace:"nowrap",letterSpacing:"0.04em" }}>{cat==="Todos"?T.all:catLabel(cat)}</button>;})}
+        {/* List Tab */}
+        {tab==="list"&&<div style={{ padding:"10px 16px 140px" }}>
+          {/* Quick moods */}
+          <div style={{ display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",paddingBottom:8 }}>
+            {MOODS.map(m=><button key={m.id} className={"mood-chip"+(activeMood===m.id?" active":"")} onClick={()=>setActiveMood(activeMood===m.id?null:m.id)}>{m.label}</button>)}
           </div>
-        </>}
-      </div>
-    </div>
+          {/* Category chips */}
+          <div style={{ display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",paddingBottom:10 }}>
+            {["Todos",...CATEGORIES].map(cat=>{const meta=CAT_META[cat],active=activeCategory===cat;return<button key={cat} onClick={()=>{if(cat==="Todos"){setActiveCategory("Todos");setSortBy("default");}else{setActiveCategory(activeCategory===cat?"Todos":cat);if(activeCategory!==cat)setSortBy("az");}}} className="btn" style={{ padding:"6px 14px",borderRadius:22,background:active?(meta?meta.color:"#ff3366")+"25":"#1a1a22",border:"2px solid "+(active?(meta?meta.color:"#ff3366")+"80":"#2a2a38"),color:active?(meta?meta.color:"#ff3366"):"#9090b0",fontSize:12,whiteSpace:"nowrap",fontWeight:active?600:400,transition:"all 0.15s" }}>{cat==="Todos"?T.all:catLabel(cat)}</button>;})}
+          </div>
+          {/* Filter row */}
+          <div style={{ display:"flex",gap:6,alignItems:"center",marginBottom:10 }}>
+            {[["todos",T.all],["quero","♥ "+T.want.replace("♥ ","")],["fui","✓ "+T.been.replace("✓ ","")]].map(([key,label])=><button key={key} onClick={()=>setActiveFilter(activeFilter===key&&key!=="todos"?"todos":key)} className="btn" style={{ padding:"7px 14px",borderRadius:20,background:activeFilter===key?key==="quero"?"#4da6ff":key==="fui"?"#00e676":"#ff3366":"#1a1a22",border:"1px solid "+(activeFilter===key?key==="quero"?"#4da6ff":key==="fui"?"#00e676":"#ff3366":"#2a2a38"),color:activeFilter===key?"#000":"#9090b0",fontSize:12,fontWeight:activeFilter===key?600:400,whiteSpace:"nowrap" }}>{label}</button>)}
+            <div style={{ flex:1 }}/>
+            <button onClick={()=>setShowFilters(!showFilters)} className="btn" style={{ padding:"5px 14px",borderRadius:20,background:activeFiltersCount>0?"#ffd60020":"#1a1a22",border:"1px solid "+(activeFiltersCount>0?"#ffd600":"#2a2a38"),color:activeFiltersCount>0?"#ffd600":"#50506a",fontSize:12,whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4 }}>{activeFiltersCount>0&&<span style={{ width:6,height:6,borderRadius:"50%",background:"#ffd600",display:"inline-block" }}/>}{activeFiltersCount>0?T.filters+" ("+activeFiltersCount+")":T.filters}</button>
+            {hasAnyFilter&&<button onClick={clearFilters} style={{ background:"none",border:"none",color:"#50506a",fontSize:11,cursor:"pointer",whiteSpace:"nowrap" }}>×{T.clearAll}</button>}
+          </div>
 
-    <div style={{ maxWidth:600,margin:"0 auto",padding:"10px 16px 140px" }}>
-        {tab==="stats"&&<StatsTab places={visiblePlaces} entries={entries}/>}
-        {tab==="eventos"&&<EventsTab events={events} onAdd={()=>setShowAddEvent(true)} onSave={async ev=>{await set(ref(db,"events/"+ev.id),ev);}} onDelete={async id=>{await remove(ref(db,"events/"+id));setEvents(prev=>prev.filter(e=>e.id!==id));}} addToast={addToast}/>}
-      {tab==="map"&&<MapTab places={filteredPlaces} entries={entries} onSelect={setSelected}/>}
-      {tab==="timeline"&&<TimelineTab places={visiblePlaces} entries={entries} onSelect={setSelected}/>}
-      {tab==="curadoria"&&<CuradoriaTab places={visiblePlaces} lists={lists} onSaveLists={saveLists} onSelectPlace={setSelected}/>}
+          {/* Filter bottom sheet */}
+          {showFilters&&<div style={{ position:"fixed",inset:0,background:"#000000c0",zIndex:200 }} onClick={()=>setShowFilters(false)}><div onClick={e=>e.stopPropagation()} style={{ position:"absolute",bottom:0,left:0,right:0,background:"#1a1a22",borderTop:"1px solid #2a2a38",borderRadius:"20px 20px 0 0",padding:"16px 16px 40px",maxHeight:"80vh",overflowY:"auto",maxWidth:600,margin:"0 auto" }}><div style={{ width:44,height:4,background:"#3a3a48",borderRadius:2,margin:"0 auto 16px" }}/>
+            <FilterSection label={T.filterVibe} options={VIBES} selected={filterVibes} onToggle={v=>setFilterVibes(prev=>prev.includes(v)?prev.filter(x=>x!==v):[...prev,v])} renderLabel={v=><span>{VIBE_EMOJI[v]} {VIBE_LABELS[v]}</span>}/>
+            <FilterSection label={T.filterPrice} options={PRICES} selected={filterPrices} onToggle={v=>setFilterPrices(prev=>prev.includes(v)?prev.filter(x=>x!==v):[...prev,v])} renderLabel={v=><span>{PRICE_EMOJI[v]}</span>}/>
+            <FilterSection label={T.filterSeason} options={SEASONS} selected={filterSeasons} onToggle={v=>setFilterSeasons(prev=>prev.includes(v)?prev.filter(x=>x!==v):[...prev,v])} renderLabel={v=><span>{SEASON_EMOJI[v]} {SEASON_LABELS[v]}</span>}/>
+            <div style={{ marginBottom:14 }}>
+              <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:8 }}>{T.filterStars}</div>
+              <div style={{ display:"flex",gap:6 }}>{[1,2,3,4,5].map(n=><button key={n} onClick={()=>setFilterStars(filterStars===n?0:n)} style={{ flex:1,padding:"6px",borderRadius:8,background:filterStars>=n?"#ffd60020":"#0f0f13",border:"1px solid "+(filterStars>=n?"#ffd600":"#2a2a38"),color:"#ffd600",fontSize:14,cursor:"pointer" }}>★</button>)}</div>
+            </div>
+            <div style={{ display:"flex",gap:8,marginBottom:14 }}>
+              <button onClick={()=>setFilterPet(!filterPet)} style={{ flex:1,padding:"8px",borderRadius:10,background:filterPet?"#4ade8020":"#0f0f13",border:"1px solid "+(filterPet?"#4ade80":"#2a2a38"),color:filterPet?"#4ade80":"#50506a",fontSize:12,cursor:"pointer" }}>🐾 {T.filterPet}</button>
+              <button onClick={()=>setFilterBathroom(!filterBathroom)} style={{ flex:1,padding:"8px",borderRadius:10,background:filterBathroom?"#60a5fa20":"#0f0f13",border:"1px solid "+(filterBathroom?"#60a5fa":"#2a2a38"),color:filterBathroom?"#60a5fa":"#50506a",fontSize:12,cursor:"pointer" }}>🚻 {T.filterBathroom}</button>
+            </div>
+            <div style={{ marginBottom:14 }}>
+              <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:8 }}>{T.filterRegion}</div>
+              <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>{Object.keys(REGIONS).map(r=><button key={r} onClick={()=>setFilterRegion(filterRegion===r?null:r)} style={{ padding:"6px 12px",borderRadius:20,background:filterRegion===r?"#4da6ff20":"#0f0f13",border:"1px solid "+(filterRegion===r?"#4da6ff":"#2a2a38"),color:filterRegion===r?"#4da6ff":"#9090b0",fontSize:11,cursor:"pointer" }}>{r}</button>)}</div>
+            </div>
+            <div style={{ display:"flex",gap:6,marginBottom:14 }}>
+              {filterRegion&&<div style={{ padding:"6px 12px",background:"#4da6ff15",border:"1px solid #4da6ff30",borderRadius:20,fontSize:11,color:"#4da6ff" }}>📍 {filterRegion}</div>}
+            </div>
+            {activeFiltersCount>0&&<button onClick={clearFilters} style={{ width:"100%",padding:"10px",background:"none",border:"1px solid #2a2a38",borderRadius:10,color:"#50506a",fontSize:12,cursor:"pointer" }}>{T.clearFilters}</button>}
+          </div></div>}
 
-      {tab==="list"&&<>
-        <WeatherWidget/>
+          <WeatherWidget/>
           {!search&&activeFilter==="todos"&&activeCategory==="Todos"&&!filterRegion&&<SeasonalBanner places={visiblePlaces} entries={entries} onSelect={openModal}/>}
-        {filterRegion&&<div style={{ background:"#4da6ff15",border:"1px solid #4da6ff40",borderRadius:12,padding:"10px 14px",marginBottom:10,display:"flex",alignItems:"center",justifyContent:"space-between" }}>
-          <div style={{ fontSize:13,color:"#4da6ff",fontWeight:600 }}>📍 {filterRegion} · {filteredPlaces.length} {T.places}</div>
-          <button onClick={()=>setFilterRegion(null)} style={{ background:"none",border:"none",color:"#4da6ff",cursor:"pointer",fontSize:16 }}>×</button>
-        </div>}
-        {placeOfDay&&!search&&activeFilter==="todos"&&activeCategory==="Todos"&&!filterRegion&&(
-          <div onClick={()=>setSelected(placeOfDay)} style={{ background:"linear-gradient(135deg,#1a0008,#0a001a,#001a08)",border:"1px solid #2a2a38",borderRadius:14,padding:"14px 16px",marginBottom:10,cursor:"pointer",position:"relative",overflow:"hidden" }}>
-            <div style={{ position:"absolute",top:0,left:0,right:0,height:2,background:"linear-gradient(90deg,#ff3366,#ff6b35,#ffd600)" }}/>
-            <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.15em",marginBottom:8 }}>{T.placeOfDay} 🎲</div>
-            <div style={{ display:"flex",gap:12,alignItems:"center" }}>
-              <div style={{ fontSize:32 }}>{placeOfDay.emoji}</div>
-              <div>
-                <div style={{ fontSize:15,fontWeight:700,color:"#f0eeff" }}>{isEN&&placeOfDay.nameEN?placeOfDay.nameEN:placeOfDay.name}</div>
-                <div style={{ fontSize:12,color:"#9090b0",marginTop:2 }}>{catLabel(placeOfDay.category)} · {PRICE_EMOJI[placeOfDay.price]||"?"} · {placeOfDay.time||"?"}</div>
-                {placeOfDay.bestTime&&<div style={{ fontSize:11,color:"#ffd600",marginTop:4 }}>⏰ {placeOfDay.bestTime}</div>}
+          {placeOfDay&&!search&&activeFilter==="todos"&&activeCategory==="Todos"&&!filterRegion&&(
+            <div onClick={()=>openModal(placeOfDay)} style={{ background:"linear-gradient(135deg,#1a0008,#0a001a,#001a08)",border:"1px solid #2a2a38",borderRadius:14,padding:"14px 16px",marginBottom:10,cursor:"pointer",position:"relative",overflow:"hidden" }}>
+              <div style={{ position:"absolute",top:0,left:0,right:0,height:2,background:"linear-gradient(90deg,#ff3366,#ffd600)" }}/>
+              <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.15em",marginBottom:8 }}>{T.placeOfDay} 🎲</div>
+              <div style={{ display:"flex",gap:12,alignItems:"center" }}>
+                <div style={{ fontSize:32 }}>{placeOfDay.emoji}</div>
+                <div>
+                  <div style={{ fontSize:15,fontWeight:700,color:"#f0eeff" }}>{isEN&&placeOfDay.nameEN?placeOfDay.nameEN:placeOfDay.name}</div>
+                  <div style={{ fontSize:12,color:"#9090b0",marginTop:2 }}>{catLabel(placeOfDay.category)} · {PRICE_EMOJI[placeOfDay.price]||"?"} · {placeOfDay.time||"?"}</div>
+                  {placeOfDay.bestTime&&<div style={{ fontSize:11,color:"#ffd600",marginTop:4 }}>⏰ {placeOfDay.bestTime}</div>}
+                </div>
               </div>
             </div>
-          </div>
-        )}
-        {!filteredPlaces.length&&<div style={{ textAlign:"center",color:"#50506a",padding:"60px 0" }}><div style={{ fontSize:32,marginBottom:8 }}>🔍</div><div style={{ fontSize:14 }}>{T.noPlaces}</div></div>}
-        {filteredPlaces.map(place=>(
-          <PlaceCard key={place.id} place={place} entry={entries[place.id]} onSelect={openModal} onCheckIn={setCheckIn} isEN={isEN} entries={entries}/>
-        ))}
-      </>}
+          )}
+
+          {!filteredPlaces.length&&<div style={{ textAlign:"center",padding:"60px 20px",color:"#50506a" }}>
+            <div style={{ fontSize:40,marginBottom:12 }}>🔍</div>
+            <div style={{ fontSize:15,fontWeight:600,color:"#f0eeff",marginBottom:8 }}>{isEN?"Nothing here":"Nada por aqui"}</div>
+            <div style={{ fontSize:13,color:"#9090b0",marginBottom:16,lineHeight:1.5 }}>
+              {activeMood?isEN?"This mood has no matches":"Esse mood nao tem resultados":search?isEN?"No places match your search":"Nenhum lugar encontrado":isEN?"Try removing some filters":"Tente remover alguns filtros"}
+            </div>
+            <div style={{ display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap" }}>
+              {activeMood&&<button onClick={()=>setActiveMood(null)} style={{ padding:"8px 16px",background:"#ff336620",border:"1px solid #ff336640",borderRadius:20,color:"#ff3366",fontSize:12,cursor:"pointer" }}>Limpar mood</button>}
+              {search&&<button onClick={()=>{setSearch("");setSearchInput("");}} style={{ padding:"8px 16px",background:"#ff336620",border:"1px solid #ff336640",borderRadius:20,color:"#ff3366",fontSize:12,cursor:"pointer" }}>Limpar busca</button>}
+              {activeFilter!=="todos"&&<button onClick={()=>setActiveFilter("todos")} style={{ padding:"8px 16px",background:"#ff336620",border:"1px solid #ff336640",borderRadius:20,color:"#ff3366",fontSize:12,cursor:"pointer" }}>Mostrar todos</button>}
+              {activeCategory!=="Todos"&&<button onClick={()=>setActiveCategory("Todos")} style={{ padding:"8px 16px",background:"#ff336620",border:"1px solid #ff336640",borderRadius:20,color:"#ff3366",fontSize:12,cursor:"pointer" }}>Todas categorias</button>}
+            </div>
+          </div>}
+          {filteredPlaces.map(place=>(
+            <PlaceCard key={place.id} place={place} entry={entries[place.id]} onSelect={openModal} onCheckIn={setCheckIn} isEN={isEN} entries={entries} onToggleWant={handleToggleWant} onQuickAction={setQuickAction}/>
+          ))}
+        </div>}
+
+        {tab==="stats"&&<StatsTab places={visiblePlaces} entries={entries}/>}
+        {tab==="map"&&<MapTab places={filteredPlaces} entries={entries} onSelect={openModal}/>}
+        {tab==="timeline"&&<TimelineTab places={visiblePlaces} entries={entries} onSelect={openModal}/>}
+        {tab==="curadoria"&&<CuradoriaTab places={visiblePlaces} lists={lists} onSaveLists={saveLists} onSelectPlace={openModal}/>}
+        {tab==="eventos"&&<EventsTab events={events} onAdd={()=>setShowAddEvent(true)} onSave={async ev=>{await set(ref(db,"events/"+ev.id),ev);}} onDelete={async id=>{await remove(ref(db,"events/"+id));setEvents(prev=>prev.filter(e=>e.id!==id));}} addToast={addToast}/>}
+      </div>
+
+      {/* Modals */}
+      {selected&&<DetailModal place={selected} entry={entries[selected.id]} places={visiblePlaces} entries={entries} onClose={closeModal} onSave={async data=>{await handleSave(selected.id,data);}} onDelete={()=>handleDelete(selected.id,isEN&&selected.nameEN?selected.nameEN:selected.name)} onSelectNearby={openModal} onEditPlace={handleEditPlace} addToast={addToast} userLat={userLat} userLng={userLng}/>}
+      {checkIn&&<CheckInModal place={checkIn} onClose={()=>setCheckIn(null)} onSave={async data=>{await handleSave(checkIn.id,data);}} addToast={addToast}/>}
+      {showAdd&&<AddPlaceModal onClose={()=>setShowAdd(false)} onSave={async place=>{await set(ref(db,"customPlaces/"+place.id),place);addToast(T.placeAdded,"success");setShowAdd(false);}} addToast={addToast}/>}
+      {showShare&&<ShareModal onClose={()=>setShowShare(false)} addToast={addToast}/>}
+      {showPlanner&&<PlannerChatModal places={visiblePlaces} entries={entries} onClose={()=>setShowPlanner(false)} addToast={addToast} userLat={userLat} userLng={userLng}/>}
+      {showNearby&&userLat&&<NearbyDrawer userLat={userLat} userLng={userLng} places={visiblePlaces} entries={entries} onSelect={openModal} onClose={()=>setShowNearby(false)}/>}
+      {showSurpresa&&<SurpresaModal places={visiblePlaces} entries={entries} weather={currentWeather} onClose={()=>setShowSurpresa(false)} addToast={addToast} onSaveLists={saveLists} lists={lists}/>}
+      {showAddEvent&&<AddEventModal onClose={()=>setShowAddEvent(false)} onSave={async ev=>{await set(ref(db,"events/"+ev.id),ev);addToast(isEN?"Event added!":"Evento adicionado!","success");setShowAddEvent(false);}} addToast={addToast}/>}
+      {quickAction&&<QuickActionSheet place={quickAction} entry={entries[quickAction.id]} onClose={()=>setQuickAction(null)} onToggleWant={handleToggleWant} onCheckIn={p=>{setCheckIn(p);setQuickAction(null);}} onSaveToCuradoria={handleSaveToCuradoria}/>}
+      {nearbyAlert&&<div onClick={()=>{openModal(nearbyAlert);setNearbyAlert(null);}} style={{ position:"fixed",bottom:80,left:"50%",transform:"translateX(-50%)",background:"#1a1a22",border:"1px solid #00e67650",borderRadius:20,padding:"10px 16px",display:"flex",alignItems:"center",gap:10,zIndex:140,boxShadow:"0 4px 20px #00000060",maxWidth:"calc(100% - 32px)",cursor:"pointer" }}>
+        <span style={{ fontSize:24 }}>{nearbyAlert.emoji}</span>
+        <div><div style={{ fontSize:12,fontWeight:600,color:"#00e676" }}>{isEN?"You're nearby!":"Voce esta perto!"}</div><div style={{ fontSize:11,color:"#9090b0" }}>{isEN&&nearbyAlert.nameEN?nearbyAlert.nameEN:nearbyAlert.name}</div></div>
+        <button onClick={e=>{e.stopPropagation();setNearbyAlert(null);}} style={{ marginLeft:"auto",background:"none",border:"none",color:"#50506a",fontSize:18,cursor:"pointer" }}>×</button>
+      </div>}
+
+      {/* Toasts */}
+      <div style={{ position:"fixed",bottom:90,left:"50%",transform:"translateX(-50%)",zIndex:300,display:"flex",flexDirection:"column",gap:8,width:"calc(100% - 32px)",maxWidth:400 }}>
+        {toasts.map(t=><Toast key={t.id} message={t.message} type={t.type} onDone={()=>setToasts(prev=>prev.filter(x=>x.id!==t.id))} onUndo={t.onUndo}/>)}
+      </div>
+
+      <BottomNav tab={tab} setTab={setTab} onSurpresa={()=>setShowSurpresa(true)} onNearby={handleNearby} onShare={()=>setShowShare(true)} onPlanner={()=>setShowPlanner(true)}/>
     </div>
-
-
-    {selected&&<DetailModal place={selected} entry={entries[selected.id]} places={visiblePlaces} entries={entries} onClose={closeModal} onSave={async data=>{await handleSave(selected.id,data);}} onDelete={()=>handleDelete(selected.id,isEN&&selected.nameEN?selected.nameEN:selected.name)} onSelectNearby={setSelected} onEditPlace={handleEditPlace} addToast={addToast} userLat={userLat} userLng={userLng}/>}
-    {checkIn&&<CheckInModal place={checkIn} onClose={()=>setCheckIn(null)} onSave={async data=>{await handleSave(checkIn.id,data);}} addToast={addToast}/>}
-    {showAdd&&<AddModal onClose={()=>setShowAdd(false)} onAdd={handleAdd} addToast={addToast}/>}
-    {showShare&&<ShareModal places={visiblePlaces} entries={entries} onClose={()=>setShowShare(false)} addToast={addToast}/>}
-    {showSurpresa&&<SurpresaModal places={visiblePlaces} entries={entries} weather={currentWeather} onClose={()=>setShowSurpresa(false)} addToast={addToast} onSaveLists={saveLists} lists={lists}/>}
-    {showPlanner&&<PlannerChatModal places={visiblePlaces} entries={entries} onClose={()=>setShowPlanner(false)} addToast={addToast} userLat={userLat} userLng={userLng}/>}
-    {showAddEvent&&<AddEventModal onClose={()=>setShowAddEvent(false)} onSave={async ev=>{await set(ref(db,"events/"+ev.id),ev);addToast(isEN?"Event added!":"Evento adicionado!","success");setShowAddEvent(false);}} addToast={addToast}/>}
-    <BottomNav tab={tab} setTab={setTab} onSurpresa={()=>setShowSurpresa(true)} onNearby={handleNearby} onShare={()=>setShowShare(true)} onPlanner={()=>setShowPlanner(true)}/>
-    {showNearby&&userLat&&<NearbyDrawer userLat={userLat} userLng={userLng} places={visiblePlaces} entries={entries} onSelect={setSelected} onClose={()=>setShowNearby(false)}/>}
-  </div>;
+  );
 }
