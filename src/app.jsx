@@ -418,6 +418,13 @@ const injectCSS = () => {
     .card:active { transform: scale(0.98); background: #20202a !important; }
     .pill-btn:active { opacity: 0.7; transform: scale(0.95); }
     .tab-btn:active { opacity: 0.8; }
+    .tab-btn:active { opacity: 0.8; }
+    .bottom-nav { position:fixed; bottom:0; left:0; right:0; background:#111118; border-top:1px solid #2a2a38; display:flex; z-index:150; padding-bottom:env(safe-area-inset-bottom); }
+    .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:10px 4px 8px; cursor:pointer; border:none; background:none; color:#50506a; transition:color 0.15s; font-family:inherit; }
+    .nav-item.active { color:#ff3366; }
+    .nav-item:active { opacity:0.7; transform:scale(0.92); }
+    .card-want { border-color:#4da6ff !important; background:linear-gradient(to right,#4da6ff08,#1a1a22) !important; }
+    .card-been { background:linear-gradient(to right,var(--cc,#ff3366)12,#1a1a22) !important; }
     .modal-drag { cursor: grab; }
     @keyframes slideUp { from { transform:translateY(30px); opacity:0; } to { transform:translateY(0); opacity:1; } }
     .slide-up { animation: slideUp 0.22s ease forwards; }
@@ -1547,6 +1554,67 @@ function EventsTab({ events, onAdd, onSave, onDelete, addToast }) {
   );
 }
 
+
+// ─── BOTTOM NAV ───────────────────────────────────────────────────────────────
+function BottomNav({ tab, setTab, onSurpresa, onNearby, onShare, onPlanner, unreadEvents }) {
+  const [showMais, setShowMais] = useState(false);
+
+  const NavItem = ({ id, icon, label, onClick }) => (
+    <button className={"nav-item"+(tab===id?" active":"")} onClick={onClick||(() => setTab(id))}>
+      {icon}
+      <span style={{ fontSize:9, fontWeight:tab===id?700:400, letterSpacing:"0.02em" }}>{label}</span>
+    </button>
+  );
+
+  const MaisIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="5" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.5" fill="currentColor" stroke="none"/></svg>;
+  const ListIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>;
+  const MapIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>;
+  const EventIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
+  const CurIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>;
+
+  return (
+    <>
+      {showMais&&(
+        <div style={{ position:"fixed",inset:0,background:"#000000c0",zIndex:200 }} onClick={()=>setShowMais(false)}>
+          <div onClick={e=>e.stopPropagation()} style={{ position:"absolute",bottom:0,left:0,right:0,background:"#1a1a22",borderTop:"1px solid #2a2a38",borderRadius:"20px 20px 0 0",padding:"16px 16px 40px",maxWidth:600,margin:"0 auto" }}>
+            <div style={{ width:44,height:4,background:"#3a3a48",borderRadius:2,margin:"0 auto 16px" }}/>
+            <div style={{ fontSize:11,color:"#50506a",letterSpacing:"0.1em",marginBottom:12 }}>MAIS OPCOES</div>
+            {[
+              ["timeline","📖",isEN?"Timeline":"Linha do Tempo"],
+              ["stats","📊","Stats"],
+            ].map(([id,emoji,label])=>(
+              <button key={id} onClick={()=>{setTab(id);setShowMais(false);}} style={{ width:"100%",display:"flex",alignItems:"center",gap:14,padding:"14px 12px",background:tab===id?"#ff336610":"none",border:"none",borderRadius:12,color:tab===id?"#ff3366":"#f0eeff",fontSize:14,cursor:"pointer",fontFamily:"inherit",marginBottom:4,textAlign:"left" }}>
+                <span style={{ fontSize:22 }}>{emoji}</span>{label}
+              </button>
+            ))}
+            <div style={{ height:1,background:"#2a2a38",margin:"8px 0" }}/>
+            {[
+              [onSurpresa,"🎲",isEN?"Surprise me":"Me surpreenda"],
+              [onNearby,"📍",isEN?"Nearby":"Lugares proximos"],
+              [onPlanner,"🤖",isEN?"AI Planner":"Guia & Planejador"],
+              [onShare,"↗",isEN?"Share":"Compartilhar"],
+            ].map(([fn,emoji,label])=>(
+              <button key={label} onClick={()=>{fn();setShowMais(false);}} style={{ width:"100%",display:"flex",alignItems:"center",gap:14,padding:"14px 12px",background:"none",border:"none",borderRadius:12,color:"#f0eeff",fontSize:14,cursor:"pointer",fontFamily:"inherit",marginBottom:4,textAlign:"left" }}>
+                <span style={{ fontSize:22 }}>{emoji}</span>{label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      <nav className="bottom-nav">
+        <NavItem id="list" icon={<ListIcon/>} label={isEN?"List":"Lista"}/>
+        <NavItem id="map" icon={<MapIcon/>} label={isEN?"Map":"Mapa"}/>
+        <NavItem id="eventos" icon={<EventIcon/>} label={isEN?"Events":"Eventos"}/>
+        <NavItem id="curadoria" icon={<CurIcon/>} label="Saves"/>
+        <button className={"nav-item"+(["timeline","stats"].includes(tab)?" active":"")} onClick={()=>setShowMais(true)}>
+          <MaisIcon/>
+          <span style={{ fontSize:9, fontWeight:["timeline","stats"].includes(tab)?700:400 }}>Mais</span>
+        </button>
+      </nav>
+    </>
+  );
+}
+
 function StatsTab({ places, entries }) {
   const visited = places.filter(p=>(entries[p.id]||{}).status==="fui");
   const total = places.length;
@@ -1994,7 +2062,7 @@ export default function App() {
         </div>
 
         <div style={{ display:"flex",gap:0,background:"#1a1a22",borderRadius:10,padding:3,border:"1px solid #2a2a38",marginBottom:10 }}>
-          {TABS.map((label,i)=>{const keys=["list","map","timeline","curadoria","stats"];return<button key={keys[i]} onClick={()=>setTab(keys[i])} className="tab-btn" style={{ flex:1,padding:"8px 2px",borderRadius:8,background:tab===keys[i]?"#ff3366":"none",border:"none",color:tab===keys[i]?"#fff":"#50506a",fontSize:10,cursor:"pointer",fontWeight:tab===keys[i]?700:400,transition:"all 0.15s",letterSpacing:"-0.01em" }}>{label}</button>;})}
+
         </div>
 
         {tab==="list"&&<>
@@ -2040,7 +2108,7 @@ export default function App() {
       </div>
     </div>
 
-    <div style={{ maxWidth:600,margin:"0 auto",padding:"10px 16px 100px" }}>
+    <div style={{ maxWidth:600,margin:"0 auto",padding:"10px 16px 140px" }}>
         {tab==="stats"&&<StatsTab places={visiblePlaces} entries={entries}/>}
         {tab==="eventos"&&<EventsTab events={events} onAdd={()=>setShowAddEvent(true)} onSave={async ev=>{await set(ref(db,"events/"+ev.id),ev);}} onDelete={async id=>{await remove(ref(db,"events/"+id));setEvents(prev=>prev.filter(e=>e.id!==id));}} addToast={addToast}/>}
       {tab==="map"&&<MapTab places={filteredPlaces} entries={entries} onSelect={setSelected}/>}
@@ -2075,7 +2143,6 @@ export default function App() {
       </>}
     </div>
 
-    <button onClick={()=>setShowAdd(true)} style={{ position:"fixed",bottom:24,right:20,width:52,height:52,background:"#ff3366",border:"none",borderRadius:"50%",color:"#fff",fontSize:24,cursor:"pointer",boxShadow:"0 4px 20px #ff336660",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700 }}>+</button>
 
     {selected&&<DetailModal place={selected} entry={entries[selected.id]} places={visiblePlaces} entries={entries} onClose={closeModal} onSave={async data=>{await handleSave(selected.id,data);}} onDelete={()=>handleDelete(selected.id,isEN&&selected.nameEN?selected.nameEN:selected.name)} onSelectNearby={setSelected} onEditPlace={handleEditPlace} addToast={addToast} userLat={userLat} userLng={userLng}/>}
     {checkIn&&<CheckInModal place={checkIn} onClose={()=>setCheckIn(null)} onSave={async data=>{await handleSave(checkIn.id,data);}} addToast={addToast}/>}
@@ -2085,6 +2152,7 @@ export default function App() {
     {showPlanner&&<PlannerChatModal places={visiblePlaces} entries={entries} onClose={()=>setShowPlanner(false)} addToast={addToast} userLat={userLat} userLng={userLng}/>}
     {showAddEvent&&<AddEventModal onClose={()=>setShowAddEvent(false)} onSave={async ev=>{await set(ref(db,"events/"+ev.id),ev);addToast(isEN?"Event added!":"Evento adicionado!","success");setShowAddEvent(false);}} addToast={addToast}/>}
     {showBugReport&&<BugReportModal onClose={()=>setShowBugReport(false)} addToast={addToast}/>}
+    <BottomNav tab={tab} setTab={setTab} onSurpresa={()=>setShowSurpresa(true)} onNearby={handleNearby} onShare={()=>setShowShare(true)} onPlanner={()=>setShowPlanner(true)}/>
     {showNearby&&userLat&&<NearbyDrawer userLat={userLat} userLng={userLng} places={visiblePlaces} entries={entries} onSelect={setSelected} onClose={()=>setShowNearby(false)}/>}
   </div>;
 }
