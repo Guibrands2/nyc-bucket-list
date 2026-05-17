@@ -1360,6 +1360,178 @@ function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveList
 }
 
 
+
+// ─── EVENTS ───────────────────────────────────────────────────────────────────
+const EVENT_CATS = ["show","exposicao","festival","esporte","teatro","outro"];
+const EVENT_CAT_EMOJI = { show:"🎸", exposicao:"🎨", festival:"🎪", esporte:"🏆", teatro:"🎭", outro:"📅" };
+const EVENT_CAT_LABEL_PT = { show:"Show", exposicao:"Exposicao", festival:"Festival", esporte:"Esporte", teatro:"Teatro", outro:"Outro" };
+const EVENT_CAT_LABEL_EN = { show:"Concert", exposicao:"Exhibition", festival:"Festival", esporte:"Sports", teatro:"Theater", outro:"Other" };
+const evCatLabel = cat => isEN ? (EVENT_CAT_LABEL_EN[cat]||cat) : (EVENT_CAT_LABEL_PT[cat]||cat);
+
+function daysUntil(dateStr) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const evt = new Date(dateStr+"T12:00:00");
+  return Math.round((evt-today)/(1000*60*60*24));
+}
+
+function EventCard({ ev, onSave, onDelete, addToast }) {
+  const [expanded, setExpanded] = useState(false);
+  const [confirmDel, setConfirmDel] = useState(false);
+  const days = daysUntil(ev.date);
+  const isPast = days < 0;
+  const isToday = days === 0;
+  const isSoon = days > 0 && days <= 3;
+  const color = isPast?"#50506a":isToday?"#00e676":isSoon?"#ffd600":"#4da6ff";
+  const catEmoji = EVENT_CAT_EMOJI[ev.category]||"📅";
+
+  const gcUrl = "https://calendar.google.com/calendar/render?action=TEMPLATE&text="+encodeURIComponent(ev.name)+(ev.location?"&location="+encodeURIComponent(ev.location):"")+(ev.desc?"&details="+encodeURIComponent(ev.desc):"")+"&dates="+ev.date.replace(/-/g,"")+"/"+(ev.date.replace(/-/g,""));
+
+  const cityUrl = ev.location ? "https://citymapper.com/directions?endname="+encodeURIComponent(ev.location)+"&endaddress="+encodeURIComponent(ev.location+", New York, NY") : null;
+
+  return (
+    <div style={{ background:"#1a1a22", border:"1px solid "+(isToday?"#00e67640":isSoon?"#ffd60040":"#2a2a38"), borderRadius:14, marginBottom:10, overflow:"hidden", opacity:isPast?0.6:1 }}>
+      {(isToday||isSoon)&&<div style={{ height:2, background:isToday?"#00e676":"#ffd600" }}/>}
+      <div onClick={()=>setExpanded(!expanded)} style={{ padding:"12px 14px", cursor:"pointer", display:"flex", gap:12, alignItems:"center" }}>
+        <div style={{ width:48, height:48, borderRadius:12, background:color+"20", border:"1px solid "+color+"40", display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, flexShrink:0 }}>{ev.emoji||catEmoji}</div>
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ fontSize:14, fontWeight:600, color:"#f0eeff", lineHeight:1.3 }}>{ev.name}</div>
+          <div style={{ fontSize:11, color:"#9090b0", marginTop:3 }}>
+            {new Date(ev.date+"T12:00:00").toLocaleDateString(isEN?"en-US":"pt-BR",{weekday:"short",month:"short",day:"numeric"})}
+            {ev.time&&" · "+ev.time}
+            {ev.location&&" · 📍 "+ev.location}
+          </div>
+          <div style={{ fontSize:11, color:ev.price==="gratis"?"#00e676":"#9090b0", marginTop:2 }}>{ev.price==="gratis"?"🆓 Gratis":ev.price?"💰 "+ev.price:""}</div>
+        </div>
+        <div style={{ textAlign:"center", flexShrink:0 }}>
+          {isPast ? <div style={{ fontSize:11, color:"#50506a" }}>{isEN?"Past":"Passou"}</div>
+          : isToday ? <div style={{ fontSize:12, fontWeight:700, color:"#00e676" }}>{isEN?"TODAY":"HOJE!"}</div>
+          : <><div style={{ fontSize:20, fontWeight:800, color }}>{days}</div><div style={{ fontSize:9, color:"#50506a" }}>{isEN?"days":"dias"}</div></>}
+        </div>
+      </div>
+      {expanded&&(
+        <div style={{ padding:"0 14px 14px", borderTop:"1px solid #2a2a38" }}>
+          {ev.desc&&<div style={{ fontSize:13, color:"#9090b0", lineHeight:1.6, marginTop:10, marginBottom:10 }}>{ev.desc}</div>}
+          <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:10 }}>
+            <a href={gcUrl} target="_blank" rel="noreferrer" style={{ padding:"6px 12px", background:"#0f0f13", border:"1px solid #2a2a38", borderRadius:8, color:"#9090b0", fontSize:11, textDecoration:"none" }}>📅 {isEN?"Add to Calendar":"Adicionar ao Google Calendar"}</a>
+            {cityUrl&&<a href={cityUrl} target="_blank" rel="noreferrer" style={{ padding:"6px 12px", background:"#0f0f13", border:"1px solid #2a2a38", borderRadius:8, color:"#9090b0", fontSize:11, textDecoration:"none" }}>🗺 {isEN?"Get directions":"Como chegar"}</a>}
+            {ev.ticketLink&&<a href={ev.ticketLink} target="_blank" rel="noreferrer" style={{ padding:"6px 12px", background:"#ff336620", border:"1px solid #ff336640", borderRadius:8, color:"#ff3366", fontSize:11, textDecoration:"none" }}>🎟 {isEN?"Buy ticket":"Comprar ingresso"}</a>}
+          </div>
+          {!isPast&&<div style={{ display:"flex", gap:8 }}>
+            {!confirmDel
+              ? <button onClick={()=>setConfirmDel(true)} style={{ padding:"7px 12px", background:"none", border:"1px solid #2a2a38", borderRadius:8, color:"#50506a", fontSize:11, cursor:"pointer" }}>{isEN?"Remove":"Remover"}</button>
+              : <>
+                  <button onClick={()=>setConfirmDel(false)} style={{ flex:1, padding:"7px", background:"none", border:"1px solid #2a2a38", borderRadius:8, color:"#9090b0", fontSize:11, cursor:"pointer" }}>{isEN?"Cancel":"Cancelar"}</button>
+                  <button onClick={()=>onDelete(ev.id)} style={{ flex:1, padding:"7px", background:"#4a0000", border:"1px solid #883333", borderRadius:8, color:"#ff8888", fontSize:11, cursor:"pointer" }}>{isEN?"Confirm":"Confirmar"}</button>
+                </>}
+          </div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AddEventModal({ onClose, onSave, addToast }) {
+  const [name,setName]=useState("");
+  const [emoji,setEmoji]=useState("📅");
+  const [category,setCategory]=useState("show");
+  const [date,setDate]=useState("");
+  const [time,setTime]=useState("");
+  const [location,setLocation]=useState("");
+  const [price,setPrice]=useState("");
+  const [desc,setDesc]=useState("");
+  const [ticketLink,setTicketLink]=useState("");
+  const [saving,setSaving]=useState(false);
+
+  const handle = async () => {
+    if(!name.trim()||!date) return;
+    setSaving(true);
+    const ev = { id:"ev"+Date.now(), name:name.trim(), emoji, category, date, time, location:location.trim(), price:price.trim(), desc:desc.trim(), ticketLink:ticketLink.trim(), archived:false, createdAt:new Date().toISOString() };
+    await onSave(ev);
+    setSaving(false);
+  };
+
+  return (
+    <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:300,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={onClose}>
+      <div className="modal" style={{ background:"#1a1a22",borderTop:"1px solid #2a2a38",borderRadius:"20px 20px 0 0",padding:"20px 16px 48px",maxWidth:560,width:"100%",maxHeight:"90vh",overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
+        <div style={{ width:36,height:3,background:"#2a2a38",borderRadius:2,margin:"0 auto 16px" }}/>
+        <div style={{ fontSize:15,fontWeight:700,color:"#f0eeff",marginBottom:14 }}>{isEN?"New Event":"Novo Evento"}</div>
+        <div style={{ display:"flex",gap:10,marginBottom:12 }}>
+          <input value={emoji} onChange={e=>setEmoji(e.target.value)} maxLength={2} style={{ width:50,background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:8,padding:"8px",color:"#f0eeff",fontSize:22,textAlign:"center" }}/>
+          <input value={name} onChange={e=>setName(e.target.value)} placeholder={isEN?"Event name...":"Nome do evento..."} style={{ flex:1,background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:8,padding:"8px 12px",color:"#f0eeff",fontSize:14 }}/>
+        </div>
+        <div style={{ marginBottom:12 }}>
+          <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"CATEGORY":"CATEGORIA"}</div>
+          <div style={{ display:"flex",gap:5,flexWrap:"wrap" }}>
+            {EVENT_CATS.map(cat=><button key={cat} onClick={()=>setCategory(cat)} style={{ padding:"6px 12px",borderRadius:20,background:category===cat?"#ff336620":"#0f0f13",border:"1px solid "+(category===cat?"#ff3366":"#2a2a38"),color:category===cat?"#ff3366":"#9090b0",fontSize:12,cursor:"pointer",fontFamily:"inherit" }}>{EVENT_CAT_EMOJI[cat]} {evCatLabel(cat)}</button>)}
+          </div>
+        </div>
+        <div style={{ display:"flex",gap:8,marginBottom:12 }}>
+          <div style={{ flex:2 }}>
+            <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"DATE *":"DATA *"}</div>
+            <input type="date" value={date} onChange={e=>setDate(e.target.value)} style={{ width:"100%",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:8,padding:"8px 12px",color:"#f0eeff",fontSize:14 }}/>
+          </div>
+          <div style={{ flex:1 }}>
+            <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"TIME":"HORA"}</div>
+            <input type="time" value={time} onChange={e=>setTime(e.target.value)} style={{ width:"100%",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:8,padding:"8px 12px",color:"#f0eeff",fontSize:14 }}/>
+          </div>
+        </div>
+        <div style={{ marginBottom:12 }}>
+          <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"LOCATION":"LOCAL"}</div>
+          <input value={location} onChange={e=>setLocation(e.target.value)} placeholder={isEN?"Venue name or address...":"Nome do local ou endereco..."} style={{ width:"100%",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:8,padding:"8px 12px",color:"#f0eeff",fontSize:13 }}/>
+        </div>
+        <div style={{ marginBottom:12 }}>
+          <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"PRICE":"PRECO"}</div>
+          <div style={{ display:"flex",gap:6 }}>
+            {["gratis","$","$$","$$$"].map(p=><button key={p} onClick={()=>setPrice(price===p?"":p)} style={{ flex:1,padding:"8px 4px",borderRadius:8,background:price===p?"#ffd60018":"#0f0f13",border:"1px solid "+(price===p?"#ffd600":"#2a2a38"),color:price===p?"#ffd600":"#9090b0",fontSize:12,cursor:"pointer",fontFamily:"inherit" }}>{p==="gratis"?"🆓":p}</button>)}
+          </div>
+        </div>
+        <div style={{ marginBottom:12 }}>
+          <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"DESCRIPTION":"DESCRICAO"}</div>
+          <textarea value={desc} onChange={e=>setDesc(e.target.value)} placeholder={isEN?"Notes about this event...":"Notas sobre o evento..."} rows={2} style={{ width:"100%",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:8,padding:"8px 12px",color:"#f0eeff",fontSize:13,resize:"none" }}/>
+        </div>
+        <div style={{ marginBottom:16 }}>
+          <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:6 }}>🎟 {isEN?"TICKET LINK":"LINK DO INGRESSO"}</div>
+          <input value={ticketLink} onChange={e=>setTicketLink(e.target.value)} placeholder="https://..." style={{ width:"100%",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:8,padding:"8px 12px",color:"#f0eeff",fontSize:13 }}/>
+        </div>
+        <button onClick={handle} disabled={!name.trim()||!date||saving} style={{ width:"100%",padding:"13px",background:name.trim()&&date&&!saving?"#ff3366":"#2a2a38",border:"none",borderRadius:10,color:name.trim()&&date&&!saving?"#fff":"#50506a",fontSize:14,fontWeight:700,cursor:name.trim()&&date&&!saving?"pointer":"default" }}>
+          {saving?(isEN?"Saving...":"Salvando..."):(isEN?"Add Event":"Adicionar Evento")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function EventsTab({ events, onAdd, onSave, onDelete, addToast }) {
+  const today = new Date().toISOString().split("T")[0];
+  const upcoming = events.filter(e=>!e.archived&&e.date>=today).sort((a,b)=>a.date.localeCompare(b.date));
+  const archived = events.filter(e=>e.archived||e.date<today).sort((a,b)=>b.date.localeCompare(a.date));
+  const [showArchived, setShowArchived] = useState(false);
+
+  return (
+    <div style={{ padding:"0 16px 80px" }}>
+      <button onClick={onAdd} style={{ width:"100%",padding:"13px",background:"#ff336615",border:"1px dashed #ff336650",borderRadius:12,color:"#ff3366",fontSize:14,cursor:"pointer",marginBottom:14,fontFamily:"inherit" }}>
+        + {isEN?"Add Event":"Adicionar Evento"}
+      </button>
+      {!upcoming.length&&!archived.length&&(
+        <div style={{ textAlign:"center",padding:"40px 0",color:"#50506a" }}>
+          <div style={{ fontSize:40,marginBottom:12 }}>🎟</div>
+          <div style={{ fontSize:14 }}>{isEN?"No events yet":"Nenhum evento ainda"}</div>
+          <div style={{ fontSize:12,marginTop:6,color:"#3a3a50" }}>{isEN?"Add shows, exhibitions, sports...":"Adicione shows, exposicoes, esportes..."}</div>
+        </div>
+      )}
+      {upcoming.map(ev=><EventCard key={ev.id} ev={ev} onSave={onSave} onDelete={onDelete} addToast={addToast}/>)}
+      {archived.length>0&&(
+        <>
+          <button onClick={()=>setShowArchived(!showArchived)} style={{ width:"100%",padding:"10px",background:"none",border:"1px solid #2a2a38",borderRadius:10,color:"#50506a",fontSize:12,cursor:"pointer",marginBottom:10,fontFamily:"inherit" }}>
+            {showArchived?(isEN?"Hide archived":"Ocultar arquivados"):(isEN?"Show archived ("+archived.length+")":"Ver arquivados ("+archived.length+")")}
+          </button>
+          {showArchived&&archived.map(ev=><EventCard key={ev.id} ev={ev} onSave={onSave} onDelete={onDelete} addToast={addToast}/>)}
+        </>
+      )}
+    </div>
+  );
+}
+
 function StatsTab({ places, entries }) {
   const visited = places.filter(p=>(entries[p.id]||{}).status==="fui");
   const total = places.length;
@@ -1566,6 +1738,8 @@ export default function App() {
   const [showNearby, setShowNearby] = useState(false);
   const [showSurpresa, setShowSurpresa] = useState(false);
   const [showBugReport, setShowBugReport] = useState(false);
+  const [events, setEvents] = useState([]);
+  const [showAddEvent, setShowAddEvent] = useState(false);
   const currentWeather = window._nycWeather||null;
   const scrollPosRef = useRef(0);
 
@@ -1628,6 +1802,19 @@ export default function App() {
     const u3=onValue(ref(db,"lists"),snap=>{if(snap.val())setLists(Object.values(snap.val()));});
     const u4=onValue(ref(db,"removedIds"),snap=>{if(snap.val())setRemovedIds(Object.keys(snap.val()));});
     const u5=onValue(ref(db,"customEdits"),snap=>{if(snap.val())setCustomEdits(snap.val());});
+    const u6=onValue(ref(db,"events"),snap=>{
+      if(snap.val()){
+        const evs=Object.values(snap.val());
+        // Auto-archive past events
+        const today=new Date().toISOString().split("T")[0];
+        evs.forEach(async ev=>{
+          if(ev.date<today&&!ev.archived){
+            await set(ref(db,"events/"+ev.id),{...ev,archived:true});
+          }
+        });
+        setEvents(evs);
+      } else { setEvents([]); }
+    });
     setTimeout(()=>setLoading(false),3000);
     return()=>{u1();u2();u3();u4();u5();};
   },[]);
@@ -1725,7 +1912,7 @@ export default function App() {
   const total=visiblePlaces.length;
   const visitedCount=Object.values(entries).filter(e=>e.status==="fui").length;
   const pct=total>0?Math.round((visitedCount/total)*100):0;
-  const TABS=isEN?["List","Map","Timeline","Curadoria","Stats"]:["Lista","Mapa","Linha do Tempo","Curadoria","Stats"];
+  const TABS=isEN?["List","Map","Timeline","Curadoria","Stats","Events"]:["Lista","Mapa","Linha do Tempo","Curadoria","Stats","Eventos"];
   const NYC_REGIONS=["Manhattan","Brooklyn","Queens","Bronx","Staten Island","Jersey City"];
   const DAYTRIP_REGIONS=["Philadelphia","Cold Spring","Asbury Park","Princeton","Hudson NY","Catskills"];
   const clearFilters=()=>{setFilterVibes([]);setFilterPrices([]);setFilterSeasons([]);setFilterStars(0);setFilterThumb(null);setFilterPet(false);setFilterBathroom(false);setFilterRegion(null);};
@@ -1836,6 +2023,7 @@ export default function App() {
 
     <div style={{ maxWidth:600,margin:"0 auto",padding:"10px 16px 100px" }}>
         {tab==="stats"&&<StatsTab places={visiblePlaces} entries={entries}/>}
+        {tab==="eventos"&&<EventsTab events={events} onAdd={()=>setShowAddEvent(true)} onSave={async ev=>{await set(ref(db,"events/"+ev.id),ev);}} onDelete={async id=>{await remove(ref(db,"events/"+id));setEvents(prev=>prev.filter(e=>e.id!==id));}} addToast={addToast}/>}
       {tab==="map"&&<MapTab places={filteredPlaces} entries={entries} onSelect={setSelected}/>}
       {tab==="timeline"&&<TimelineTab places={visiblePlaces} entries={entries} onSelect={setSelected}/>}
       {tab==="curadoria"&&<CuradoriaTab places={visiblePlaces} lists={lists} onSaveLists={saveLists} onSelectPlace={setSelected}/>}
@@ -1876,6 +2064,7 @@ export default function App() {
     {showShare&&<ShareModal places={visiblePlaces} entries={entries} onClose={()=>setShowShare(false)} addToast={addToast}/>}
     {showSurpresa&&<SurpresaModal places={visiblePlaces} entries={entries} weather={currentWeather} onClose={()=>setShowSurpresa(false)} addToast={addToast} onSaveLists={saveLists} lists={lists}/>}
     {showPlanner&&<PlannerChatModal places={visiblePlaces} entries={entries} onClose={()=>setShowPlanner(false)} addToast={addToast} userLat={userLat} userLng={userLng}/>}
+    {showAddEvent&&<AddEventModal onClose={()=>setShowAddEvent(false)} onSave={async ev=>{await set(ref(db,"events/"+ev.id),ev);addToast(isEN?"Event added!":"Evento adicionado!","success");setShowAddEvent(false);}} addToast={addToast}/>}
     {showBugReport&&<BugReportModal onClose={()=>setShowBugReport(false)} addToast={addToast}/>}
     {showNearby&&userLat&&<NearbyDrawer userLat={userLat} userLng={userLng} places={visiblePlaces} entries={entries} onSelect={setSelected} onClose={()=>setShowNearby(false)}/>}
   </div>;
