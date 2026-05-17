@@ -1981,7 +1981,7 @@ export default function App() {
         {tab==="list"&&<>
           <div style={{ position:"relative",marginBottom:8 }}>
             <span style={{ position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",color:"#50506a",fontSize:13 }}>🔍</span>
-            <input value={search} onChange={ev=>{setSearchInput(ev.target.value);clearTimeout(searchDebounce.current);searchDebounce.current=setTimeout(()=>setSearch(ev.target.value),200);}} value={searchInput} placeholder={T.search} style={{ width:"100%",background:"#1a1a22",border:"1px solid #2a2a38",borderRadius:10,padding:"9px 34px 9px 34px",color:"#f0eeff",fontSize:13 }}/>
+            <input value={searchInput} onChange={ev=>{setSearchInput(ev.target.value);clearTimeout(searchDebounce.current);searchDebounce.current=setTimeout(()=>setSearch(ev.target.value),200);}} placeholder={T.search} style={{ width:"100%",background:"#1a1a22",border:"1px solid #2a2a38",borderRadius:10,padding:"9px 34px 9px 34px",color:"#f0eeff",fontSize:13 }}/>
             {searchInput&&<button onClick={()=>{setSearchInput("");setSearch("");}} style={{ position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"#50506a",cursor:"pointer",fontSize:16 }}>×</button>}
           </div>
 
