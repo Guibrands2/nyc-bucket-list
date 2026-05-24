@@ -377,15 +377,25 @@ const TAB_KEYS = ["list","map","timeline","curadoria","stats","eventos"];
 function useSwipeTabs(tab, setTab) {
   const startX = useRef(0);
   const startY = useRef(0);
+  const startTarget = useRef(null);
   useEffect(() => {
-    const onStart = e => { startX.current=e.touches[0].clientX; startY.current=e.touches[0].clientY; };
+    const onStart = e => {
+      startX.current=e.touches[0].clientX;
+      startY.current=e.touches[0].clientY;
+      startTarget.current=e.target;
+    };
     const onEnd = e => {
-      const target = e.target;
-      // Don't swipe if touching the map
-      if(target.closest&&(target.closest(".leaflet-container")||target.closest(".leaflet-pane"))) return;
+      const target = startTarget.current;
+      // Ignore if started on map or any horizontally scrollable container
+      if(target&&target.closest&&(
+        target.closest(".leaflet-container") ||
+        target.closest(".leaflet-pane") ||
+        target.closest("[data-hscroll]") ||
+        target.closest(".swipe-card")
+      )) return;
       const dx = e.changedTouches[0].clientX - startX.current;
       const dy = Math.abs(e.changedTouches[0].clientY - startY.current);
-      if(Math.abs(dx)>60&&dy<40) {
+      if(Math.abs(dx)>70&&dy<30) {
         const idx = TAB_KEYS.indexOf(tab);
         if(dx<0&&idx<TAB_KEYS.length-1) setTab(TAB_KEYS[idx+1]);
         if(dx>0&&idx>0) setTab(TAB_KEYS[idx-1]);
@@ -1787,7 +1797,7 @@ const PlaceCard = memo(function PlaceCard({ place, entry, onSelect, onCheckIn, i
     const dx = e.touches[0].clientX - touchStartX.current;
     const dy = Math.abs(e.touches[0].clientY - touchStartY.current);
     if(dy > 10) { setSwipeDx(0); setSwiping(false); return; }
-    if(Math.abs(dx) > 8) { setSwiping(true); setSwipeDx(Math.max(-80, Math.min(80, dx))); }
+    if(Math.abs(dx) > 12 && dy < 15) { setSwiping(true); setSwipeDx(Math.max(-80, Math.min(80, dx))); }
   };
   const onTouchEnd = e => {
     clearTimeout(longPressTimer.current);
@@ -1857,6 +1867,293 @@ const PlaceCard = memo(function PlaceCard({ place, entry, onSelect, onCheckIn, i
   );
 }, (prev, next) => prev.place===next.place && prev.entry===next.entry && prev.isEN===next.isEN);
 
+
+// ─── AI ADD MODAL ─────────────────────────────────────────────────────────────
+function AIAddModal({ onClose, onSavePlace, onSaveEvent, addToast }) {
+  const [mode, setMode] = useState("input"); // input | loading | preview
+  const [inputText, setInputText] = useState("");
+  const [imageBase64, setImageBase64] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [result, setResult] = useState(null);
+  const [editResult, setEditResult] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const fileRef = useRef(null);
+  const drag = useDragToDismiss(onClose);
+
+  const CATEGORIES_LIST = ["Museus","Monumentos","Observatorios","Natureza","Praias","Livrarias","Lojas","Entretenimento","Compras","Bairros","Comida","Mercados & Delis","Dispensaries","Bares","Daytrips"];
+
+  const handleImage = e => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const b64 = ev.target.result.split(",")[1];
+      setImageBase64(b64);
+      setImagePreview(ev.target.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const analyze = async () => {
+    if(!inputText.trim() && !imageBase64) return;
+    setMode("loading");
+
+    const systemPrompt = `Voce e um assistente que ajuda adicionar lugares e eventos a um app de bucket list de NYC.
+Dado um nome, descricao ou foto, extraia as informacoes e retorne APENAS JSON valido, sem texto adicional.
+
+Categorias disponiveis: Museus, Monumentos, Observatorios, Natureza, Praias, Livrarias, Lojas, Entretenimento, Compras, Bairros, Comida, Mercados & Delis, Dispensaries, Bares, Daytrips.
+Precos: gratis, $, $$, $$$.
+Tempo: 30min, 1h, 2h, 3h+.
+Estacoes: sempre, verao, inverno, primavera, outono.
+Tipo de evento: show, exposicao, festival, esporte, teatro, outro.
+
+Retorne este JSON (type = "place" ou "event"):
+{
+  "type": "place",
+  "name": "Nome em portugues",
+  "nameEN": "Name in English",
+  "category": "categoria da lista acima",
+  "emoji": "emoji unico e relevante",
+  "desc": "descricao curta em portugues (max 120 chars)",
+  "descEN": "short description in English (max 120 chars)",
+  "price": "gratis|$|$$|$$$",
+  "time": "30min|1h|2h|3h+",
+  "season": "sempre|verao|inverno|primavera|outono",
+  "petFriendly": false,
+  "publicBathroom": false,
+  "needsReservation": false,
+  "hours": "horarios de funcionamento ou vazio",
+  "link": "URL oficial ou vazio",
+  "rep": "dica em portugues (max 80 chars) ou vazio",
+  "repEN": "tip in English (max 80 chars) or empty",
+  "eventDate": "YYYY-MM-DD se for evento com data especifica, senao vazio",
+  "eventTime": "HH:MM se for evento, senao vazio",
+  "location": "endereco ou nome do local se for evento",
+  "eventCategory": "show|exposicao|festival|esporte|teatro|outro se for evento",
+  "ticketLink": "link do ingresso se existir"
+}`;
+
+    const userContent = imageBase64 ? [
+      { type:"image", source:{ type:"base64", media_type:"image/jpeg", data:imageBase64 } },
+      { type:"text", text:inputText.trim()||"Analise esta imagem e preencha os dados para adicionar ao bucket list de NYC." }
+    ] : inputText.trim();
+
+    try {
+      const r = await fetch(AI_PROXY, {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+          system: systemPrompt,
+          messages:[{ role:"user", content:userContent }],
+          max_tokens:1000
+        })
+      });
+      const d = await r.json();
+      const text = d.content?.[0]?.text||"";
+      const clean = text.replace(/```json|```/g,"").trim();
+      const parsed = JSON.parse(clean);
+      setResult(parsed);
+      setEditResult({...parsed});
+      setMode("preview");
+    } catch(err) {
+      addToast(isEN?"Could not analyze. Try describing the place.":"Nao consegui analisar. Tente descrever o lugar.","error");
+      setMode("input");
+    }
+  };
+
+  const confirm = async () => {
+    setSaving(true);
+    const r = editResult;
+    const isEvent = r.type==="event" || (r.eventDate&&r.eventDate.length>0);
+
+    if(isEvent) {
+      const ev = {
+        id:"ev"+Date.now(),
+        name:r.name||r.nameEN||"Evento",
+        emoji:r.emoji||"📅",
+        category:r.eventCategory||"outro",
+        date:r.eventDate||new Date().toISOString().split("T")[0],
+        time:r.eventTime||"",
+        location:r.location||"",
+        price:r.price||"",
+        desc:r.desc||"",
+        ticketLink:r.ticketLink||"",
+        archived:false,
+        createdAt:new Date().toISOString()
+      };
+      await onSaveEvent(ev);
+      addToast(isEN?"Event added!":"Evento adicionado!","success");
+    } else {
+      const place = {
+        id:"ai"+Date.now(),
+        name:r.name||r.nameEN||"Lugar",
+        nameEN:r.nameEN||r.name||"Place",
+        category:CATEGORIES_LIST.includes(r.category)?r.category:"Entretenimento",
+        emoji:r.emoji||"📍",
+        desc:r.desc||"",
+        descEN:r.descEN||"",
+        price:r.price||"$",
+        time:r.time||"2h",
+        season:r.season||"sempre",
+        petFriendly:r.petFriendly||false,
+        publicBathroom:r.publicBathroom||false,
+        needsReservation:r.needsReservation||false,
+        hours:r.hours||"",
+        link:r.link||"",
+        rep:r.rep||"",
+        repEN:r.repEN||"",
+        lat:null, lng:null
+      };
+      await onSavePlace(place);
+      addToast(isEN?"Place added!":"Lugar adicionado!","success");
+    }
+    setSaving(false);
+    onClose();
+  };
+
+  if(mode==="loading") return (
+    <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:400,display:"flex",alignItems:"center",justifyContent:"center" }}>
+      <div style={{ textAlign:"center" }}>
+        <div className="pulsing" style={{ fontSize:52,marginBottom:16 }}>🤖</div>
+        <div style={{ fontSize:15,color:"#f0eeff",fontWeight:600,marginBottom:6 }}>Analisando...</div>
+        <div style={{ fontSize:12,color:"#9090b0" }}>Claude esta pensando</div>
+      </div>
+    </div>
+  );
+
+  if(mode==="preview"&&editResult) return (
+    <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:400,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={onClose}>
+      <div className="modal" {...drag} onClick={e=>e.stopPropagation()} style={{ background:"#1a1a22",borderTop:"1px solid #2a2a38",borderRadius:"20px 20px 0 0",padding:"20px 16px 48px",maxWidth:560,width:"100%",maxHeight:"92vh",overflowY:"auto" }}>
+        <div style={{ width:44,height:4,background:"#3a3a48",borderRadius:2,margin:"0 auto 14px" }}/>
+        <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14 }}>
+          <div style={{ fontSize:15,fontWeight:700,color:"#f0eeff" }}>✨ {isEN?"Claude found this":"Claude encontrou isso"}</div>
+          <button onClick={()=>setMode("input")} style={{ background:"none",border:"1px solid #2a2a38",borderRadius:8,padding:"4px 10px",color:"#50506a",fontSize:12,cursor:"pointer" }}>← {isEN?"Back":"Voltar"}</button>
+        </div>
+
+        {/* Type badge */}
+        <div style={{ display:"flex",gap:8,marginBottom:14 }}>
+          {["place","event"].map(t=><button key={t} onClick={()=>setEditResult(p=>({...p,type:t}))} style={{ flex:1,padding:"8px",borderRadius:10,background:editResult.type===t||(!editResult.type&&t==="place")?"#ff336620":"#0f0f13",border:"1px solid "+(editResult.type===t?"#ff3366":"#2a2a38"),color:editResult.type===t?"#ff3366":"#50506a",fontSize:12,cursor:"pointer" }}>
+            {t==="place"?(isEN?"📍 Place":"📍 Lugar"):(isEN?"📅 Event":"📅 Evento")}
+          </button>)}
+        </div>
+
+        {/* Emoji + Name */}
+        <div style={{ display:"flex",gap:10,marginBottom:12 }}>
+          <input value={editResult.emoji||""} onChange={e=>setEditResult(p=>({...p,emoji:e.target.value}))} maxLength={2} style={{ width:52,background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:8,padding:"8px",color:"#f0eeff",fontSize:22,textAlign:"center" }}/>
+          <input value={editResult.name||""} onChange={e=>setEditResult(p=>({...p,name:e.target.value}))} style={{ flex:1,background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:8,padding:"8px 12px",color:"#f0eeff",fontSize:14,fontWeight:600 }}/>
+        </div>
+
+        {/* Category */}
+        {(editResult.type==="place"||!editResult.eventDate) && <div style={{ marginBottom:12 }}>
+          <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:6 }}>CATEGORIA</div>
+          <div style={{ display:"flex",gap:5,flexWrap:"wrap" }}>
+            {CATEGORIES_LIST.map(cat=><button key={cat} onClick={()=>setEditResult(p=>({...p,category:cat}))} style={{ padding:"5px 10px",borderRadius:20,background:editResult.category===cat?"#ff336620":"#0f0f13",border:"1px solid "+(editResult.category===cat?"#ff3366":"#2a2a38"),color:editResult.category===cat?"#ff3366":"#9090b0",fontSize:11,cursor:"pointer" }}>{catLabel(cat)}</button>)}
+          </div>
+        </div>}
+
+        {/* Event date/time */}
+        {(editResult.type==="event"||editResult.eventDate) && <div style={{ display:"flex",gap:8,marginBottom:12 }}>
+          <div style={{ flex:2 }}>
+            <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:6 }}>DATA</div>
+            <input type="date" value={editResult.eventDate||""} onChange={e=>setEditResult(p=>({...p,eventDate:e.target.value}))} style={{ width:"100%",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:8,padding:"8px 12px",color:"#f0eeff",fontSize:13 }}/>
+          </div>
+          <div style={{ flex:1 }}>
+            <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:6 }}>HORA</div>
+            <input type="time" value={editResult.eventTime||""} onChange={e=>setEditResult(p=>({...p,eventTime:e.target.value}))} style={{ width:"100%",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:8,padding:"8px 12px",color:"#f0eeff",fontSize:13 }}/>
+          </div>
+        </div>}
+
+        {/* Desc */}
+        <div style={{ marginBottom:12 }}>
+          <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:6 }}>DESCRICAO</div>
+          <textarea value={editResult.desc||""} onChange={e=>setEditResult(p=>({...p,desc:e.target.value}))} rows={2} style={{ width:"100%",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:8,padding:"8px 12px",color:"#f0eeff",fontSize:13,resize:"none" }}/>
+        </div>
+
+        {/* Price + Time row */}
+        <div style={{ display:"flex",gap:8,marginBottom:12 }}>
+          <div style={{ flex:1 }}>
+            <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:6 }}>PRECO</div>
+            <div style={{ display:"flex",gap:4 }}>
+              {["gratis","$","$$","$$$"].map(p=><button key={p} onClick={()=>setEditResult(prev=>({...prev,price:p}))} style={{ flex:1,padding:"7px 4px",borderRadius:8,background:editResult.price===p?"#ffd60018":"#0f0f13",border:"1px solid "+(editResult.price===p?"#ffd600":"#2a2a38"),color:editResult.price===p?"#ffd600":"#9090b0",fontSize:11,cursor:"pointer" }}>{p==="gratis"?"🆓":p}</button>)}
+            </div>
+          </div>
+          <div style={{ flex:1 }}>
+            <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:6 }}>TEMPO</div>
+            <div style={{ display:"flex",gap:4 }}>
+              {["30min","1h","2h","3h+"].map(t=><button key={t} onClick={()=>setEditResult(prev=>({...prev,time:t}))} style={{ flex:1,padding:"7px 2px",borderRadius:8,background:editResult.time===t?"#4da6ff18":"#0f0f13",border:"1px solid "+(editResult.time===t?"#4da6ff":"#2a2a38"),color:editResult.time===t?"#4da6ff":"#9090b0",fontSize:11,cursor:"pointer" }}>{t}</button>)}
+            </div>
+          </div>
+        </div>
+
+        {/* Rep tip */}
+        {editResult.rep&&<div style={{ marginBottom:12,padding:"10px 12px",background:"#ffd60010",border:"1px solid #ffd60030",borderRadius:10 }}>
+          <div style={{ fontSize:10,color:"#ffd600",marginBottom:4 }}>⭐ DICA DO CLAUDE</div>
+          <input value={editResult.rep||""} onChange={e=>setEditResult(p=>({...p,rep:e.target.value}))} style={{ width:"100%",background:"none",border:"none",color:"#f0eeff",fontSize:13 }}/>
+        </div>}
+
+        {/* Hours + Link */}
+        {editResult.hours&&<div style={{ marginBottom:12 }}>
+          <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:6 }}>HORARIOS</div>
+          <input value={editResult.hours||""} onChange={e=>setEditResult(p=>({...p,hours:e.target.value}))} style={{ width:"100%",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:8,padding:"8px 12px",color:"#f0eeff",fontSize:13 }}/>
+        </div>}
+        {editResult.link&&<div style={{ marginBottom:14 }}>
+          <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:6 }}>LINK</div>
+          <input value={editResult.link||""} onChange={e=>setEditResult(p=>({...p,link:e.target.value}))} style={{ width:"100%",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:8,padding:"8px 12px",color:"#f0eeff",fontSize:13 }}/>
+        </div>}
+
+        {/* Flags */}
+        <div style={{ display:"flex",gap:8,marginBottom:16 }}>
+          {[["needsReservation","📋","Reserva"],["petFriendly","🐾","Pet"],["publicBathroom","🚻","Banheiro"]].map(([k,emoji,label])=>(
+            <button key={k} onClick={()=>setEditResult(p=>({...p,[k]:!p[k]}))} style={{ flex:1,padding:"8px 4px",borderRadius:10,background:editResult[k]?"#ff336618":"#0f0f13",border:"1px solid "+(editResult[k]?"#ff3366":"#2a2a38"),color:editResult[k]?"#ff3366":"#50506a",fontSize:11,cursor:"pointer" }}>
+              {emoji} {label}
+            </button>
+          ))}
+        </div>
+
+        <button onClick={confirm} disabled={saving} style={{ width:"100%",padding:"14px",background:saving?"#2a2a38":"#ff3366",border:"none",borderRadius:12,color:saving?"#50506a":"#fff",fontSize:14,fontWeight:700,cursor:saving?"default":"pointer" }}>
+          {saving?"Salvando...":(isEN?"Add to my list ✓":"Adicionar à minha lista ✓")}
+        </button>
+      </div>
+    </div>
+  );
+
+  // Input mode
+  return (
+    <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:400,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={onClose}>
+      <div className="modal" {...drag} onClick={e=>e.stopPropagation()} style={{ background:"#1a1a22",borderTop:"1px solid #2a2a38",borderRadius:"20px 20px 0 0",padding:"20px 16px 48px",maxWidth:560,width:"100%" }}>
+        <div style={{ width:44,height:4,background:"#3a3a48",borderRadius:2,margin:"0 auto 16px" }}/>
+        <div style={{ fontSize:15,fontWeight:700,color:"#f0eeff",marginBottom:4 }}>✨ {isEN?"Add with AI":"Adicionar com IA"}</div>
+        <div style={{ fontSize:12,color:"#9090b0",marginBottom:16 }}>{isEN?"Send a photo or describe the place/event":"Mande uma foto ou descreva o lugar/evento"}</div>
+
+        {/* Image upload */}
+        <div onClick={()=>fileRef.current.click()} style={{ border:"1.5px dashed "+(imagePreview?"#ff336660":"#2a2a38"),borderRadius:12,padding:"16px",textAlign:"center",cursor:"pointer",marginBottom:12,background:imagePreview?"#ff336608":"none",transition:"all 0.2s",position:"relative",overflow:"hidden" }}>
+          {imagePreview ? <>
+            <img src={imagePreview} alt="" style={{ maxHeight:140,borderRadius:8,objectFit:"contain" }}/>
+            <button onClick={e=>{e.stopPropagation();setImageBase64(null);setImagePreview(null);}} style={{ position:"absolute",top:8,right:8,background:"#000c",border:"none",borderRadius:"50%",width:24,height:24,color:"#fff",cursor:"pointer",fontSize:14 }}>×</button>
+          </> : <>
+            <div style={{ fontSize:32,marginBottom:6 }}>📸</div>
+            <div style={{ fontSize:13,color:"#9090b0" }}>{isEN?"Tap to upload photo or screenshot":"Toque para enviar foto ou print"}</div>
+            <div style={{ fontSize:11,color:"#50506a",marginTop:4 }}>{isEN?"Story, flyer, Google Maps screenshot...":"Story, flyer, print do Google Maps..."}</div>
+          </>}
+        </div>
+        <input ref={fileRef} type="file" accept="image/*" onChange={handleImage} style={{ display:"none" }}/>
+
+        <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:12 }}>
+          <div style={{ flex:1,height:1,background:"#2a2a38" }}/>
+          <span style={{ fontSize:11,color:"#50506a" }}>{isEN?"or type":"ou escreva"}</span>
+          <div style={{ flex:1,height:1,background:"#2a2a38" }}/>
+        </div>
+
+        <input value={inputText} onChange={e=>setInputText(e.target.value)} onKeyDown={e=>e.key==="Enter"&&analyze()} placeholder={isEN?"e.g. Roberta's Pizza Brooklyn, or describe an event...":"ex: Roberta's Pizza Brooklyn, ou descreva um evento..."} style={{ width:"100%",background:"#0f0f13",border:"1.5px solid "+(inputText?"#ff336650":"#2a2a38"),borderRadius:12,padding:"12px 14px",color:"#f0eeff",fontSize:14,marginBottom:14,transition:"border-color 0.2s" }}/>
+
+        <button onClick={analyze} disabled={!inputText.trim()&&!imageBase64} style={{ width:"100%",padding:"14px",background:inputText.trim()||imageBase64?"#ff3366":"#2a2a38",border:"none",borderRadius:12,color:inputText.trim()||imageBase64?"#fff":"#50506a",fontSize:14,fontWeight:700,cursor:inputText.trim()||imageBase64?"pointer":"default",transition:"all 0.2s" }}>
+          {isEN?"Analyze with Claude ✨":"Analisar com Claude ✨"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── APP ─────────────────────────────────────────────────────────────────────
 export default function App() {
   const [loading, setLoading] = useState(true);
@@ -1891,6 +2188,7 @@ export default function App() {
   const [showNearby, setShowNearby] = useState(false);
   const [showSurpresa, setShowSurpresa] = useState(false);
   const [showAddEvent, setShowAddEvent] = useState(false);
+  const [showAIAdd, setShowAIAdd] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [placeOfDay, setPlaceOfDay] = useState(null);
   const placeOfDayFixed = useRef(false);
@@ -2108,9 +2406,14 @@ export default function App() {
               <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.15em" }}>{T.byGuiGab} {syncing&&<span className="pulsing" style={{ color:"#ff3366" }}>·</span>}</div>
               <div style={{ fontSize:20,fontWeight:800,letterSpacing:"-0.02em",background:"linear-gradient(90deg,#ff3366,#ff6b35,#ffd600)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",lineHeight:1.2 }}>{T.appTitle} 🗽</div>
             </div>
-            <button onClick={()=>setShowAdd(true)} style={{ background:"#ff3366",border:"none",borderRadius:12,padding:"8px 16px",display:"flex",alignItems:"center",gap:6,cursor:"pointer",fontSize:13,color:"#fff",fontWeight:700 }}>
-              <span style={{ fontSize:18 }}>+</span> {isEN?"Add":"Adicionar"}
-            </button>
+            <div style={{ display:"flex",gap:6 }}>
+              <button onClick={()=>setShowAIAdd(true)} style={{ background:"#1a1a22",border:"1px solid #2a2a38",borderRadius:12,padding:"8px 12px",display:"flex",alignItems:"center",gap:5,cursor:"pointer",fontSize:13,color:"#9090b0" }}>
+                ✨ AI
+              </button>
+              <button onClick={()=>setShowAdd(true)} style={{ background:"#ff3366",border:"none",borderRadius:12,padding:"8px 14px",display:"flex",alignItems:"center",gap:5,cursor:"pointer",fontSize:13,color:"#fff",fontWeight:700 }}>
+                + {isEN?"Add":"Adicionar"}
+              </button>
+            </div>
           </div>
           {/* Progress bar */}
           <div style={{ marginBottom:8 }}>
@@ -2141,7 +2444,7 @@ export default function App() {
             {MOODS.map(m=><button key={m.id} className={"mood-chip"+(activeMood===m.id?" active":"")} onClick={()=>setActiveMood(activeMood===m.id?null:m.id)}>{m.label}</button>)}
           </div>
           {/* Category chips */}
-          <div style={{ display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",paddingBottom:10 }}>
+          <div data-hscroll style={{ display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",paddingBottom:10 }}>
             {["Todos",...CATEGORIES].map(cat=>{const meta=CAT_META[cat],active=activeCategory===cat;return<button key={cat} onClick={()=>{if(cat==="Todos"){setActiveCategory("Todos");setSortBy("default");}else{setActiveCategory(activeCategory===cat?"Todos":cat);if(activeCategory!==cat)setSortBy("az");}}} className="btn" style={{ padding:"6px 14px",borderRadius:22,background:active?(meta?meta.color:"#ff3366")+"25":"#1a1a22",border:"2px solid "+(active?(meta?meta.color:"#ff3366")+"80":"#2a2a38"),color:active?(meta?meta.color:"#ff3366"):"#9090b0",fontSize:12,whiteSpace:"nowrap",fontWeight:active?600:400,transition:"all 0.15s" }}>{cat==="Todos"?T.all:catLabel(cat)}</button>;})}
           </div>
           {/* Filter row */}
@@ -2220,6 +2523,7 @@ export default function App() {
       {/* Modals */}
       {selected&&<DetailModal place={selected} entry={entries[selected.id]} places={visiblePlaces} entries={entries} onClose={closeModal} onSave={async data=>{await handleSave(selected.id,data);}} onDelete={()=>handleDelete(selected.id,isEN&&selected.nameEN?selected.nameEN:selected.name)} onSelectNearby={openModal} onEditPlace={handleEditPlace} addToast={addToast} userLat={userLat} userLng={userLng}/>}
       {checkIn&&<CheckInModal place={checkIn} onClose={()=>setCheckIn(null)} onSave={async data=>{await handleSave(checkIn.id,data);}} addToast={addToast}/>}
+      {showAIAdd&&<AIAddModal onClose={()=>setShowAIAdd(false)} onSavePlace={async place=>{await set(ref(db,"customPlaces/"+place.id),place);}} onSaveEvent={async ev=>{await set(ref(db,"events/"+ev.id),ev);setShowAIAdd(false);}} addToast={addToast}/>}
       {showAdd&&<AddPlaceModal onClose={()=>setShowAdd(false)} onSave={async place=>{await set(ref(db,"customPlaces/"+place.id),place);addToast(T.placeAdded,"success");setShowAdd(false);}} addToast={addToast}/>}
       {showShare&&<ShareModal onClose={()=>setShowShare(false)} addToast={addToast}/>}
       {showPlanner&&<PlannerChatModal places={visiblePlaces} entries={entries} onClose={()=>setShowPlanner(false)} addToast={addToast} userLat={userLat} userLng={userLng}/>}
