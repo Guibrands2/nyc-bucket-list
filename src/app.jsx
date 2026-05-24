@@ -145,6 +145,16 @@ const T = {
   hoursPlaceholder: isEN ? "Ex: Mon-Fri 10am-8pm, Sat-Sun 11am-6pm" : "Ex: Seg-Sex 10h-20h, Sab-Dom 11h-18h",
   weather: { sunny:"Sunny", cloudy:"Cloudy", partCloud:"Partly cloudy", foggy:"Foggy", drizzle:"Drizzle", rainy:"Rainy", snowy:"Snowing",
     ensolarado:"Ensolarado", nublado:"Nublado", parcNublado:"Parcialmente nublado", nebuloso:"Nebuloso", garoa:"Garoa", chovendo:"Chovendo", nevando:"Nevando" },
+  filterVibe: isEN ? "VIBE" : "VIBE",
+  filterPrice: isEN ? "PRICE" : "PRECO",
+  filterSeason: isEN ? "SEASON" : "EPOCA",
+  filterStars: isEN ? "MIN RATING" : "NOTA MINIMA",
+  filterPet: isEN ? "Pet friendly" : "Pet friendly",
+  filterBathroom: isEN ? "Free bathroom" : "Banheiro gratis",
+  filterRegion: isEN ? "REGION" : "REGIAO",
+  clearAll: isEN ? " Clear" : " Limpar",
+  gpsError: isEN ? "Could not get location" : "Nao foi possivel obter localizacao",
+  placeAdded: isEN ? "Place added!" : "Lugar adicionado!",
 };
 
 const VIBES = ["romantico","amigos","familia","solo"];
@@ -160,6 +170,7 @@ const SEASON_LABELS_EN = { verao:"Summer", inverno:"Winter", primavera:"Spring",
 const SEASON_LABELS = isEN ? SEASON_LABELS_EN : SEASON_LABELS_PT;
 
 const PRICE_LEVELS = ["gratis","$","$$","$$$"];
+const PRICES = PRICE_LEVELS;
 const PRICE_EMOJI = { gratis:"🆓", "$":"$", "$$":"$$", "$$$":"$$$" };
 
 const WHO_OPTIONS = ["gui","gabriel","juntos"];
@@ -315,6 +326,14 @@ const INITIAL_PLACES = [
 
 const CATEGORIES = [...new Set(INITIAL_PLACES.map(p => p.category))].sort();
 
+const REGIONS = {
+  Manhattan:    { minLat:40.700, maxLat:40.882, minLng:-74.020, maxLng:-73.907 },
+  Brooklyn:     { minLat:40.570, maxLat:40.740, minLng:-74.042, maxLng:-73.833 },
+  Queens:       { minLat:40.541, maxLat:40.800, minLng:-73.962, maxLng:-73.700 },
+  Bronx:        { minLat:40.785, maxLat:40.917, minLng:-73.933, maxLng:-73.765 },
+  "New Jersey": { minLat:40.460, maxLat:40.820, minLng:-74.260, maxLng:-74.050 },
+};
+
 let _pullStartY = 0;
 let _pulling = false;
 
@@ -328,6 +347,21 @@ function initPullToRefresh() {
   }, { passive:true });
 }
 
+
+function FilterSection({ label, options, selected, onToggle, renderLabel }) {
+  return (
+    <div style={{ marginBottom:12 }}>
+      <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:6 }}>{label}</div>
+      <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
+        {options.map(opt=>(
+          <button key={opt} onClick={()=>onToggle(opt)} style={{ padding:"5px 10px",borderRadius:20,background:selected.includes(opt)?"#ff336620":"#0f0f13",border:"1px solid "+(selected.includes(opt)?"#ff3366":"#2a2a38"),color:selected.includes(opt)?"#ff3366":"#9090b0",fontSize:11,cursor:"pointer" }}>
+            {renderLabel(opt)}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function SeasonalBanner({ places, entries, onSelect }) {
   const now = new Date();
@@ -1076,7 +1110,7 @@ function DetailModal({ place, entry, places, entries, onClose, onSave, onDelete,
         {confirmDel?<div style={{ display:"flex",gap:8 }}><button onClick={()=>setConfirmDel(false)} style={{ flex:1,padding:"11px",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:10,color:"#9090b0",fontSize:13,cursor:"pointer" }}>{T.cancel}</button><button onClick={handleDelete} style={{ flex:1,padding:"11px",background:"#4a0000",border:"1px solid #883333",borderRadius:10,color:"#ff8888",fontSize:13,cursor:"pointer" }}>{T.confirm}</button></div>:<button onClick={()=>setConfirmDel(true)} style={{ width:"100%",padding:"11px",background:"none",border:"1px solid #2a2a38",borderRadius:10,color:"#50506a",fontSize:13,cursor:"pointer" }}>{T.remove}</button>}
       </div>
     </div>
-    {showEdit&&<EditNameModal place={place} onClose={()=>setShowEdit(false)} onSave={updated=>{onEditPlace(updated);setShowEdit(false);}}/>}
+    {showEdit&&<EditNameModal place={place} onClose={()=>setShowEdit(false)} onSave={updated=>{onEditPlace(place.id,{name:updated.name,nameEN:updated.nameEN,emoji:updated.emoji,desc:updated.desc,descEN:updated.descEN});setShowEdit(false);}}/>}
   </>;
 }
 
@@ -1645,9 +1679,6 @@ function StatsTab({ places, entries }) {
     </div>
   );
 
-  // Debug: log visited to verify data
-  console.log("StatsTab visited:", visited.length, "entries sample:", Object.keys(entries).slice(0,3));
-
   return (
     <div style={{ padding:"0 16px 80px" }}>
 
@@ -1933,17 +1964,17 @@ Retorne este JSON (type = "place" ou "event"):
   "ticketLink": "link do ingresso se existir"
 }`;
 
+    const userText = systemPrompt + "\n\n" + (inputText.trim() || "Analise o que foi fornecido e preencha os dados para adicionar ao bucket list de NYC.");
     const userContent = imageBase64 ? [
       { type:"image", source:{ type:"base64", media_type:"image/jpeg", data:imageBase64 } },
-      { type:"text", text:inputText.trim()||"Analise esta imagem e preencha os dados para adicionar ao bucket list de NYC." }
-    ] : inputText.trim();
+      { type:"text", text:userText }
+    ] : userText;
 
     try {
       const r = await fetch(AI_PROXY, {
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body: JSON.stringify({
-          system: systemPrompt,
           messages:[{ role:"user", content:userContent }],
           max_tokens:1000
         })
@@ -2200,6 +2231,9 @@ export default function App() {
   const [activeMood, setActiveMood] = useState(null);
   const [nearbyAlert, setNearbyAlert] = useState(null);
   const scrollPosRef = useRef(0);
+  const alertedRef = useRef(new Set());
+  const visiblePlacesRef = useRef([]);
+  const entriesRef = useRef({});
   const currentWeather = window._nycWeather||null;
 
   const openModal = (place) => { scrollPosRef.current = window.scrollY; setSelected(place); };
@@ -2229,9 +2263,33 @@ export default function App() {
     return()=>{u1();u2();u3();u4();u5();u6();};
   }, []);
 
+  useEffect(()=>{
+    if(!navigator.geolocation) return;
+    const wid=navigator.geolocation.watchPosition(
+      pos=>{
+        const {latitude:lat,longitude:lng}=pos.coords;
+        setUserLat(lat); setUserLng(lng);
+        const RADIUS=0.2;
+        const near=visiblePlacesRef.current.find(p=>{
+          if(!p.lat||!p.lng) return false;
+          if(alertedRef.current.has(p.id)) return false;
+          const e=entriesRef.current[p.id]||{};
+          if(e.status==="fui") return false;
+          return haversineKm(lat,lng,p.lat,p.lng)<RADIUS;
+        });
+        if(near){alertedRef.current.add(near.id);setNearbyAlert(near);}
+      },
+      ()=>{},
+      {enableHighAccuracy:true,maximumAge:30000}
+    );
+    return()=>navigator.geolocation.clearWatch(wid);
+  },[]);
+
   const places = useMemo(()=>[...INITIAL_PLACES,...customPlaces],[customPlaces]);
   const effectivePlaces = useMemo(()=>places.map(p=>{const ed=customEdits[p.id];return ed?{...p,...ed}:p;}),[places,customEdits]);
   const visiblePlaces = useMemo(()=>effectivePlaces.filter(p=>!removedIds.includes(p.id)),[effectivePlaces,removedIds]);
+  visiblePlacesRef.current = visiblePlaces;
+  entriesRef.current = entries;
 
   useEffect(()=>{
     if(placeOfDayFixed.current)return;
@@ -2266,7 +2324,6 @@ export default function App() {
     addToast(placeName+" "+T.removedToast,"error",undo);
     removeTimers.current[placeId]=setTimeout(async()=>{
       if(undone)return;
-      setPlaces && null;
       setEntries(prev=>{const ne={...prev};delete ne[placeId];return ne;});
       try{await remove(ref(db,"customPlaces/"+placeId));await remove(ref(db,"entries/"+placeId));await set(ref(db,"removedIds/"+placeId),true);}
       catch{addToast(isEN?"Remove failed.":"Erro ao remover.","error");}
@@ -2524,8 +2581,8 @@ export default function App() {
       {selected&&<DetailModal place={selected} entry={entries[selected.id]} places={visiblePlaces} entries={entries} onClose={closeModal} onSave={async data=>{await handleSave(selected.id,data);}} onDelete={()=>handleDelete(selected.id,isEN&&selected.nameEN?selected.nameEN:selected.name)} onSelectNearby={openModal} onEditPlace={handleEditPlace} addToast={addToast} userLat={userLat} userLng={userLng}/>}
       {checkIn&&<CheckInModal place={checkIn} onClose={()=>setCheckIn(null)} onSave={async data=>{await handleSave(checkIn.id,data);}} addToast={addToast}/>}
       {showAIAdd&&<AIAddModal onClose={()=>setShowAIAdd(false)} onSavePlace={async place=>{await set(ref(db,"customPlaces/"+place.id),place);}} onSaveEvent={async ev=>{await set(ref(db,"events/"+ev.id),ev);setShowAIAdd(false);}} addToast={addToast}/>}
-      {showAdd&&<AddPlaceModal onClose={()=>setShowAdd(false)} onSave={async place=>{await set(ref(db,"customPlaces/"+place.id),place);addToast(T.placeAdded,"success");setShowAdd(false);}} addToast={addToast}/>}
-      {showShare&&<ShareModal onClose={()=>setShowShare(false)} addToast={addToast}/>}
+      {showAdd&&<AddModal onClose={()=>setShowAdd(false)} onAdd={async place=>{await set(ref(db,"customPlaces/"+place.id),place);}} addToast={addToast}/>}
+      {showShare&&<ShareModal places={visiblePlaces} entries={entries} onClose={()=>setShowShare(false)} addToast={addToast}/>}
       {showPlanner&&<PlannerChatModal places={visiblePlaces} entries={entries} onClose={()=>setShowPlanner(false)} addToast={addToast} userLat={userLat} userLng={userLng}/>}
       {showNearby&&userLat&&<NearbyDrawer userLat={userLat} userLng={userLng} places={visiblePlaces} entries={entries} onSelect={openModal} onClose={()=>setShowNearby(false)}/>}
       {showSurpresa&&<SurpresaModal places={visiblePlaces} entries={entries} weather={currentWeather} onClose={()=>setShowSurpresa(false)} addToast={addToast} onSaveLists={saveLists} lists={lists}/>}
