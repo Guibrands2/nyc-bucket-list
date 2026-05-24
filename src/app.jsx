@@ -402,7 +402,14 @@ function SeasonalBanner({ places, entries, onSelect }) {
 function useDragToDismiss(onDismiss) {
   const startY = useRef(0);
   const onTouchStart = e => { startY.current = e.touches[0].clientY; };
-  const onTouchEnd = e => { if(e.changedTouches[0].clientY - startY.current > 90) onDismiss(); };
+  const onTouchEnd = e => {
+    const dy = e.changedTouches[0].clientY - startY.current;
+    if(dy > 150) {
+      let el = e.target;
+      while(el && el !== document.body) { if(el.scrollTop > 5) return; el = el.parentElement; }
+      onDismiss();
+    }
+  };
   return { onTouchStart, onTouchEnd };
 }
 
@@ -1908,18 +1915,25 @@ function AIAddModal({ onClose, onSavePlace, onSaveEvent, addToast }) {
   const [result, setResult] = useState(null);
   const [editResult, setEditResult] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [imageMediaType, setImageMediaType] = useState("image/jpeg");
   const fileRef = useRef(null);
   const drag = useDragToDismiss(onClose);
 
   const CATEGORIES_LIST = ["Museus","Monumentos","Observatorios","Natureza","Praias","Livrarias","Lojas","Entretenimento","Compras","Bairros","Comida","Mercados & Delis","Dispensaries","Bares","Daytrips"];
+  const SUPPORTED_TYPES = ["image/jpeg","image/png","image/gif","image/webp"];
 
   const handleImage = e => {
     const file = e.target.files[0];
     if(!file) return;
+    if(!SUPPORTED_TYPES.includes(file.type)) {
+      addToast(isEN?"Use JPEG, PNG or WebP image":"Use imagem JPEG, PNG ou WebP","error");
+      return;
+    }
     const reader = new FileReader();
     reader.onload = ev => {
       const b64 = ev.target.result.split(",")[1];
       setImageBase64(b64);
+      setImageMediaType(file.type);
       setImagePreview(ev.target.result);
     };
     reader.readAsDataURL(file);
@@ -1966,7 +1980,7 @@ Retorne este JSON (type = "place" ou "event"):
 
     const userText = systemPrompt + "\n\n" + (inputText.trim() || "Analise o que foi fornecido e preencha os dados para adicionar ao bucket list de NYC.");
     const userContent = imageBase64 ? [
-      { type:"image", source:{ type:"base64", media_type:"image/jpeg", data:imageBase64 } },
+      { type:"image", source:{ type:"base64", media_type:imageMediaType, data:imageBase64 } },
       { type:"text", text:userText }
     ] : userText;
 
@@ -2053,12 +2067,15 @@ Retorne este JSON (type = "place" ou "event"):
   );
 
   if(mode==="preview"&&editResult) return (
-    <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:400,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={onClose}>
-      <div className="modal" {...drag} onClick={e=>e.stopPropagation()} style={{ background:"#1a1a22",borderTop:"1px solid #2a2a38",borderRadius:"20px 20px 0 0",padding:"20px 16px 48px",maxWidth:560,width:"100%",maxHeight:"92vh",overflowY:"auto" }}>
+    <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:400,display:"flex",alignItems:"flex-end",justifyContent:"center" }}>
+      <div className="modal" style={{ background:"#1a1a22",borderTop:"1px solid #2a2a38",borderRadius:"20px 20px 0 0",padding:"20px 16px 48px",maxWidth:560,width:"100%",maxHeight:"92vh",overflowY:"auto" }}>
         <div style={{ width:44,height:4,background:"#3a3a48",borderRadius:2,margin:"0 auto 14px" }}/>
         <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14 }}>
           <div style={{ fontSize:15,fontWeight:700,color:"#f0eeff" }}>✨ {isEN?"Claude found this":"Claude encontrou isso"}</div>
-          <button onClick={()=>setMode("input")} style={{ background:"none",border:"1px solid #2a2a38",borderRadius:8,padding:"4px 10px",color:"#50506a",fontSize:12,cursor:"pointer" }}>← {isEN?"Back":"Voltar"}</button>
+          <div style={{ display:"flex",gap:6 }}>
+            <button onClick={()=>setMode("input")} style={{ background:"none",border:"1px solid #2a2a38",borderRadius:8,padding:"4px 10px",color:"#50506a",fontSize:12,cursor:"pointer" }}>← {isEN?"Edit":"Editar"}</button>
+            <button onClick={onClose} style={{ background:"none",border:"1px solid #2a2a38",borderRadius:8,padding:"4px 10px",color:"#50506a",fontSize:16,cursor:"pointer",lineHeight:1 }}>×</button>
+          </div>
         </div>
 
         {/* Type badge */}
