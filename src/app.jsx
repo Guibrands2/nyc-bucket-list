@@ -401,10 +401,17 @@ function SeasonalBanner({ places, entries, onSelect }) {
 
 function useDragToDismiss(onDismiss) {
   const startY = useRef(0);
-  const onTouchStart = e => { startY.current = e.touches[0].clientY; };
+  const active = useRef(false);
+  const onTouchStart = e => {
+    if(e.touches.length > 1) { active.current = false; return; } // ignore pinch/zoom
+    active.current = true;
+    startY.current = e.touches[0].clientY;
+  };
   const onTouchEnd = e => {
+    if(!active.current) return;
+    active.current = false;
     const dy = e.changedTouches[0].clientY - startY.current;
-    if(dy > 150) {
+    if(dy > 160) {
       let el = e.target;
       while(el && el !== document.body) { if(el.scrollTop > 5) return; el = el.parentElement; }
       onDismiss();
@@ -1920,21 +1927,35 @@ function AIAddModal({ onClose, onSavePlace, onSaveEvent, addToast }) {
   const drag = useDragToDismiss(onClose);
 
   const CATEGORIES_LIST = ["Museus","Monumentos","Observatorios","Natureza","Praias","Livrarias","Lojas","Entretenimento","Compras","Bairros","Comida","Mercados & Delis","Dispensaries","Bares","Daytrips"];
-  const SUPPORTED_TYPES = ["image/jpeg","image/png","image/gif","image/webp"];
+
+  const compressImage = (dataUrl) => new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 1024;
+      const ratio = Math.min(MAX / img.width, MAX / img.height, 1);
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * ratio);
+      canvas.height = Math.round(img.height * ratio);
+      canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL("image/jpeg", 0.85));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
 
   const handleImage = e => {
     const file = e.target.files[0];
     if(!file) return;
-    if(!SUPPORTED_TYPES.includes(file.type)) {
-      addToast(isEN?"Use JPEG, PNG or WebP image":"Use imagem JPEG, PNG ou WebP","error");
+    if(!file.type.startsWith("image/")) {
+      addToast(isEN?"Select an image file":"Selecione um arquivo de imagem","error");
       return;
     }
     const reader = new FileReader();
-    reader.onload = ev => {
-      const b64 = ev.target.result.split(",")[1];
-      setImageBase64(b64);
-      setImageMediaType(file.type);
-      setImagePreview(ev.target.result);
+    reader.onload = async ev => {
+      const compressed = await compressImage(ev.target.result);
+      setImageBase64(compressed.split(",")[1]);
+      setImageMediaType("image/jpeg");
+      setImagePreview(compressed);
     };
     reader.readAsDataURL(file);
   };
@@ -1994,14 +2015,17 @@ Retorne este JSON (type = "place" ou "event"):
         })
       });
       const d = await r.json();
+      if(d.error) throw new Error(d.error.message||JSON.stringify(d.error));
       const text = d.content?.[0]?.text||"";
-      const clean = text.replace(/```json|```/g,"").trim();
+      if(!text) throw new Error("empty response");
+      const clean = text.replace(/```json\n?|```/g,"").trim();
       const parsed = JSON.parse(clean);
       setResult(parsed);
       setEditResult({...parsed});
       setMode("preview");
     } catch(err) {
-      addToast(isEN?"Could not analyze. Try describing the place.":"Nao consegui analisar. Tente descrever o lugar.","error");
+      console.error("AI Add error:", err);
+      addToast((isEN?"Error: ":"Erro: ")+(err.message||"tente novamente"),"error");
       setMode("input");
     }
   };
