@@ -657,7 +657,6 @@ function MapTab({ places, entries, onSelect, onNearby, onGeocode }) {
         radius:9, fillColor:"#007aff", color:"#fff", weight:2.5, opacity:1, fillOpacity:1
       }).addTo(inst.current);
       setLocating(false);
-      if (onNearby) onNearby();
     }, () => setLocating(false), { enableHighAccuracy:false, timeout:8000 });
   };
 
