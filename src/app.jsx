@@ -334,23 +334,7 @@ const REGIONS = {
   "New Jersey": { minLat:40.460, maxLat:40.820, minLng:-74.260, maxLng:-74.050 },
 };
 
-let _pullStartY = 0;
-let _pullStartX = 0;
 
-function initPullToRefresh() {
-  if (window._ptrInit) return;
-  window._ptrInit = true;
-  document.addEventListener("touchstart", e => {
-    _pullStartY = e.touches[0].clientY;
-    _pullStartX = e.touches[0].clientX;
-  }, { passive:true });
-  document.addEventListener("touchend", e => {
-    const dy = e.changedTouches[0].clientY - _pullStartY;
-    const dx = Math.abs(e.changedTouches[0].clientX - _pullStartX);
-    // Only reload if: mostly vertical (dx<40), pulled down >130px, page at top
-    if (dy > 130 && dx < 40 && window.scrollY === 0) { window.location.reload(); }
-  }, { passive:true });
-}
 
 
 function FilterSection({ label, options, selected, onToggle, renderLabel }) {
@@ -462,7 +446,6 @@ function useSwipeTabs(tab, setTab) {
 
 const injectCSS = () => {
   if (document.getElementById("nyc-css")) return;
-  initPullToRefresh();
   const s = document.createElement("style");
   s.id = "nyc-css";
   s.textContent = `
