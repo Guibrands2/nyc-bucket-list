@@ -335,15 +335,20 @@ const REGIONS = {
 };
 
 let _pullStartY = 0;
-let _pulling = false;
+let _pullStartX = 0;
 
 function initPullToRefresh() {
   if (window._ptrInit) return;
   window._ptrInit = true;
-  document.addEventListener("touchstart", e => { _pullStartY = e.touches[0].clientY; }, { passive:true });
+  document.addEventListener("touchstart", e => {
+    _pullStartY = e.touches[0].clientY;
+    _pullStartX = e.touches[0].clientX;
+  }, { passive:true });
   document.addEventListener("touchend", e => {
     const dy = e.changedTouches[0].clientY - _pullStartY;
-    if (dy > 80 && window.scrollY === 0) { window.location.reload(); }
+    const dx = Math.abs(e.changedTouches[0].clientX - _pullStartX);
+    // Only reload if: mostly vertical (dx<40), pulled down >130px, page at top
+    if (dy > 130 && dx < 40 && window.scrollY === 0) { window.location.reload(); }
   }, { passive:true });
 }
 
