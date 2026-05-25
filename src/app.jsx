@@ -642,7 +642,7 @@ function MapTab({ places, entries, onSelect, onNearby, onGeocode }) {
       const html = "<div style='width:32px;height:32px;border-radius:50%;background:"+pinColor+"22;border:2.5px solid "+pinColor+";display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 2px 8px rgba(0,0,0,0.15)'>"+p.emoji+"</div>";
       const icon = window.L.divIcon({ html, className:"", iconSize:[32,32], iconAnchor:[16,16] });
       const m = window.L.marker([p.lat, p.lng], { icon }).addTo(inst.current);
-      m.on("click", () => onSelect(p));
+      m.on("click", () => setTimeout(() => onSelect(p), 0));
       markers.current.push(m);
     });
   }, [ready, places, entries, filter, filterCat, filterPrice]);
