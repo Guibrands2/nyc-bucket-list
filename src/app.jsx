@@ -694,13 +694,13 @@ function MapTab({ places, entries, onSelect, onNearby, onGeocode }) {
           ))}
         </div>
 
-        {/* Locate button — float over map bottom-right */}
-        <button onClick={handleLocate} disabled={locating} style={{ position:"absolute", bottom:12, right:12, zIndex:500, width:44, height:44, borderRadius:22, background:"#ffffff", border:"none", boxShadow:"0 2px 12px #00000030", fontSize:20, cursor:locating?"default":"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+        {/* Locate button — float over map bottom-left */}
+        <button onClick={handleLocate} disabled={locating} style={{ position:"absolute", bottom:12, left:12, zIndex:500, width:44, height:44, borderRadius:22, background:"#ffffff", border:"none", boxShadow:"0 2px 12px #00000030", fontSize:20, cursor:locating?"default":"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
           {locating ? <span className="pulsing" style={{ fontSize:14 }}>...</span> : "📍"}
         </button>
 
-        {/* Pin count badge — float over map bottom-left */}
-        {hasActiveFilter && <div style={{ position:"absolute", bottom:12, left:12, zIndex:500, background:"#ffffffee", borderRadius:20, padding:"5px 12px", fontSize:11, fontWeight:600, color:"#1a1a1a", boxShadow:"0 2px 8px #00000020" }}>{visibleCount} pins</div>}
+        {/* Pin count badge — float over map bottom-left, next to locate */}
+        {hasActiveFilter && <div style={{ position:"absolute", bottom:18, left:64, zIndex:500, background:"#ffffffee", borderRadius:20, padding:"5px 12px", fontSize:11, fontWeight:600, color:"#1a1a1a", boxShadow:"0 2px 8px #00000020" }}>{visibleCount} pins</div>}
       </div>
 
       {/* Filters below map — compact */}
