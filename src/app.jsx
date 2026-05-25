@@ -2459,6 +2459,7 @@ export default function App() {
   const searchDebounce = useRef(null);
   const [showFilters, setShowFilters] = useState(false);
   const [showListas, setShowListas] = useState(false);
+  const [showAddMenu, setShowAddMenu] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [showPlanner, setShowPlanner] = useState(false);
@@ -2710,9 +2711,7 @@ export default function App() {
                 <div style={{ fontSize:10,color:"#ffffff80",letterSpacing:"0.14em",fontWeight:600 }}>{T.byGuiGab} {syncing&&<span className="pulsing">·</span>}</div>
                 <div style={{ fontSize:22,fontWeight:900,letterSpacing:"-0.03em",color:"#ffffff",lineHeight:1.1 }}>{T.appTitle} 🗽</div>
               </div>
-              <button onClick={()=>setShowAIAdd(true)} style={{ background:"#ffffff20",border:"1px solid #ffffff40",borderRadius:20,padding:"8px 16px",cursor:"pointer",fontSize:12,color:"#ffffff",fontWeight:600 }}>
-                ✨ AI
-              </button>
+              <div style={{ width:8,height:8,borderRadius:"50%",background:syncing?"#ff9f0a":"#ffffff50" }}/>
             </div>
             {/* Progress bar — white on gradient */}
             <div>
@@ -2878,10 +2877,24 @@ export default function App() {
       </div>
 
       <BottomNav tab={tab} setTab={setTab}/>
-      {/* FAB — always visible */}
-      <div style={{ position:"fixed",bottom:80,right:16,display:"flex",flexDirection:"column",gap:10,zIndex:140 }}>
-        <button onClick={()=>setShowSurpresa(true)} style={{ width:48,height:48,borderRadius:24,background:"#ffffff",border:"1px solid #e8e6e0",boxShadow:"0 2px 12px #00000020",fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }} title={isEN?"Surprise me":"Me surpreender"}>🎲</button>
-        <button onClick={()=>setShowAdd(true)} style={{ width:56,height:56,borderRadius:28,background:"#ff2d55",border:"none",boxShadow:"0 4px 16px #ff2d5540",fontSize:24,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"#ffffff",fontWeight:700 }}>+</button>
+      {/* FAB speed-dial */}
+      {showAddMenu&&<div style={{ position:"fixed",inset:0,zIndex:138 }} onClick={()=>setShowAddMenu(false)}/>}
+      <div style={{ position:"fixed",bottom:82,right:16,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:10,zIndex:139 }}>
+        {/* Surprise — always visible secondary */}
+        <button onClick={()=>setShowSurpresa(true)} style={{ width:44,height:44,borderRadius:22,background:"#1a1210",border:"none",boxShadow:"0 2px 10px #00000030",fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",transition:"transform 0.2s" }}>🎲</button>
+        {/* Speed-dial sub-buttons */}
+        {showAddMenu&&<>
+          <div style={{ display:"flex",alignItems:"center",gap:10,animation:"fadeUp 0.15s ease" }}>
+            <span style={{ background:"#1a1210",color:"#ffffff",fontSize:11,fontWeight:600,borderRadius:20,padding:"5px 12px",boxShadow:"0 2px 8px #00000020",whiteSpace:"nowrap" }}>{isEN?"Add with AI":"Adicionar com IA"}</span>
+            <button onClick={()=>{setShowAddMenu(false);setShowAIAdd(true);}} style={{ width:48,height:48,borderRadius:24,background:"linear-gradient(135deg,#7c3aed,#4f46e5)",border:"none",boxShadow:"0 3px 12px #7c3aed40",fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}>✨</button>
+          </div>
+          <div style={{ display:"flex",alignItems:"center",gap:10,animation:"fadeUp 0.1s ease" }}>
+            <span style={{ background:"#1a1210",color:"#ffffff",fontSize:11,fontWeight:600,borderRadius:20,padding:"5px 12px",boxShadow:"0 2px 8px #00000020",whiteSpace:"nowrap" }}>{isEN?"Add manually":"Adicionar manual"}</span>
+            <button onClick={()=>{setShowAddMenu(false);setShowAdd(true);}} style={{ width:48,height:48,borderRadius:24,background:"#ffffff",border:"none",boxShadow:"0 3px 12px #00000020",fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"#1a1210",fontWeight:700 }}>📝</button>
+          </div>
+        </>}
+        {/* Main + button */}
+        <button onClick={()=>setShowAddMenu(v=>!v)} style={{ width:58,height:58,borderRadius:29,background:"linear-gradient(135deg,#ff2d55,#ff6b35)",border:"none",boxShadow:"0 4px 20px #ff2d5550",fontSize:26,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"#ffffff",fontWeight:700,transition:"transform 0.2s",transform:showAddMenu?"rotate(45deg)":"none" }}>+</button>
       </div>
     </div>
   );
