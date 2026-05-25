@@ -1606,19 +1606,27 @@ function EventCard({ ev, onSave, onDelete, addToast }) {
   );
 }
 
-function AddEventModal({ onClose, onSave, addToast }) {
-  const [name,setName]=useState("");
-  const [emoji,setEmoji]=useState("📅");
-  const [category,setCategory]=useState("show");
-  const [date,setDate]=useState("");
-  const [time,setTime]=useState("");
-  const [location,setLocation]=useState("");
-  const [price,setPrice]=useState("");
-  const [desc,setDesc]=useState("");
-  const [ticketLink,setTicketLink]=useState("");
+function AddEventModal({ onClose, onSave, initialEvent, addToast }) {
+  const isEditing = !!initialEvent;
+  const [name,setName]=useState(initialEvent?.name||"");
+  const [emoji,setEmoji]=useState(initialEvent?.emoji||"📅");
+  const [category,setCategory]=useState(initialEvent?.category||"show");
+  const [date,setDate]=useState(initialEvent?.date||"");
+  const [time,setTime]=useState(initialEvent?.time||"");
+  const [location,setLocation]=useState(initialEvent?.location||"");
+  const [price,setPrice]=useState(initialEvent?.price||"");
+  const [desc,setDesc]=useState(initialEvent?.desc||"");
+  const [ticketLink,setTicketLink]=useState(initialEvent?.ticketLink||"");
+  const [showMore,setShowMore]=useState(isEditing);
+
   const handle = () => {
     if(!name.trim()||!date) return;
-    const ev = { id:"ev"+Date.now(), name:name.trim(), emoji, category, date, time, location:location.trim(), price:price.trim(), desc:desc.trim(), ticketLink:ticketLink.trim(), archived:false, createdAt:new Date().toISOString() };
+    const ev = {
+      ...(isEditing ? initialEvent : { id:"ev"+Date.now(), createdAt:new Date().toISOString() }),
+      name:name.trim(), emoji, category, date, time,
+      location:location.trim(), price:price.trim(),
+      desc:desc.trim(), ticketLink:ticketLink.trim(), archived:false
+    };
     onSave(ev);
   };
 
@@ -1626,16 +1634,10 @@ function AddEventModal({ onClose, onSave, addToast }) {
     <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:300,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={onClose}>
       <div className="modal" style={{ background:"#ffffff",borderTop:"1px solid #e8e6e0",borderRadius:"20px 20px 0 0",padding:"20px 16px 48px",maxWidth:560,width:"100%",maxHeight:"90vh",overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
         <div style={{ width:36,height:3,background:"#e8e6e0",borderRadius:2,margin:"0 auto 16px" }}/>
-        <div style={{ fontSize:15,fontWeight:700,color:"#1a1a1a",marginBottom:14 }}>{isEN?"New Event":"Novo Evento"}</div>
+        <div style={{ fontSize:15,fontWeight:700,color:"#1a1a1a",marginBottom:14 }}>{isEditing?(isEN?"Edit Event":"Editar Evento"):(isEN?"New Event":"Novo Evento")}</div>
         <div style={{ display:"flex",gap:10,marginBottom:12 }}>
           <input value={emoji} onChange={e=>setEmoji(e.target.value)} maxLength={2} style={{ width:50,background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px",color:"#1a1a1a",fontSize:22,textAlign:"center" }}/>
           <input value={name} onChange={e=>setName(e.target.value)} placeholder={isEN?"Event name...":"Nome do evento..."} style={{ flex:1,background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:14 }}/>
-        </div>
-        <div style={{ marginBottom:12 }}>
-          <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"CATEGORY":"CATEGORIA"}</div>
-          <div style={{ display:"flex",gap:5,flexWrap:"wrap" }}>
-            {EVENT_CATS.map(cat=><button key={cat} onClick={()=>setCategory(cat)} style={{ padding:"6px 12px",borderRadius:20,background:category===cat?"#ff2d5515":"#f5f3ee",border:"1px solid "+(category===cat?"#ff2d55":"#e8e6e0"),color:category===cat?"#ff2d55":"#8a8a9a",fontSize:12,cursor:"pointer",fontFamily:"inherit" }}>{EVENT_CAT_EMOJI[cat]} {evCatLabel(cat)}</button>)}
-          </div>
         </div>
         <div style={{ display:"flex",gap:8,marginBottom:12 }}>
           <div style={{ flex:2 }}>
@@ -1647,26 +1649,35 @@ function AddEventModal({ onClose, onSave, addToast }) {
             <input type="time" value={time} onChange={e=>setTime(e.target.value)} style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:14 }}/>
           </div>
         </div>
-        <div style={{ marginBottom:12 }}>
-          <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"LOCATION":"LOCAL"}</div>
-          <input value={location} onChange={e=>setLocation(e.target.value)} placeholder={isEN?"Venue name or address...":"Nome do local ou endereco..."} style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13 }}/>
-        </div>
-        <div style={{ marginBottom:12 }}>
-          <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"PRICE":"PRECO"}</div>
-          <div style={{ display:"flex",gap:6 }}>
-            {["gratis","$","$$","$$$"].map(p=><button key={p} onClick={()=>setPrice(price===p?"":p)} style={{ flex:1,padding:"8px 4px",borderRadius:8,background:price===p?"#ff9f0a18":"#f5f3ee",border:"1px solid "+(price===p?"#ff9f0a":"#e8e6e0"),color:price===p?"#ff9f0a":"#8a8a9a",fontSize:12,cursor:"pointer",fontFamily:"inherit" }}>{p==="gratis"?"🆓":p}</button>)}
+        {!showMore&&<button onClick={()=>setShowMore(true)} style={{ width:"100%",padding:"9px",background:"none",border:"1px dashed #e8e6e0",borderRadius:8,color:"#8a8a9a",fontSize:12,cursor:"pointer",fontFamily:"inherit",marginBottom:12 }}>+ {isEN?"Category, location, price...":"Categoria, local, preco..."}</button>}
+        {showMore&&<>
+          <div style={{ marginBottom:12 }}>
+            <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"CATEGORY":"CATEGORIA"}</div>
+            <div style={{ display:"flex",gap:5,flexWrap:"wrap" }}>
+              {EVENT_CATS.map(cat=><button key={cat} onClick={()=>setCategory(cat)} style={{ padding:"6px 12px",borderRadius:20,background:category===cat?"#ff2d5515":"#f5f3ee",border:"1px solid "+(category===cat?"#ff2d55":"#e8e6e0"),color:category===cat?"#ff2d55":"#8a8a9a",fontSize:12,cursor:"pointer",fontFamily:"inherit" }}>{EVENT_CAT_EMOJI[cat]} {evCatLabel(cat)}</button>)}
+            </div>
           </div>
-        </div>
-        <div style={{ marginBottom:12 }}>
-          <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"DESCRIPTION":"DESCRICAO"}</div>
-          <textarea value={desc} onChange={e=>setDesc(e.target.value)} placeholder={isEN?"Notes about this event...":"Notas sobre o evento..."} rows={2} style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13,resize:"none" }}/>
-        </div>
-        <div style={{ marginBottom:16 }}>
-          <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>🎟 {isEN?"TICKET LINK":"LINK DO INGRESSO"}</div>
-          <input value={ticketLink} onChange={e=>setTicketLink(e.target.value)} placeholder="https://..." style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13 }}/>
-        </div>
-        <button onClick={handle} disabled={!name.trim()||!date} style={{ width:"100%",padding:"13px",background:name.trim()&&date?"#ff2d55":"#e8e6e0",border:"none",borderRadius:10,color:name.trim()&&date?"#fff":"#a0a0b0",fontSize:14,fontWeight:700,cursor:name.trim()&&date?"pointer":"default" }}>
-          {isEN?"Add Event":"Adicionar Evento"}
+          <div style={{ marginBottom:12 }}>
+            <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"LOCATION":"LOCAL"}</div>
+            <input value={location} onChange={e=>setLocation(e.target.value)} placeholder={isEN?"Venue name or address...":"Nome do local ou endereco..."} style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13 }}/>
+          </div>
+          <div style={{ marginBottom:12 }}>
+            <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"PRICE":"PRECO"}</div>
+            <div style={{ display:"flex",gap:6 }}>
+              {["gratis","$","$$","$$$"].map(p=><button key={p} onClick={()=>setPrice(price===p?"":p)} style={{ flex:1,padding:"8px 4px",borderRadius:8,background:price===p?"#ff9f0a18":"#f5f3ee",border:"1px solid "+(price===p?"#ff9f0a":"#e8e6e0"),color:price===p?"#ff9f0a":"#8a8a9a",fontSize:12,cursor:"pointer",fontFamily:"inherit" }}>{p==="gratis"?"🆓":p}</button>)}
+            </div>
+          </div>
+          <div style={{ marginBottom:12 }}>
+            <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"DESCRIPTION":"DESCRICAO"}</div>
+            <textarea value={desc} onChange={e=>setDesc(e.target.value)} placeholder={isEN?"Notes about this event...":"Notas sobre o evento..."} rows={2} style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13,resize:"none" }}/>
+          </div>
+          <div style={{ marginBottom:12 }}>
+            <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>🎟 {isEN?"TICKET LINK":"LINK DO INGRESSO"}</div>
+            <input value={ticketLink} onChange={e=>setTicketLink(e.target.value)} placeholder="https://..." style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13 }}/>
+          </div>
+        </>}
+        <button onClick={handle} disabled={!name.trim()||!date} style={{ width:"100%",padding:"13px",background:name.trim()&&date?"#ff2d55":"#e8e6e0",border:"none",borderRadius:10,color:name.trim()&&date?"#fff":"#a0a0b0",fontSize:14,fontWeight:700,cursor:name.trim()&&date?"pointer":"default",marginTop:4 }}>
+          {isEditing?(isEN?"Save changes":"Salvar alteracoes"):(isEN?"Add Event":"Adicionar Evento")}
         </button>
       </div>
     </div>
@@ -1722,7 +1733,7 @@ function BottomNav({ tab, setTab }) {
   return (
     <nav className="bottom-nav">
       <NavItem id="explorar" icon={<ExplorarIcon/>} label={isEN?"Explore":"Explorar"}/>
-      <NavItem id="planejar" icon={<PlanejIcon/>} label={isEN?"Plan":"Planejar"}/>
+      <NavItem id="planejar" icon={<PlanejIcon/>} label="Agenda"/>
       <NavItem id="mapa" icon={<MapIcon/>} label={isEN?"Map":"Mapa"}/>
       <NavItem id="memorias" icon={<MemoriasIcon/>} label={isEN?"Memories":"Memorias"}/>
     </nav>
@@ -2506,7 +2517,7 @@ function MemoriasTab({ places, entries, onSelect }) {
   );
 }
 
-function PlanejArTab({ events, places, onAddEvent, onSaveEvent, onDeleteEvent, onOpenPlanner, onSelect, addToast }) {
+function PlanejArTab({ events, places, onAddEvent, onEditEvent, onSaveEvent, onDeleteEvent, onOpenPlanner, onSelect, addToast }) {
   const today = new Date().toISOString().split("T")[0];
 
   function nextDateForWeekday(weekday) {
@@ -2581,7 +2592,7 @@ function PlanejArTab({ events, places, onAddEvent, onSaveEvent, onDeleteEvent, o
       </div>}
 
       {allUpcoming.map(ev=>(
-        <div key={ev.id} onClick={ev.isRecurring&&onSelect?()=>onSelect(ev.placeRef):undefined} style={{ background:"#ffffff",borderRadius:14,padding:"14px 16px",marginBottom:10,border:"1px solid "+(ev.isRecurring?"#ff9f0a30":"#e8e6e0"),boxShadow:"0 1px 3px #00000008",display:"flex",gap:12,alignItems:"flex-start",cursor:ev.isRecurring?"pointer":"default" }}>
+        <div key={ev.id} onClick={ev.isRecurring?(onSelect?()=>onSelect(ev.placeRef):undefined):(onEditEvent?()=>onEditEvent(ev):undefined)} style={{ background:"#ffffff",borderRadius:14,padding:"14px 16px",marginBottom:10,border:"1px solid "+(ev.isRecurring?"#ff9f0a30":"#e8e6e0"),boxShadow:"0 1px 3px #00000008",display:"flex",gap:12,alignItems:"flex-start",cursor:"pointer" }}>
           <div style={{ background:ev.date===today?"#ff2d5515":ev.isRecurring?"#ff9f0a10":"#f5f3ee",borderRadius:10,padding:"8px 10px",textAlign:"center",minWidth:44,flexShrink:0,border:"1px solid "+(ev.date===today?"#ff2d5530":ev.isRecurring?"#ff9f0a30":"#e8e6e0") }}>
             <div style={{ fontSize:11,fontWeight:800,color:ev.date===today?"#ff2d55":ev.isRecurring?"#ff9f0a":"#8a8a9a" }}>{ev.date?new Date(ev.date+"T12:00:00").getDate():"-"}</div>
             <div style={{ fontSize:9,color:ev.date===today?"#ff2d55":ev.isRecurring?"#ff9f0a":"#b0aebb",textTransform:"uppercase" }}>{ev.date?new Date(ev.date+"T12:00:00").toLocaleDateString(isEN?"en-US":"pt-BR",{month:"short"}):""}</div>
@@ -3027,7 +3038,7 @@ export default function App() {
 
         {tab==="mapa"&&<MapTab places={visiblePlaces} entries={entries} onSelect={openModal} onNearby={()=>setShowNearby(true)} onGeocode={handleGeocode}/>}
         {tab==="memorias"&&<MemoriasTab places={visiblePlaces} entries={entries} onSelect={openModal}/>}
-        {tab==="planejar"&&<PlanejArTab events={events} places={visiblePlaces} onAddEvent={()=>setShowAddEvent(true)} onSaveEvent={async ev=>{await set(ref(db,"events/"+ev.id),ev);}} onDeleteEvent={async id=>{await remove(ref(db,"events/"+id));setEvents(prev=>prev.filter(e=>e.id!==id));}} onOpenPlanner={()=>setShowPlanner(true)} onSelect={openModal} addToast={addToast}/>}
+        {tab==="planejar"&&<PlanejArTab events={events} places={visiblePlaces} onAddEvent={()=>setShowAddEvent(true)} onEditEvent={ev=>setShowAddEvent(ev)} onSaveEvent={async ev=>{await set(ref(db,"events/"+ev.id),ev);}} onDeleteEvent={async id=>{await remove(ref(db,"events/"+id));setEvents(prev=>prev.filter(e=>e.id!==id));}} onOpenPlanner={()=>setShowPlanner(true)} onSelect={openModal} addToast={addToast}/>}
       </div>
 
       {/* Listas drawer */}
@@ -3055,7 +3066,7 @@ export default function App() {
       {showPlanner&&<PlannerChatModal places={visiblePlaces} entries={entries} onClose={()=>setShowPlanner(false)} addToast={addToast} userLat={userLat} userLng={userLng}/>}
       {showNearby&&userLat&&<NearbyDrawer userLat={userLat} userLng={userLng} places={visiblePlaces} entries={entries} onSelect={openModal} onClose={()=>setShowNearby(false)}/>}
       {showSurpresa&&<SurpresaModal places={visiblePlaces} entries={entries} weather={currentWeather} onClose={()=>setShowSurpresa(false)} addToast={addToast} onSaveLists={saveLists} lists={lists}/>}
-      {showAddEvent&&<AddEventModal onClose={()=>setShowAddEvent(false)} onSave={ev=>{set(ref(db,"events/"+ev.id),ev);addToast(isEN?"Event added!":"Evento adicionado!","success");setShowAddEvent(false);}} addToast={addToast}/>}
+      {showAddEvent&&<AddEventModal initialEvent={showAddEvent!==true?showAddEvent:undefined} onClose={()=>setShowAddEvent(false)} onSave={ev=>{set(ref(db,"events/"+ev.id),ev);addToast(showAddEvent!==true?(isEN?"Event updated!":"Evento atualizado!"):(isEN?"Event added!":"Evento adicionado!"),"success");setShowAddEvent(false);}} addToast={addToast}/>}
       {quickAction&&<QuickActionSheet place={quickAction} entry={entries[quickAction.id]} onClose={()=>setQuickAction(null)} onToggleWant={handleToggleWant} onCheckIn={p=>{setCheckIn(p);setQuickAction(null);}} onSaveToCuradoria={handleSaveToCuradoria}/>}
       {nearbyAlert&&<div onClick={()=>{openModal(nearbyAlert);setNearbyAlert(null);}} style={{ position:"fixed",bottom:80,left:"50%",transform:"translateX(-50%)",background:"#ffffff",border:"1px solid #30d15850",borderRadius:20,padding:"10px 16px",display:"flex",alignItems:"center",gap:10,zIndex:140,boxShadow:"0 4px 20px #00000060",maxWidth:"calc(100% - 32px)",cursor:"pointer" }}>
         <span style={{ fontSize:24 }}>{nearbyAlert.emoji}</span>
