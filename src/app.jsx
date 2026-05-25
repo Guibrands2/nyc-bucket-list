@@ -1300,12 +1300,13 @@ function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveList
   );
 
   if(step==="loading") return (
-    <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center" }}>
+    <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16 }}>
       <div style={{ textAlign:"center" }}>
         <div className="pulsing" style={{ fontSize:52,marginBottom:16 }}>🎲</div>
-        <div style={{ fontSize:15,color:"#1a1a1a",fontWeight:600,marginBottom:6 }}>{isEN?"Building your surprise day...":"Montando seu dia surpresa..."}</div>
-        <div style={{ fontSize:12,color:"#8a8a9a" }}>{isEN?"Claude is thinking...":"Claude esta pensando..."}</div>
+        <div style={{ fontSize:15,color:"#ffffff",fontWeight:600,marginBottom:6 }}>{isEN?"Building your surprise day...":"Montando seu dia surpresa..."}</div>
+        <div style={{ fontSize:12,color:"#ffffff80" }}>{isEN?"Claude is thinking...":"Claude esta pensando..."}</div>
       </div>
+      <button onClick={()=>{setStep("form");setLoading(false);}} style={{ marginTop:16,background:"#ffffff20",border:"1px solid #ffffff30",borderRadius:20,padding:"8px 20px",color:"#ffffff",fontSize:13,cursor:"pointer" }}>{isEN?"Cancel":"Cancelar"}</button>
     </div>
   );
 
@@ -1356,7 +1357,10 @@ function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveList
     <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:300,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={onClose}>
       <div className="modal" style={{ background:"#ffffff",borderTop:"1px solid #e8e6e0",borderRadius:"20px 20px 0 0",padding:"20px 16px 40px",maxWidth:560,width:"100%",maxHeight:"92vh",overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
         <div style={{ width:36,height:3,background:"#e8e6e0",borderRadius:2,margin:"0 auto 14px" }}/>
-        <div style={{ fontSize:16,fontWeight:700,color:"#1a1a1a",marginBottom:4 }}>🎲 {isEN?"Surprise me!":"Me surpreenda!"}</div>
+        <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4 }}>
+          <div style={{ fontSize:16,fontWeight:700,color:"#1a1a1a" }}>🎲 {isEN?"Surprise me!":"Me surpreenda!"}</div>
+          <button onClick={onClose} style={{ background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,width:32,height:32,color:"#8a8a9a",cursor:"pointer",fontSize:16 }}>×</button>
+        </div>
         <div style={{ fontSize:12,color:"#8a8a9a",marginBottom:16 }}>{isEN?"Answer a few questions and Claude builds your perfect day.":"Responda algumas perguntas e o Claude monta seu dia perfeito."}</div>
 
         <div style={{ marginBottom:16 }}>
@@ -1869,41 +1873,41 @@ const PlaceCard = memo(function PlaceCard({ place, entry, onSelect, onCheckIn, i
         onTouchEnd={onTouchEnd}
         onClick={()=>{ if(Math.abs(swipeDx)<5) onSelect(place); }}
         style={{
-          background: isBeen ? meta.color+"0a" : "#ffffff",
-          border: "1px solid "+(isBeen?meta.color+"50":isWant?"#007aff30":"#e8e6e0"),
-          borderLeft: "3px solid "+(isBeen?meta.color:isWant?"#007aff":"#e8e6e0"),
-          borderRadius:14, padding:"14px 14px 14px 13px", cursor:"pointer", display:"flex", gap:14,
+          background: isBeen ? meta.color+"08" : "#ffffff",
+          border: "1px solid "+(isBeen?meta.color+"40":isWant?"#007aff25":"#eceae4"),
+          borderRadius:16, padding:"14px 14px 14px 14px", cursor:"pointer", display:"flex", gap:14,
           transform: swipeDx ? `translateX(${swipeDx}px)` : "none",
-          transition: swiping ? "none" : "transform 0.2s ease"
+          transition: swiping ? "none" : "transform 0.2s ease",
+          boxShadow: isBeen?"none":"0 1px 3px #00000008"
         }}
       >
         <div style={{ position:"relative", flexShrink:0 }}>
-          {fp ? <img src={fp} alt="" style={{ width:62,height:62,borderRadius:10,objectFit:"cover" }}/>
-              : <div style={{ width:62,height:62,borderRadius:10,background:meta.color+(isBeen?"25":"15"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:26 }}>{place.emoji}</div>}
-          {isBeen&&<div style={{ position:"absolute",bottom:-4,right:-4,width:18,height:18,borderRadius:"50%",background:meta.color,border:"2px solid #ffffff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,color:"#fff",fontWeight:700 }}>✓</div>}
-          {isWant&&!isBeen&&<div style={{ position:"absolute",bottom:-4,right:-4,width:18,height:18,borderRadius:"50%",background:"#007aff",border:"2px solid #ffffff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,color:"#fff" }}>♥</div>}
+          {fp ? <img src={fp} alt="" style={{ width:60,height:60,borderRadius:12,objectFit:"cover" }}/>
+              : <div style={{ width:60,height:60,borderRadius:12,background:meta.color+(isBeen?"20":"12"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:28 }}>{place.emoji}</div>}
+          {isBeen&&<div style={{ position:"absolute",bottom:-3,right:-3,width:18,height:18,borderRadius:"50%",background:meta.color,border:"2px solid #ffffff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,color:"#fff",fontWeight:700 }}>✓</div>}
+          {isWant&&!isBeen&&<div style={{ position:"absolute",bottom:-3,right:-3,width:18,height:18,borderRadius:"50%",background:"#007aff",border:"2px solid #ffffff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,color:"#fff" }}>♥</div>}
         </div>
         <div style={{ flex:1, minWidth:0 }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:6, marginBottom:4 }}>
-            <div style={{ fontSize:14,fontWeight:600,color:"#1a1a1a",lineHeight:1.25,flex:1 }}>{displayName}</div>
-            <div style={{ display:"flex",gap:3,flexShrink:0,alignItems:"center" }}>
-              {needsRes&&<span style={{ fontSize:10 }}>📋</span>}
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:6, marginBottom:5 }}>
+            <div style={{ fontSize:16,fontWeight:700,color:"#1a1a1a",lineHeight:1.2,flex:1,letterSpacing:"-0.01em" }}>{displayName}</div>
+            <div style={{ display:"flex",gap:3,flexShrink:0,alignItems:"center",marginTop:2 }}>
               {entry?.thumb==="up"&&<span style={{ fontSize:11 }}>👍</span>}
-              {entry?.stars>0&&<span style={{ fontSize:10,color:"#ff9f0a" }}>{"★".repeat(entry.stars)}</span>}
-              {pc>0&&<span style={{ fontSize:10,color:"#a0a0b0" }}>📷</span>}
+              {entry?.stars>0&&<span style={{ fontSize:11,color:"#ff9f0a",letterSpacing:-1 }}>{"★".repeat(entry.stars)}</span>}
+              {pc>0&&<span style={{ fontSize:10,color:"#a0a0b0" }}>📷{pc}</span>}
             </div>
           </div>
-          <div style={{ display:"flex",gap:5,alignItems:"center",flexWrap:"wrap" }}>
-            <span style={{ fontSize:10,color:meta.color,background:meta.color+"18",borderRadius:6,padding:"2px 7px",fontWeight:500 }}>{catLabel(place.category)}</span>
-            {displayPrice&&<span style={{ fontSize:10,color:"#8a8a9a" }}>{PRICE_EMOJI[displayPrice]}</span>}
-            {place.time&&<span style={{ fontSize:10,color:"#a0a0b0" }}>· {place.time}</span>}
+          <div style={{ display:"flex",gap:6,alignItems:"center",flexWrap:"wrap",marginBottom: (entry?.note||entry?.date)?4:0 }}>
+            <span style={{ fontSize:11,color:meta.color,background:meta.color+"15",borderRadius:20,padding:"2px 9px",fontWeight:600,letterSpacing:"0.02em" }}>{catLabel(place.category)}</span>
+            {displayPrice&&<span style={{ fontSize:11,color:"#a0a0b0",fontWeight:500 }}>{PRICE_EMOJI[displayPrice]}</span>}
+            {place.time&&<span style={{ fontSize:11,color:"#c0bdb8" }}>· {place.time}</span>}
+            {needsRes&&<span style={{ fontSize:10,color:"#ff9f0a" }}>📋</span>}
             {isPet&&<span style={{ fontSize:10 }}>🐾</span>}
           </div>
-          {entry?.note&&<div style={{ fontSize:11,color:"#8a8a9a",marginTop:5,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontStyle:"italic" }}>"{entry.note}"</div>}
-          {isBeen&&entry?.date&&<div style={{ fontSize:10,color:meta.color+"aa",marginTop:3 }}>Visitado {new Date(entry.date+"T12:00:00").toLocaleDateString(isEN?"en-US":"pt-BR",{month:"short",day:"numeric",year:"numeric"})}</div>}
+          {entry?.note&&<div style={{ fontSize:12,color:"#8a8a9a",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontStyle:"italic" }}>"{entry.note}"</div>}
+          {isBeen&&entry?.date&&<div style={{ fontSize:11,color:meta.color,fontWeight:500,marginTop:1 }}>✓ {new Date(entry.date+"T12:00:00").toLocaleDateString(isEN?"en-US":"pt-BR",{month:"short",day:"numeric",year:"numeric"})}</div>}
         </div>
       </div>
-      {!isBeen&&swipeDx===0&&<button onClick={ev=>{ev.stopPropagation();onCheckIn(place);}} style={{ position:"absolute",bottom:14,right:12,background:"#30d15815",border:"1px solid #30d15840",borderRadius:20,padding:"4px 10px",color:"#30d158",fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:600 }}>✓ check-in</button>}
+      {!isBeen&&swipeDx===0&&<button onClick={ev=>{ev.stopPropagation();onCheckIn(place);}} style={{ position:"absolute",bottom:12,right:12,background:"#30d15812",border:"1px solid #30d15830",borderRadius:20,padding:"4px 10px",color:"#30d158",fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:600 }}>✓ check-in</button>}
     </div>
   );
 }, (prev, next) => prev.place===next.place && prev.entry===next.entry && prev.isEN===next.isEN);
@@ -2452,6 +2456,7 @@ export default function App() {
   const [searchInput, setSearchInput] = useState("");
   const searchDebounce = useRef(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [showListas, setShowListas] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [showPlanner, setShowPlanner] = useState(false);
@@ -2730,21 +2735,22 @@ export default function App() {
         </div>
 
         {/* Explorar Tab */}
-        {tab==="explorar"&&<div style={{ padding:"10px 16px 140px" }}>
+        {tab==="explorar"&&<div style={{ padding:"12px 16px 140px" }}>
           {/* Quick moods */}
-          <div style={{ display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",paddingBottom:8 }}>
+          <div style={{ display:"flex",gap:7,overflowX:"auto",scrollbarWidth:"none",paddingBottom:12,marginBottom:2 }}>
             {MOODS.map(m=><button key={m.id} className={"mood-chip"+(activeMood===m.id?" active":"")} onClick={()=>setActiveMood(activeMood===m.id?null:m.id)}>{m.label}</button>)}
           </div>
           {/* Category chips */}
-          <div data-hscroll style={{ display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",paddingBottom:10 }}>
-            {["Todos",...CATEGORIES].map(cat=>{const meta=CAT_META[cat],active=activeCategory===cat;return<button key={cat} onClick={()=>{if(cat==="Todos"){setActiveCategory("Todos");setSortBy("default");}else{setActiveCategory(activeCategory===cat?"Todos":cat);if(activeCategory!==cat)setSortBy("az");}}} className="btn" style={{ padding:"6px 14px",borderRadius:22,background:active?(meta?meta.color:"#ff2d55")+"25":"#ffffff",border:"2px solid "+(active?(meta?meta.color:"#ff2d55")+"80":"#e8e6e0"),color:active?(meta?meta.color:"#ff2d55"):"#8a8a9a",fontSize:12,whiteSpace:"nowrap",fontWeight:active?600:400,transition:"all 0.15s" }}>{cat==="Todos"?T.all:catLabel(cat)}</button>;})}
+          <div data-hscroll style={{ display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",paddingBottom:12 }}>
+            {["Todos",...CATEGORIES].map(cat=>{const meta=CAT_META[cat],active=activeCategory===cat;return<button key={cat} onClick={()=>{if(cat==="Todos"){setActiveCategory("Todos");setSortBy("default");}else{setActiveCategory(activeCategory===cat?"Todos":cat);if(activeCategory!==cat)setSortBy("az");}}} className="btn" style={{ padding:"7px 16px",borderRadius:22,background:active?(meta?meta.color:"#ff2d55")+(active?"22":""):"#ffffff",border:"1.5px solid "+(active?(meta?meta.color:"#ff2d55")+"70":"#e8e6e0"),color:active?(meta?meta.color:"#ff2d55"):"#8a8a9a",fontSize:12,whiteSpace:"nowrap",fontWeight:active?700:400,transition:"all 0.15s",boxShadow:active?"none":"0 1px 2px #00000008" }}>{cat==="Todos"?T.all:catLabel(cat)}</button>;})}
           </div>
           {/* Filter row */}
           <div style={{ display:"flex",gap:6,alignItems:"center",marginBottom:10 }}>
-            {[["todos",T.all],["quero","♥ "+T.want.replace("♥ ","")],["fui","✓ "+T.been.replace("✓ ","")]].map(([key,label])=><button key={key} onClick={()=>setActiveFilter(activeFilter===key&&key!=="todos"?"todos":key)} className="btn" style={{ padding:"7px 14px",borderRadius:20,background:activeFilter===key?key==="quero"?"#007aff":key==="fui"?"#30d158":"#ff2d55":"#ffffff",border:"1px solid "+(activeFilter===key?key==="quero"?"#007aff":key==="fui"?"#30d158":"#ff2d55":"#e8e6e0"),color:activeFilter===key?"#000":"#8a8a9a",fontSize:12,fontWeight:activeFilter===key?600:400,whiteSpace:"nowrap" }}>{label}</button>)}
+            {[["todos",T.all],["quero","♥ Want"],["fui","✓ Been"]].map(([key,label])=><button key={key} onClick={()=>setActiveFilter(activeFilter===key&&key!=="todos"?"todos":key)} className="btn" style={{ padding:"7px 14px",borderRadius:20,background:activeFilter===key?key==="quero"?"#007aff":key==="fui"?"#30d158":"#ff2d55":"#ffffff",border:"1px solid "+(activeFilter===key?key==="quero"?"#007aff":key==="fui"?"#30d158":"#ff2d55":"#e8e6e0"),color:activeFilter===key?"#ffffff":"#8a8a9a",fontSize:12,fontWeight:activeFilter===key?700:400,whiteSpace:"nowrap",boxShadow:activeFilter===key?"none":"0 1px 2px #00000008" }}>{label}</button>)}
             <div style={{ flex:1 }}/>
-            <button onClick={()=>setShowFilters(!showFilters)} className="btn" style={{ padding:"5px 14px",borderRadius:20,background:activeFiltersCount>0?"#ff9f0a20":"#ffffff",border:"1px solid "+(activeFiltersCount>0?"#ff9f0a":"#e8e6e0"),color:activeFiltersCount>0?"#ff9f0a":"#a0a0b0",fontSize:12,whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4 }}>{activeFiltersCount>0&&<span style={{ width:6,height:6,borderRadius:"50%",background:"#ff9f0a",display:"inline-block" }}/>}{activeFiltersCount>0?T.filters+" ("+activeFiltersCount+")":T.filters}</button>
-            {hasAnyFilter&&<button onClick={clearFilters} style={{ background:"none",border:"none",color:"#a0a0b0",fontSize:11,cursor:"pointer",whiteSpace:"nowrap" }}>×{T.clearAll}</button>}
+            <button onClick={()=>setShowListas(true)} className="btn" style={{ padding:"5px 12px",borderRadius:20,background:"#ffffff",border:"1px solid #e8e6e0",color:"#8a8a9a",fontSize:12,whiteSpace:"nowrap",boxShadow:"0 1px 2px #00000008" }}>🔖 {isEN?"Lists":"Listas"}</button>
+            <button onClick={()=>setShowFilters(!showFilters)} className="btn" style={{ padding:"5px 12px",borderRadius:20,background:activeFiltersCount>0?"#ff9f0a15":"#ffffff",border:"1px solid "+(activeFiltersCount>0?"#ff9f0a60":"#e8e6e0"),color:activeFiltersCount>0?"#ff9f0a":"#a0a0b0",fontSize:12,whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4,boxShadow:"0 1px 2px #00000008" }}>{activeFiltersCount>0&&<span style={{ width:6,height:6,borderRadius:"50%",background:"#ff9f0a",display:"inline-block" }}/>}{T.filters}{activeFiltersCount>0?" ("+activeFiltersCount+")":""}</button>
+            {hasAnyFilter&&<button onClick={clearFilters} style={{ background:"none",border:"none",color:"#a0a0b0",fontSize:11,cursor:"pointer",whiteSpace:"nowrap" }}>×</button>}
           </div>
 
           {/* Filter bottom sheet */}
@@ -2773,20 +2779,28 @@ export default function App() {
           <WeatherWidget/>
           {!search&&activeFilter==="todos"&&activeCategory==="Todos"&&!filterRegion&&<SeasonalBanner places={visiblePlaces} entries={entries} onSelect={openModal}/>}
           {placeOfDay&&!search&&activeFilter==="todos"&&activeCategory==="Todos"&&!filterRegion&&(
-            <div onClick={()=>openModal(placeOfDay)} style={{ background:"linear-gradient(135deg,#fff5f7,#fff8f0)",border:"1px solid #ffccd5",borderRadius:14,padding:"14px 16px",marginBottom:10,cursor:"pointer",position:"relative",overflow:"hidden" }}>
-              <div style={{ position:"absolute",top:0,left:0,right:0,height:3,background:"linear-gradient(90deg,#ff2d55,#ff6b35,#ff9f0a)",borderRadius:"14px 14px 0 0" }}/>
-              <div style={{ fontSize:10,color:"#ff2d55",letterSpacing:"0.15em",marginBottom:8,fontWeight:600 }}>{T.placeOfDay} 🎲</div>
-              <div style={{ display:"flex",gap:12,alignItems:"center" }}>
-                <div style={{ fontSize:32 }}>{placeOfDay.emoji}</div>
-                <div>
-                  <div style={{ fontSize:15,fontWeight:700,color:"#1a1a1a" }}>{isEN&&placeOfDay.nameEN?placeOfDay.nameEN:placeOfDay.name}</div>
-                  <div style={{ fontSize:12,color:"#8a8a9a",marginTop:2 }}>{catLabel(placeOfDay.category)} · {PRICE_EMOJI[placeOfDay.price]||"?"} · {placeOfDay.time||"?"}</div>
-                  {placeOfDay.bestTime&&<div style={{ fontSize:11,color:"#ff6b35",marginTop:4 }}>⏰ {placeOfDay.bestTime}</div>}
+            <div onClick={()=>openModal(placeOfDay)} style={{ background:"linear-gradient(135deg,#fff5f7,#fff0f8)",border:"1px solid #ffccd5",borderRadius:18,padding:"0",marginBottom:12,cursor:"pointer",position:"relative",overflow:"hidden",boxShadow:"0 2px 12px #ff2d5510" }}>
+              <div style={{ height:3,background:"linear-gradient(90deg,#ff2d55,#ff6b35,#ff9f0a)" }}/>
+              <div style={{ padding:"14px 16px 16px" }}>
+                <div style={{ fontSize:10,color:"#ff2d55",letterSpacing:"0.15em",marginBottom:10,fontWeight:700 }}>{T.placeOfDay}</div>
+                <div style={{ display:"flex",gap:16,alignItems:"center" }}>
+                  <div style={{ width:72,height:72,borderRadius:16,background:"linear-gradient(135deg,#ff2d5515,#ff6b3510)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:38,flexShrink:0 }}>{placeOfDay.emoji}</div>
+                  <div style={{ flex:1,minWidth:0 }}>
+                    <div style={{ fontSize:18,fontWeight:800,color:"#1a1a1a",letterSpacing:"-0.02em",lineHeight:1.2,marginBottom:4 }}>{isEN&&placeOfDay.nameEN?placeOfDay.nameEN:placeOfDay.name}</div>
+                    <div style={{ display:"flex",gap:6,alignItems:"center",marginBottom:placeOfDay.bestTime?4:0 }}>
+                      <span style={{ fontSize:11,color:CAT_META[placeOfDay.category]?.color||"#ff2d55",background:(CAT_META[placeOfDay.category]?.color||"#ff2d55")+"15",borderRadius:20,padding:"2px 9px",fontWeight:600 }}>{catLabel(placeOfDay.category)}</span>
+                      <span style={{ fontSize:12,color:"#a0a0b0" }}>{PRICE_EMOJI[placeOfDay.price]||"?"} · {placeOfDay.time||"?"}</span>
+                    </div>
+                    {placeOfDay.bestTime&&<div style={{ fontSize:11,color:"#ff6b35",fontWeight:500 }}>⏰ {placeOfDay.bestTime}</div>}
+                  </div>
                 </div>
+                {(isEN&&placeOfDay.descEN||placeOfDay.desc)&&<div style={{ fontSize:12,color:"#8a8a9a",marginTop:10,lineHeight:1.5,overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical" }}>{isEN&&placeOfDay.descEN?placeOfDay.descEN:placeOfDay.desc}</div>}
+                <div style={{ marginTop:10,fontSize:12,color:"#ff2d55",fontWeight:600 }}>{isEN?"See details →":"Ver detalhes →"}</div>
               </div>
             </div>
           )}
 
+          {filteredPlaces.length>0&&<div style={{ fontSize:11,color:"#a0a0b0",marginBottom:8,fontWeight:500 }}>{filteredPlaces.length} {isEN?"places":"lugares"}{hasAnyFilter?" "+isEN?"filtered":"filtrados":""}</div>}
           {!filteredPlaces.length&&<div style={{ textAlign:"center",padding:"60px 20px",color:"#a0a0b0" }}>
             <div style={{ fontSize:40,marginBottom:12 }}>🔍</div>
             <div style={{ fontSize:15,fontWeight:600,color:"#1a1a1a",marginBottom:8 }}>{isEN?"Nothing here":"Nada por aqui"}</div>
@@ -2809,6 +2823,22 @@ export default function App() {
         {tab==="memorias"&&<MemoriasTab places={visiblePlaces} entries={entries} onSelect={openModal}/>}
         {tab==="planejar"&&<PlanejArTab events={events} onAddEvent={()=>setShowAddEvent(true)} onSaveEvent={async ev=>{await set(ref(db,"events/"+ev.id),ev);}} onDeleteEvent={async id=>{await remove(ref(db,"events/"+id));setEvents(prev=>prev.filter(e=>e.id!==id));}} onOpenPlanner={()=>setShowPlanner(true)} addToast={addToast}/>}
       </div>
+
+      {/* Listas drawer */}
+      {showListas&&<div style={{ position:"fixed",inset:0,background:"#000000c0",zIndex:200 }} onClick={()=>setShowListas(false)}>
+        <div onClick={e=>e.stopPropagation()} style={{ position:"absolute",bottom:0,left:0,right:0,background:"#f8f7f4",borderRadius:"20px 20px 0 0",padding:"0 0 40px",maxWidth:600,margin:"0 auto",maxHeight:"88vh",display:"flex",flexDirection:"column" }}>
+          <div style={{ padding:"16px 20px 0" }}>
+            <div style={{ width:36,height:3,background:"#e8e6e0",borderRadius:2,margin:"0 auto 16px" }}/>
+            <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4 }}>
+              <div style={{ fontSize:17,fontWeight:700,color:"#1a1a1a" }}>🔖 {isEN?"My Lists":"Minhas Listas"}</div>
+              <button onClick={()=>setShowListas(false)} style={{ background:"#f0eeeb",border:"none",borderRadius:8,width:32,height:32,color:"#8a8a9a",cursor:"pointer",fontSize:16 }}>×</button>
+            </div>
+          </div>
+          <div style={{ overflowY:"auto",flex:1 }}>
+            <CuradoriaTab places={visiblePlaces} lists={lists} onSaveLists={saveLists} onSelectPlace={p=>{setShowListas(false);openModal(p);}}/>
+          </div>
+        </div>
+      </div>}
 
       {/* Modals */}
       {selected&&<DetailModal place={selected} entry={entries[selected.id]} places={visiblePlaces} entries={entries} onClose={closeModal} onSave={async data=>{await handleSave(selected.id,data);}} onDelete={()=>handleDelete(selected.id,isEN&&selected.nameEN?selected.nameEN:selected.name)} onSelectNearby={openModal} onEditPlace={handleEditPlace} addToast={addToast} userLat={userLat} userLng={userLng}/>}
