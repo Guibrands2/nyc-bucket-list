@@ -239,18 +239,18 @@ const INITIAL_PLACES = [
   { id:"pr005", category:"Praias", name:"Jacob Riis Park", nameEN:"Jacob Riis Park", emoji:"🏖️", desc:"Praia preservada no Queens com atmosfera vintage e menos turista.", descEN:"Preserved beach in Queens with a vintage atmosphere and fewer tourists.", price:"gratis", lat:40.5618, lng:-73.8904, time:"dia inteiro", petFriendly:true, publicBathroom:true, season:"verao", rep:"A praia favorita dos nova-iorquinos que sabem.", repEN:"The favorite beach of savvy New Yorkers." },
   { id:"pr006", category:"Praias", name:"Sandy Hook, NJ", nameEN:"Sandy Hook, NJ", emoji:"🦅", desc:"Peninsula pristina em NJ com praias federais, trilhas e vista de Manhattan.", descEN:"Pristine NJ peninsula with federal beaches, trails and Manhattan views.", price:"$", lat:40.4643, lng:-74.0094, time:"dia inteiro", petFriendly:true, publicBathroom:true, season:"verao", rep:"A praia mais bonita da regiao.", repEN:"The most beautiful beach in the region." },
   { id:"pr007", category:"Praias", name:"Fire Island, NY", nameEN:"Fire Island, NY", emoji:"🏝️", desc:"Ilha sem carros no Atlantico com praias paradisiacas e comunidade LGBTQ+.", descEN:"Car-free Atlantic island with paradisiacal beaches and vibrant LGBTQ+ community.", price:"$$", lat:40.6318, lng:-73.1271, time:"dia inteiro", petFriendly:false, publicBathroom:true, season:"verao", rep:"Praia mais bonita proximo a NYC.", repEN:"Most beautiful beach near NYC." },
-  { id:"md001", bestTime:"Sabado entre 10h-12h antes de lotar", category:"Mercados & Delis", name:"Smorgasburg", nameEN:"Smorgasburg", emoji:"🥘", desc:"Maior mercado de comida ao ar livre dos EUA, todo sabado em Williamsburg.", descEN:"Largest outdoor food market in the US, every Saturday in Williamsburg.", price:"$", lat:40.7223, lng:-73.9572, time:"2h", link:"https://www.smorgasburg.com", petFriendly:true, publicBathroom:true, season:"verao", rep:"O melhor mercado de comida dos EUA.", repEN:"The best food market in the US.", hours:"Sab 11h-18h (Williamsburg)" },
+  { id:"md001", bestTime:"Sabado entre 10h-12h antes de lotar", category:"Mercados & Delis", name:"Smorgasburg", nameEN:"Smorgasburg", emoji:"🥘", desc:"Maior mercado de comida ao ar livre dos EUA, todo sabado em Williamsburg.", descEN:"Largest outdoor food market in the US, every Saturday in Williamsburg.", price:"$", lat:40.7223, lng:-73.9572, time:"2h", link:"https://www.smorgasburg.com", petFriendly:true, publicBathroom:true, season:"verao", rep:"O melhor mercado de comida dos EUA.", repEN:"The best food market in the US.", hours:"Sab 11h-18h (Williamsburg)", recurring:"Todo Sab 11h-18h", recurringEN:"Every Sat 11am-6pm", recurringDays:[6] },
   { id:"md002", category:"Mercados & Delis", name:"Chelsea Market", nameEN:"Chelsea Market", emoji:"🥐", desc:"Mercado gourmet coberto numa antiga fabrica de biscoitos no Meatpacking.", descEN:"Covered gourmet market in a former cookie factory in the Meatpacking District.", price:"$$", lat:40.7424, lng:-74.0048, time:"2h", link:"https://www.chelseamarket.com", petFriendly:false, publicBathroom:true, season:"sempre", rep:"Perfeito para almocar.", repEN:"Perfect for lunch." },
   { id:"md003", category:"Mercados & Delis", name:"Katz's Delicatessen", nameEN:"Katz's Delicatessen", emoji:"🥪", desc:"O deli mais famoso de NY, desde 1888. O sanduiche de pastrami e lendario.", descEN:"NY's most famous deli, since 1888. The pastrami sandwich is legendary.", price:"$$", lat:40.7223, lng:-73.9874, time:"1h", link:"https://katzsdelicatessen.com", petFriendly:false, publicBathroom:true, season:"sempre", rep:"Uma instituicao. O pastrami e transcendental.", repEN:"An institution. The pastrami is transcendental.", hours:"Seg-Qua 8h-22h45, Qui-Dom 24h" },
   { id:"md004", category:"Mercados & Delis", name:"Russ & Daughters", nameEN:"Russ & Daughters", emoji:"🐟", desc:"Salmao defumado, cream cheese e bagel no Lower East Side desde 1914.", descEN:"Smoked salmon, cream cheese and bagel on the Lower East Side since 1914.", price:"$$", lat:40.7220, lng:-73.9876, time:"1h", link:"https://www.russanddaughters.com", petFriendly:false, publicBathroom:false, season:"sempre", rep:"Lendario. O melhor bagel com lox do mundo.", repEN:"Legendary. The best lox bagel in the world.", hours:"Seg-Sex 8h-18h, Sab 8h-19h, Dom 8h-17h30" },
   { id:"md005", category:"Mercados & Delis", name:"Essex Market", nameEN:"Essex Market", emoji:"🛒", desc:"Mercado gourmet moderno no Lower East Side, com bancas de comida do mundo todo.", descEN:"Modern gourmet market on the Lower East Side with food stalls from around the world.", price:"$$", lat:40.7183, lng:-73.9860, time:"1h", petFriendly:false, publicBathroom:true, season:"sempre", rep:"O mercado moderno do LES. Diverso e delicioso.", repEN:"The modern LES market. Diverse and delicious." },
-  { id:"md006", category:"Mercados & Delis", name:"Union Square Greenmarket", nameEN:"Union Square Greenmarket", emoji:"🥬", desc:"Mercado de produtores locais todo sabado e quarta em Union Square.", descEN:"Local farmers market every Saturday and Wednesday at Union Square.", price:"$", lat:40.7359, lng:-73.9906, time:"1h", petFriendly:true, publicBathroom:false, season:"sempre", rep:"O melhor mercado de agricultores de NYC.", repEN:"The best farmers market in NYC.", hours:"Sab 8h-18h, Qua 8h-18h" },
+  { id:"md006", category:"Mercados & Delis", name:"Union Square Greenmarket", nameEN:"Union Square Greenmarket", emoji:"🥬", desc:"Mercado de produtores locais todo sabado e quarta em Union Square.", descEN:"Local farmers market every Saturday and Wednesday at Union Square.", price:"$", lat:40.7359, lng:-73.9906, time:"1h", petFriendly:true, publicBathroom:false, season:"sempre", rep:"O melhor mercado de agricultores de NYC.", repEN:"The best farmers market in NYC.", hours:"Sab 8h-18h, Qua 8h-18h", recurring:"Sab e Qua 8h-18h", recurringEN:"Sat & Wed 8am-6pm", recurringDays:[6,3] },
   { id:"md007", category:"Mercados & Delis", name:"Zabar's", nameEN:"Zabar's", emoji:"🧀", desc:"Deli gourmet lendario no Upper West Side desde 1934. Queijos, defumados e delicatessen.", descEN:"Legendary gourmet deli on the Upper West Side since 1934. Cheeses, smoked fish.", price:"$$", lat:40.7844, lng:-73.9830, time:"1h", link:"https://zabars.com", petFriendly:false, publicBathroom:false, season:"sempre", rep:"Uma instituicao nova-iorquina.", repEN:"A New York institution.", hours:"Seg-Sex 8h-19h30, Sab 8h-20h, Dom 9h-18h" },
   { id:"md008", category:"Mercados & Delis", name:"Barney Greengrass", nameEN:"Barney Greengrass", emoji:"🐠", desc:"O rei do esturjao desde 1908 no Upper West Side. Brunch lendario.", descEN:"The sturgeon king since 1908 on the Upper West Side. Legendary brunch.", price:"$$", lat:40.7851, lng:-73.9804, time:"1h", petFriendly:false, publicBathroom:false, season:"sempre", rep:"Cafe da manha mais famoso do Upper West Side.", repEN:"Most famous breakfast on the Upper West Side.", hours:"Ter-Dom 8h30-16h" },
   { id:"md009", category:"Mercados & Delis", name:"Astor Wines & Spirits", nameEN:"Astor Wines & Spirits", emoji:"🍷", desc:"Uma das melhores adegas de NYC, no East Village. Selecao enorme e precos justos.", descEN:"One of NYC's best wine shops, in the East Village. Huge selection, fair prices.", price:"$$", lat:40.7284, lng:-73.9899, time:"30min", link:"https://astorwines.com", petFriendly:false, publicBathroom:false, season:"sempre", rep:"A melhor loja de vinhos de NYC.", repEN:"The best wine shop in NYC." },
   { id:"md010", category:"Mercados & Delis", name:"Park Avenue Liquor Shop", nameEN:"Park Avenue Liquor Shop", emoji:"🥃", desc:"Loja especializada em whisky com uma das maiores selecoes de bourbon dos EUA.", descEN:"Whisky specialty store with one of the largest bourbon selections in the US.", price:"$$$", lat:40.7512, lng:-73.9779, time:"30min", link:"https://parkavenueli.com", petFriendly:false, publicBathroom:false, season:"sempre", rep:"Paraiso para fas de whisky.", repEN:"Paradise for whisky lovers." },
   { id:"md011", category:"Mercados & Delis", name:"DeKalb Market Hall", nameEN:"DeKalb Market Hall", emoji:"🍱", desc:"Food hall no subsolo do City Point em Brooklyn com 40 bancas de comida.", descEN:"Food hall in the basement of City Point in Brooklyn with 40 food stalls.", price:"$", lat:40.6908, lng:-73.9832, time:"1h", petFriendly:false, publicBathroom:true, season:"sempre", rep:"O melhor food hall de Brooklyn.", repEN:"The best food hall in Brooklyn." },
-  { id:"md012", category:"Mercados & Delis", name:"Brooklyn Flea", nameEN:"Brooklyn Flea", emoji:"🛍️", desc:"Mercado de pulgas e vintage aos fins de semana. Comida, antiguidades e artesanato.", descEN:"Flea and vintage market on weekends. Food, antiques and crafts.", price:"$", lat:40.7223, lng:-73.9572, time:"2h", link:"https://brooklynflea.com", petFriendly:true, publicBathroom:false, season:"verao", rep:"O mercado de pulgas mais cool de NYC.", repEN:"The coolest flea market in NYC." },
+  { id:"md012", category:"Mercados & Delis", name:"Brooklyn Flea", nameEN:"Brooklyn Flea", emoji:"🛍️", desc:"Mercado de pulgas e vintage aos fins de semana. Comida, antiguidades e artesanato.", descEN:"Flea and vintage market on weekends. Food, antiques and crafts.", price:"$", lat:40.7223, lng:-73.9572, time:"2h", link:"https://brooklynflea.com", petFriendly:true, publicBathroom:false, season:"verao", rep:"O mercado de pulgas mais cool de NYC.", repEN:"The coolest flea market in NYC.", recurring:"Fins de semana (verao)", recurringEN:"Weekends (summer)", recurringDays:[6,0] },
   { id:"t021", category:"Livrarias", name:"The Strand", nameEN:"The Strand", emoji:"📖", desc:"4 andares e 18 milhas de livros na Union Square.", descEN:"4 floors and 18 miles of books at Union Square.", price:"$", lat:40.7330, lng:-73.9910, time:"1h", link:"https://www.strandbooks.com", petFriendly:false, publicBathroom:false, season:"sempre", rep:"Uma das livrarias mais famosas do mundo.", repEN:"One of the most famous bookstores in the world.", hours:"Seg-Sab 10h-22h30, Dom 11h-22h30" },
   { id:"t022", category:"Livrarias", name:"The Ripped Bodice", nameEN:"The Ripped Bodice", emoji:"💘", desc:"Livraria especializada em romance em Park Slope, Brooklyn.", descEN:"Romance specialty bookstore in Park Slope, Brooklyn.", price:"$", lat:40.6761, lng:-73.9810, time:"1h", link:"https://www.therippedbodicebklyn.com", petFriendly:false, publicBathroom:false, season:"sempre", rep:"Joia de Park Slope.", repEN:"Gem of Park Slope." },
   { id:"t023", category:"Lojas", name:"Nintendo NY", nameEN:"Nintendo NY", emoji:"🎮", desc:"No Rockefeller Plaza, com merchandise exclusivo e demos de jogos.", descEN:"At Rockefeller Plaza, with exclusive merchandise and game demos.", price:"$", lat:40.7582, lng:-73.9796, time:"1h", link:"https://www.nintendo.com/stores/nintendo-ny/", petFriendly:false, publicBathroom:false, season:"sempre", rep:"Paraiso para gamers.", repEN:"Paradise for gamers." },
@@ -258,7 +258,7 @@ const INITIAL_PLACES = [
   { id:"t025", category:"Lojas", name:"Hershey's + M&M + Lego", nameEN:"Hershey's + M&M + Lego", emoji:"🍫", desc:"As tres gigantes na Times Square.", descEN:"The three giants at Times Square.", price:"$", lat:40.7580, lng:-73.9845, time:"1h", petFriendly:false, publicBathroom:false, season:"sempre", rep:"Mais pela experiencia visual.", repEN:"More for the visual experience." },
   { id:"t026", category:"Entretenimento", name:"SPYSCAPE", nameEN:"SPYSCAPE", emoji:"🕵️", desc:"Museu interativo de espionagem: quebra codigos e descobre seu perfil de espiao.", descEN:"Interactive spy museum: crack codes and discover your spy profile.", price:"$$", lat:40.7634, lng:-73.9863, time:"2h", link:"https://spyscape.com", petFriendly:false, publicBathroom:true, season:"sempre", rep:"Super interativo e surpreendente.", repEN:"Super interactive and surprising.", hours:"Diario 10h-19h" },
   { id:"t027", category:"Entretenimento", name:"Show no Madison Square Garden", nameEN:"Show at Madison Square Garden", emoji:"🎵", desc:"O maior e mais famoso venue indoor de NY.", descEN:"The largest and most famous indoor venue in NY.", price:"$$$", lat:40.7505, lng:-73.9934, time:"3h+", link:"https://www.msg.com", petFriendly:false, publicBathroom:true, season:"sempre", rep:"O Garden e uma lenda.", repEN:"The Garden is a legend." },
-  { id:"t028", category:"Entretenimento", name:"PARAISO - Westlight Rooftop", nameEN:"PARAISO - Westlight Rooftop", emoji:"🪩", desc:"Festa semanal aos domingos no rooftop do William Vale, Williamsburg.", descEN:"Weekly Sunday party on the William Vale rooftop, Williamsburg.", price:"$$", lat:40.7181, lng:-73.9566, time:"3h+", link:"https://www.paraisonyc.com", petFriendly:false, publicBathroom:true, season:"verao", rep:"Um dos melhores rooftops de NYC.", repEN:"One of the best rooftops in NYC." },
+  { id:"t028", category:"Entretenimento", name:"PARAISO - Westlight Rooftop", nameEN:"PARAISO - Westlight Rooftop", emoji:"🪩", desc:"Festa semanal aos domingos no rooftop do William Vale, Williamsburg.", descEN:"Weekly Sunday party on the William Vale rooftop, Williamsburg.", price:"$$", lat:40.7181, lng:-73.9566, time:"3h+", link:"https://www.paraisonyc.com", petFriendly:false, publicBathroom:true, season:"verao", rep:"Um dos melhores rooftops de NYC.", repEN:"One of the best rooftops in NYC.", recurring:"Domingos no verao", recurringEN:"Sundays in summer", recurringDays:[0] },
   { id:"t029", category:"Entretenimento", name:"Ellen's Stardust Diner", nameEN:"Ellen's Stardust Diner", emoji:"🎤", desc:"Restaurante dos garcons que cantam na Broadway, tematico dos anos 50.", descEN:"Restaurant with singing waiters on Broadway, 1950s themed.", price:"$$", lat:40.7614, lng:-73.9848, time:"2h", link:"https://www.ellensstardustdiner.com", petFriendly:false, publicBathroom:true, season:"sempre", rep:"Experiencia unica em NYC.", repEN:"Unique experience in NYC." },
   { id:"t030", category:"Bares", name:"Bares Speakeasy", nameEN:"Speakeasy Bars", emoji:"🤫", desc:"Bares secretos escondidos atras de cafeterias e cabines telefonicas.", descEN:"Secret bars hidden behind cafeterias and phone booths.", price:"$$", lat:40.7282, lng:-74.0076, time:"2h", petFriendly:false, publicBathroom:true, season:"sempre", rep:"PDT (Please Don't Tell) e Attaboy sao os mais conhecidos.", repEN:"PDT (Please Don't Tell) and Attaboy are the most famous.", link:"https://pdtnyc.com" },
   { id:"t031", category:"Entretenimento", name:"Brooklyn Mirage", nameEN:"Brooklyn Mirage", emoji:"🎧", desc:"O maior venue de musica eletronica dos EUA, em Bushwick, Brooklyn.", descEN:"The largest electronic music venue in the US, in Bushwick, Brooklyn.", price:"$$", lat:40.6985, lng:-73.9318, time:"3h+", link:"https://www.avant-gardner.com", petFriendly:false, publicBathroom:true, season:"verao", rep:"O melhor venue de eletronico dos EUA.", repEN:"The best electronic music venue in the US." },
@@ -2506,17 +2506,45 @@ function MemoriasTab({ places, entries, onSelect }) {
   );
 }
 
-function PlanejArTab({ events, onAddEvent, onSaveEvent, onDeleteEvent, onOpenPlanner, addToast }) {
+function PlanejArTab({ events, places, onAddEvent, onSaveEvent, onDeleteEvent, onOpenPlanner, onSelect, addToast }) {
+  const today = new Date().toISOString().split("T")[0];
+
+  function nextDateForWeekday(weekday) {
+    const d = new Date();
+    const diff = (weekday - d.getDay() + 7) % 7;
+    d.setDate(d.getDate() + (diff === 0 ? 7 : diff));
+    return d.toISOString().split("T")[0];
+  }
+
+  const syntheticEvents = (places||[])
+    .filter(p => p.recurringDays?.length)
+    .map(p => {
+      const candidates = p.recurringDays.map(wd => ({ date: nextDateForWeekday(wd), wd }));
+      const soonest = candidates.sort((a,b)=>a.date.localeCompare(b.date))[0];
+      return {
+        id: "rec_" + p.id,
+        name: isEN && p.nameEN ? p.nameEN : p.name,
+        emoji: p.emoji,
+        date: soonest.date,
+        desc: isEN ? p.recurringEN : p.recurring,
+        isRecurring: true,
+        placeRef: p,
+      };
+    });
+
   const upcoming = (events||[]).filter(ev=>{
     if(!ev.date)return false;
     return new Date(ev.date+"T23:59:59")>=new Date();
   }).sort((a,b)=>a.date.localeCompare(b.date));
+
+  const allUpcoming = [...upcoming, ...syntheticEvents]
+    .sort((a,b)=>a.date.localeCompare(b.date));
+
   const past = (events||[]).filter(ev=>{
     if(!ev.date)return true;
     return new Date(ev.date+"T23:59:59")<new Date();
   }).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
 
-  const today = new Date().toISOString().split("T")[0];
   const dayNames = isEN?["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]:["Dom","Seg","Ter","Qua","Qui","Sex","Sab"];
 
   const formatDate = (d)=>{
@@ -2546,24 +2574,27 @@ function PlanejArTab({ events, onAddEvent, onSaveEvent, onDeleteEvent, onOpenPla
         <button onClick={onAddEvent} style={{ background:"#ff2d55",border:"none",borderRadius:20,padding:"6px 14px",color:"#ffffff",fontSize:12,fontWeight:700,cursor:"pointer" }}>+ {isEN?"Add":"Adicionar"}</button>
       </div>
 
-      {upcoming.length===0&&<div style={{ background:"#ffffff",borderRadius:14,padding:"24px 20px",textAlign:"center",marginBottom:20,border:"1px solid #e8e6e0" }}>
+      {allUpcoming.length===0&&<div style={{ background:"#ffffff",borderRadius:14,padding:"24px 20px",textAlign:"center",marginBottom:20,border:"1px solid #e8e6e0" }}>
         <div style={{ fontSize:32,marginBottom:8 }}>📅</div>
         <div style={{ fontSize:13,color:"#1a1a1a",marginBottom:4 }}>{isEN?"No upcoming events":"Nenhum evento proximo"}</div>
         <div style={{ fontSize:12,color:"#8a8a9a" }}>{isEN?"Add events like concerts, shows or reservations":"Adicione eventos como shows, pecas ou reservas"}</div>
       </div>}
 
-      {upcoming.map(ev=>(
-        <div key={ev.id} style={{ background:"#ffffff",borderRadius:14,padding:"14px 16px",marginBottom:10,border:"1px solid #e8e6e0",boxShadow:"0 1px 3px #00000008",display:"flex",gap:12,alignItems:"flex-start" }}>
-          <div style={{ background:ev.date===today?"#ff2d5515":"#f5f3ee",borderRadius:10,padding:"8px 10px",textAlign:"center",minWidth:44,flexShrink:0,border:"1px solid "+(ev.date===today?"#ff2d5530":"#e8e6e0") }}>
-            <div style={{ fontSize:11,fontWeight:800,color:ev.date===today?"#ff2d55":"#8a8a9a" }}>{ev.date?new Date(ev.date+"T12:00:00").getDate():"-"}</div>
-            <div style={{ fontSize:9,color:ev.date===today?"#ff2d55":"#b0aebb",textTransform:"uppercase" }}>{ev.date?new Date(ev.date+"T12:00:00").toLocaleDateString(isEN?"en-US":"pt-BR",{month:"short"}):""}</div>
+      {allUpcoming.map(ev=>(
+        <div key={ev.id} onClick={ev.isRecurring&&onSelect?()=>onSelect(ev.placeRef):undefined} style={{ background:"#ffffff",borderRadius:14,padding:"14px 16px",marginBottom:10,border:"1px solid "+(ev.isRecurring?"#ff9f0a30":"#e8e6e0"),boxShadow:"0 1px 3px #00000008",display:"flex",gap:12,alignItems:"flex-start",cursor:ev.isRecurring?"pointer":"default" }}>
+          <div style={{ background:ev.date===today?"#ff2d5515":ev.isRecurring?"#ff9f0a10":"#f5f3ee",borderRadius:10,padding:"8px 10px",textAlign:"center",minWidth:44,flexShrink:0,border:"1px solid "+(ev.date===today?"#ff2d5530":ev.isRecurring?"#ff9f0a30":"#e8e6e0") }}>
+            <div style={{ fontSize:11,fontWeight:800,color:ev.date===today?"#ff2d55":ev.isRecurring?"#ff9f0a":"#8a8a9a" }}>{ev.date?new Date(ev.date+"T12:00:00").getDate():"-"}</div>
+            <div style={{ fontSize:9,color:ev.date===today?"#ff2d55":ev.isRecurring?"#ff9f0a":"#b0aebb",textTransform:"uppercase" }}>{ev.date?new Date(ev.date+"T12:00:00").toLocaleDateString(isEN?"en-US":"pt-BR",{month:"short"}):""}</div>
           </div>
           <div style={{ flex:1,minWidth:0 }}>
-            <div style={{ fontSize:14,fontWeight:700,color:"#1a1a1a",marginBottom:2 }}>{ev.emoji||"📅"} {ev.name}</div>
+            <div style={{ display:"flex",alignItems:"center",gap:6,marginBottom:2 }}>
+              <div style={{ fontSize:14,fontWeight:700,color:"#1a1a1a" }}>{ev.emoji||"📅"} {ev.name}</div>
+              {ev.isRecurring&&<div style={{ fontSize:9,fontWeight:700,color:"#ff9f0a",background:"#ff9f0a15",borderRadius:6,padding:"2px 6px",whiteSpace:"nowrap" }}>🔄 {isEN?"RECURRING":"RECORRENTE"}</div>}
+            </div>
             {ev.desc&&<div style={{ fontSize:12,color:"#8a8a9a",marginBottom:2 }}>{ev.desc}</div>}
             <div style={{ fontSize:11,color:"#ff2d55",fontWeight:600 }}>{formatDate(ev.date)}</div>
           </div>
-          <button onClick={async()=>{if(onDeleteEvent)await onDeleteEvent(ev.id);}} style={{ background:"none",border:"none",color:"#b0aebb",fontSize:18,cursor:"pointer",flexShrink:0,padding:"0 4px" }}>×</button>
+          {!ev.isRecurring&&<button onClick={async()=>{if(onDeleteEvent)await onDeleteEvent(ev.id);}} style={{ background:"none",border:"none",color:"#b0aebb",fontSize:18,cursor:"pointer",flexShrink:0,padding:"0 4px" }}>×</button>}
         </div>
       ))}
 
@@ -2996,7 +3027,7 @@ export default function App() {
 
         {tab==="mapa"&&<MapTab places={visiblePlaces} entries={entries} onSelect={openModal} onNearby={()=>setShowNearby(true)} onGeocode={handleGeocode}/>}
         {tab==="memorias"&&<MemoriasTab places={visiblePlaces} entries={entries} onSelect={openModal}/>}
-        {tab==="planejar"&&<PlanejArTab events={events} onAddEvent={()=>setShowAddEvent(true)} onSaveEvent={async ev=>{await set(ref(db,"events/"+ev.id),ev);}} onDeleteEvent={async id=>{await remove(ref(db,"events/"+id));setEvents(prev=>prev.filter(e=>e.id!==id));}} onOpenPlanner={()=>setShowPlanner(true)} addToast={addToast}/>}
+        {tab==="planejar"&&<PlanejArTab events={events} places={visiblePlaces} onAddEvent={()=>setShowAddEvent(true)} onSaveEvent={async ev=>{await set(ref(db,"events/"+ev.id),ev);}} onDeleteEvent={async id=>{await remove(ref(db,"events/"+id));setEvents(prev=>prev.filter(e=>e.id!==id));}} onOpenPlanner={()=>setShowPlanner(true)} onSelect={openModal} addToast={addToast}/>}
       </div>
 
       {/* Listas drawer */}
