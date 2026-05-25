@@ -70,14 +70,14 @@ const T = {
   addNew: isEN ? "New place" : "Novo lugar",
   add: isEN ? "Add" : "Adicionar",
   adding: isEN ? "Adding..." : "Adicionando...",
-  createCuradoria: isEN ? "+ Create new curadoria" : "+ Criar nova curadoria",
-  curadoriaEmpty: isEN ? "Create curadorias to organize your favorites!" : "Crie curadorias para organizar seus favoritos!",
+  createCuradoria: isEN ? "+ Create new list" : "+ Criar nova lista",
+  curadoriaEmpty: isEN ? "Create lists to organize your favorites!" : "Crie listas para organizar seus favoritos!",
   curadoriaEx: isEN ? "Ex: Weekend with friends, Rainy day, Romantic NYC" : "Ex: Para ir com amigos, Dia de chuva, NYC romantico",
-  curadoriaName: isEN ? "Curadoria name..." : "Nome da curadoria...",
+  curadoriaName: isEN ? "List name..." : "Nome da lista...",
   curadoriaDesc: isEN ? "Description (ex: For the gym group)" : "Descricao (ex: Para ir com o grupo da academia)",
   create: isEN ? "Create and add places →" : "Criar e adicionar lugares →",
   back: isEN ? "← Back" : "← Voltar",
-  myCuradorias: isEN ? "← My curadorias" : "← Minhas curadorias",
+  myCuradorias: isEN ? "← My lists" : "← Minhas listas",
   places: isEN ? "places" : "lugares",
   tapToEdit: isEN ? "tap to edit" : "toque para editar",
   selectPlaces: isEN ? "Select places to add:" : "Selecione lugares para adicionar:",
@@ -681,7 +681,7 @@ function CuradoriaTab({ places, lists, onSaveLists, onSelectPlace }) {
     if (view==="create") return (
       <div style={{ padding:"0 16px 80px" }}>
         <button onClick={()=>setView("home")} style={{ background:"none",border:"none",color:"#8a8a9a",fontSize:13,cursor:"pointer",marginBottom:16 }}>{T.back}</button>
-        <div style={{ fontSize:16,fontWeight:700,color:"#1a1a1a",marginBottom:16 }}>{isEN?"New curadoria":"Nova curadoria"}</div>
+        <div style={{ fontSize:16,fontWeight:700,color:"#1a1a1a",marginBottom:16 }}>{isEN?"New list":"Nova lista"}</div>
         <div style={{ display:"flex",gap:10,marginBottom:10 }}>
           <input value={newEmoji} onChange={e=>setNewEmoji(e.target.value)} maxLength={2} style={{ width:52,background:"#ffffff",border:"1px solid #e8e6e0",borderRadius:10,padding:"10px",color:"#1a1a1a",fontSize:22,textAlign:"center" }}/>
           <input value={newName} onChange={e=>setNewName(e.target.value)} placeholder={T.curadoriaName} autoFocus style={{ flex:1,background:"#ffffff",border:"1px solid #e8e6e0",borderRadius:10,padding:"10px 14px",color:"#1a1a1a",fontSize:14 }}/>
@@ -724,7 +724,7 @@ function CuradoriaTab({ places, lists, onSaveLists, onSelectPlace }) {
       </div>
     );
   } catch(err) {
-    return <div style={{ padding:"40px 16px", textAlign:"center", color:"#a0a0b0" }}><div style={{ fontSize:32, marginBottom:8 }}>📋</div><div style={{ fontSize:13, color:"#ff2d55", marginBottom:12 }}>{isEN?"Error loading curadoria":"Erro ao carregar curadoria"}</div><button onClick={()=>{setError(null);setView("home");}} style={{ padding:"10px 20px", background:"#ff2d55", border:"none", borderRadius:10, color:"#fff", cursor:"pointer" }}>Reload</button></div>;
+    return <div style={{ padding:"40px 16px", textAlign:"center", color:"#a0a0b0" }}><div style={{ fontSize:32, marginBottom:8 }}>📋</div><div style={{ fontSize:13, color:"#ff2d55", marginBottom:12 }}>{isEN?"Error loading lists":"Erro ao carregar listas"}</div><button onClick={()=>{setError(null);setView("home");}} style={{ padding:"10px 20px", background:"#ff2d55", border:"none", borderRadius:10, color:"#fff", cursor:"pointer" }}>Reload</button></div>;
   }
 }
 
@@ -1125,12 +1125,14 @@ function AddModal({ onClose, onAdd, addToast }) {
   const [status,setStatus]=useState(null); // null | "quero" | "fui"
   const [visitDate,setVisitDate]=useState(new Date().toISOString().split("T")[0]);
   const [who,setWho]=useState("juntos");
+  const [addSpentM,setAddSpentM]=useState("");
+  const [addStarsM,setAddStarsM]=useState(0);
   const handle=async()=>{
     if(!name.trim())return;setSaving(true);
     let lat=null,lng=null;
     if(address.trim()){setGeocoding(true);const coords=await geocodeAddress(address);if(coords){lat=coords.lat;lng=coords.lng;}setGeocoding(false);}
     const place={id:"u"+Date.now(),name:name.trim(),nameEN:name.trim(),desc:desc.trim(),descEN:desc.trim(),emoji,category,price,time,link,custom:true,season:"sempre",lat,lng};
-    const entry=status?{status,date:status==="fui"?visitDate:null,who:status==="fui"?who:null}:null;
+    const entry=status?{status,date:status==="fui"?visitDate:null,who:status==="fui"?who:null,spent:status==="fui"&&addSpentM?parseFloat(addSpentM):null,stars:status==="fui"?addStarsM:null}:null;
     await onAdd(place,entry);
     addToast(name+" "+T.addedToast,"success");setSaving(false);onClose();
   };
@@ -1154,7 +1156,7 @@ function AddModal({ onClose, onAdd, addToast }) {
       </div>
     </div>
 
-    {/* Date + who — only when "fui" */}
+    {/* Date + who + stars + spent — only when "fui" */}
     {status==="fui"&&<div style={{ background:"#f5f3ee80",border:"1px solid #e8e6e0",borderRadius:10,padding:"12px",marginBottom:14 }}>
       <div style={{ display:"flex",gap:10,marginBottom:10 }}>
         <div style={{ flex:1 }}>
@@ -1163,7 +1165,16 @@ function AddModal({ onClose, onAdd, addToast }) {
         </div>
       </div>
       <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"WHO WENT?":"QUEM FOI?"}</div>
-      <div style={{ display:"flex",gap:6 }}>{WHO_OPTIONS.map(w=><button key={w} onClick={()=>setWho(w)} style={{ flex:1,padding:"8px 4px",borderRadius:8,background:who===w?"#007aff20":"#f5f3ee",border:"1px solid "+(who===w?"#007aff":"#e8e6e0"),color:who===w?"#007aff":"#8a8a9a",fontSize:12,cursor:"pointer" }}>{WHO_EMOJI[w]} {WHO_LABELS[w]}</button>)}</div>
+      <div style={{ display:"flex",gap:6,marginBottom:10 }}>{WHO_OPTIONS.map(w=><button key={w} onClick={()=>setWho(w)} style={{ flex:1,padding:"8px 4px",borderRadius:8,background:who===w?"#007aff20":"#f5f3ee",border:"1px solid "+(who===w?"#007aff":"#e8e6e0"),color:who===w?"#007aff":"#8a8a9a",fontSize:12,cursor:"pointer" }}>{WHO_EMOJI[w]} {WHO_LABELS[w]}</button>)}</div>
+      <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"RATING":"AVALIACAO"}</div>
+      <div style={{ display:"flex",gap:4,marginBottom:10 }}>{[1,2,3,4,5].map(n=><span key={n} onClick={()=>setAddStarsM(addStarsM===n?0:n)} style={{ fontSize:26,cursor:"pointer",color:n<=addStarsM?"#ff9f0a":"#a0a0b0",transition:"color 0.1s" }}>★</span>)}</div>
+      <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"SPENT":"QUANTO GASTOU"}</div>
+      <div style={{ display:"flex",alignItems:"center",gap:8,background:"#ffffff",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 10px" }}>
+        <span style={{ fontSize:15 }}>💸</span>
+        <span style={{ fontSize:14,color:"#a0a0b0",fontWeight:600 }}>$</span>
+        <input type="number" min="0" step="0.01" value={addSpentM} onChange={ev=>setAddSpentM(ev.target.value)} placeholder="0.00" style={{ flex:1,background:"none",border:"none",color:"#1a1a1a",fontSize:14,fontWeight:600 }}/>
+        {addSpentM&&<span style={{ fontSize:11,color:"#30d158" }}>${parseFloat(addSpentM)||0} USD</span>}
+      </div>
     </div>}
 
     <button onClick={handle} disabled={saving||geocoding} style={{ width:"100%",padding:"13px",background:saving||geocoding?"#e8e6e0":"#ff2d55",border:"none",borderRadius:10,color:saving||geocoding?"#a0a0b0":"#fff",fontSize:14,fontWeight:700,cursor:saving||geocoding?"default":"pointer" }}>{geocoding?isEN?"Getting location...":"Buscando localizacao...":saving?T.adding:T.add}</button>
@@ -1913,6 +1924,8 @@ function AIAddModal({ onClose, onSavePlace, onSaveEvent, addToast }) {
   const [addStatus, setAddStatus] = useState(null); // null | "quero" | "fui"
   const [addDate, setAddDate] = useState(new Date().toISOString().split("T")[0]);
   const [addWho, setAddWho] = useState("juntos");
+  const [addSpent, setAddSpent] = useState("");
+  const [addStars, setAddStars] = useState(0);
   const fileRef = useRef(null);
   const drag = useDragToDismiss(onClose);
 
@@ -2064,7 +2077,7 @@ Retorne este JSON (type = "place" ou "event"):
         lat:null, lng:null
       };
       await onSavePlace(place);
-      if(addStatus) await set(ref(db,"entries/"+place.id),{status:addStatus,date:addStatus==="fui"?addDate:null,who:addStatus==="fui"?addWho:null});
+      if(addStatus) await set(ref(db,"entries/"+place.id),{status:addStatus,date:addStatus==="fui"?addDate:null,who:addStatus==="fui"?addWho:null,spent:addStatus==="fui"&&addSpent?parseFloat(addSpent):null,stars:addStatus==="fui"?addStars:null});
       addToast(isEN?"Place added!":"Lugar adicionado!","success");
     }
     setSaving(false);
@@ -2188,7 +2201,16 @@ Retorne este JSON (type = "place" ou "event"):
             <input type="date" value={addDate} onChange={e=>setAddDate(e.target.value)} style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 10px",color:"#1a1a1a",fontSize:13 }}/>
           </div>
           <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"WHO WENT?":"QUEM FOI?"}</div>
-          <div style={{ display:"flex",gap:6 }}>{WHO_OPTIONS.map(w=><button key={w} onClick={()=>setAddWho(w)} style={{ flex:1,padding:"8px 4px",borderRadius:8,background:addWho===w?"#007aff20":"#f5f3ee",border:"1px solid "+(addWho===w?"#007aff":"#e8e6e0"),color:addWho===w?"#007aff":"#8a8a9a",fontSize:12,cursor:"pointer" }}>{WHO_EMOJI[w]} {WHO_LABELS[w]}</button>)}</div>
+          <div style={{ display:"flex",gap:6,marginBottom:10 }}>{WHO_OPTIONS.map(w=><button key={w} onClick={()=>setAddWho(w)} style={{ flex:1,padding:"8px 4px",borderRadius:8,background:addWho===w?"#007aff20":"#f5f3ee",border:"1px solid "+(addWho===w?"#007aff":"#e8e6e0"),color:addWho===w?"#007aff":"#8a8a9a",fontSize:12,cursor:"pointer" }}>{WHO_EMOJI[w]} {WHO_LABELS[w]}</button>)}</div>
+          <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"RATING":"AVALIACAO"}</div>
+          <div style={{ display:"flex",gap:4,marginBottom:10 }}>{[1,2,3,4,5].map(n=><span key={n} onClick={()=>setAddStars(addStars===n?0:n)} style={{ fontSize:26,cursor:"pointer",color:n<=addStars?"#ff9f0a":"#a0a0b0",transition:"color 0.1s" }}>★</span>)}</div>
+          <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"SPENT":"QUANTO GASTOU"}</div>
+          <div style={{ display:"flex",alignItems:"center",gap:8,background:"#ffffff",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 10px" }}>
+            <span style={{ fontSize:15 }}>💸</span>
+            <span style={{ fontSize:14,color:"#a0a0b0",fontWeight:600 }}>$</span>
+            <input type="number" min="0" step="0.01" value={addSpent} onChange={e=>setAddSpent(e.target.value)} placeholder="0.00" style={{ flex:1,background:"none",border:"none",color:"#1a1a1a",fontSize:14,fontWeight:600 }}/>
+            {addSpent&&<span style={{ fontSize:11,color:"#30d158" }}>${parseFloat(addSpent)||0} USD</span>}
+          </div>
         </div>}
 
         <button onClick={confirm} disabled={saving} style={{ width:"100%",padding:"14px",background:saving?"#e8e6e0":"#ff2d55",border:"none",borderRadius:12,color:saving?"#a0a0b0":"#fff",fontSize:14,fontWeight:700,cursor:saving?"default":"pointer" }}>
