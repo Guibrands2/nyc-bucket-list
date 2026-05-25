@@ -455,6 +455,7 @@ const injectCSS = () => {
     ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-thumb { background: #d8d5ce; border-radius: 2px; }
     input, textarea, select, button { font-family: inherit; }
+    input, textarea, select { font-size: 16px !important; }
     input:focus, textarea:focus { outline: none; }
     .card:hover { background: #f5f4f1 !important; }
     .card { transition: background 0.12s ease; }
