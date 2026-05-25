@@ -1221,7 +1221,7 @@ function AddModal({ onClose, onAdd, addToast }) {
     if(address.trim()){setGeocoding(true);const coords=await geocodeAddress(address);if(coords){lat=coords.lat;lng=coords.lng;}setGeocoding(false);}
     const place={id:"u"+Date.now(),name:name.trim(),nameEN:name.trim(),desc:desc.trim(),descEN:desc.trim(),emoji,category,price,time,link,custom:true,season:"sempre",lat,lng};
     const entry=status?{status,date:status==="fui"?visitDate:null,who:status==="fui"?who:null,spent:status==="fui"&&addSpentM?parseFloat(addSpentM):null,stars:status==="fui"?addStarsM:null}:null;
-    await onAdd(place,entry);
+    onAdd(place,entry);
     addToast(name+" "+T.addedToast,"success");setSaving(false);onClose();
   };
   return <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:300,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={onClose}><div className="modal" style={{ background:"#ffffff",borderTop:"1px solid #e8e6e0",borderRadius:"20px 20px 0 0",padding:"20px 16px 48px",maxWidth:560,width:"100%",maxHeight:"85vh",overflowY:"auto" }} onClick={ev=>ev.stopPropagation()}>
@@ -1616,14 +1616,10 @@ function AddEventModal({ onClose, onSave, addToast }) {
   const [price,setPrice]=useState("");
   const [desc,setDesc]=useState("");
   const [ticketLink,setTicketLink]=useState("");
-  const [saving,setSaving]=useState(false);
-
-  const handle = async () => {
+  const handle = () => {
     if(!name.trim()||!date) return;
-    setSaving(true);
     const ev = { id:"ev"+Date.now(), name:name.trim(), emoji, category, date, time, location:location.trim(), price:price.trim(), desc:desc.trim(), ticketLink:ticketLink.trim(), archived:false, createdAt:new Date().toISOString() };
-    await onSave(ev);
-    setSaving(false);
+    onSave(ev);
   };
 
   return (
@@ -1669,8 +1665,8 @@ function AddEventModal({ onClose, onSave, addToast }) {
           <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>🎟 {isEN?"TICKET LINK":"LINK DO INGRESSO"}</div>
           <input value={ticketLink} onChange={e=>setTicketLink(e.target.value)} placeholder="https://..." style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13 }}/>
         </div>
-        <button onClick={handle} disabled={!name.trim()||!date||saving} style={{ width:"100%",padding:"13px",background:name.trim()&&date&&!saving?"#ff2d55":"#e8e6e0",border:"none",borderRadius:10,color:name.trim()&&date&&!saving?"#fff":"#a0a0b0",fontSize:14,fontWeight:700,cursor:name.trim()&&date&&!saving?"pointer":"default" }}>
-          {saving?(isEN?"Saving...":"Salvando..."):(isEN?"Add Event":"Adicionar Evento")}
+        <button onClick={handle} disabled={!name.trim()||!date} style={{ width:"100%",padding:"13px",background:name.trim()&&date?"#ff2d55":"#e8e6e0",border:"none",borderRadius:10,color:name.trim()&&date?"#fff":"#a0a0b0",fontSize:14,fontWeight:700,cursor:name.trim()&&date?"pointer":"default" }}>
+          {isEN?"Add Event":"Adicionar Evento"}
         </button>
       </div>
     </div>
@@ -2164,8 +2160,8 @@ Retorne este JSON (type = "place" ou "event"):
         repEN:r.repEN||"",
         lat:null, lng:null
       };
-      await onSavePlace(place);
-      if(addStatus) await set(ref(db,"entries/"+place.id),{status:addStatus,date:addStatus==="fui"?addDate:null,who:addStatus==="fui"?addWho:null,spent:addStatus==="fui"&&addSpent?parseFloat(addSpent):null,stars:addStatus==="fui"?addStars:null});
+      onSavePlace(place);
+      if(addStatus) set(ref(db,"entries/"+place.id),{status:addStatus,date:addStatus==="fui"?addDate:null,who:addStatus==="fui"?addWho:null,spent:addStatus==="fui"&&addSpent?parseFloat(addSpent):null,stars:addStatus==="fui"?addStars:null});
       addToast(isEN?"Place added!":"Lugar adicionado!","success");
     }
     setSaving(false);
@@ -3022,13 +3018,13 @@ export default function App() {
       {/* Modals */}
       {selected&&<DetailModal place={selected} entry={entries[selected.id]} places={visiblePlaces} entries={entries} onClose={closeModal} onSave={async data=>{await handleSave(selected.id,data);}} onDelete={()=>handleDelete(selected.id,isEN&&selected.nameEN?selected.nameEN:selected.name)} onSelectNearby={openModal} onEditPlace={handleEditPlace} addToast={addToast} userLat={userLat} userLng={userLng}/>}
       {checkIn&&<CheckInModal place={checkIn} onClose={()=>setCheckIn(null)} onSave={async data=>{await handleSave(checkIn.id,data);}} addToast={addToast}/>}
-      {showAIAdd&&<AIAddModal onClose={()=>setShowAIAdd(false)} onSavePlace={async place=>{await set(ref(db,"customPlaces/"+place.id),place);}} onSaveEvent={async ev=>{await set(ref(db,"events/"+ev.id),ev);setShowAIAdd(false);}} addToast={addToast}/>}
-      {showAdd&&<AddModal onClose={()=>setShowAdd(false)} onAdd={async(place,entry)=>{await set(ref(db,"customPlaces/"+place.id),place);if(entry)await set(ref(db,"entries/"+place.id),entry);}} addToast={addToast}/>}
+      {showAIAdd&&<AIAddModal onClose={()=>setShowAIAdd(false)} onSavePlace={place=>{set(ref(db,"customPlaces/"+place.id),place);}} onSaveEvent={ev=>{set(ref(db,"events/"+ev.id),ev);setShowAIAdd(false);}} addToast={addToast}/>}
+      {showAdd&&<AddModal onClose={()=>setShowAdd(false)} onAdd={(place,entry)=>{set(ref(db,"customPlaces/"+place.id),place);if(entry)set(ref(db,"entries/"+place.id),entry);}} addToast={addToast}/>}
       {showShare&&<ShareModal places={visiblePlaces} entries={entries} onClose={()=>setShowShare(false)} addToast={addToast}/>}
       {showPlanner&&<PlannerChatModal places={visiblePlaces} entries={entries} onClose={()=>setShowPlanner(false)} addToast={addToast} userLat={userLat} userLng={userLng}/>}
       {showNearby&&userLat&&<NearbyDrawer userLat={userLat} userLng={userLng} places={visiblePlaces} entries={entries} onSelect={openModal} onClose={()=>setShowNearby(false)}/>}
       {showSurpresa&&<SurpresaModal places={visiblePlaces} entries={entries} weather={currentWeather} onClose={()=>setShowSurpresa(false)} addToast={addToast} onSaveLists={saveLists} lists={lists}/>}
-      {showAddEvent&&<AddEventModal onClose={()=>setShowAddEvent(false)} onSave={async ev=>{await set(ref(db,"events/"+ev.id),ev);addToast(isEN?"Event added!":"Evento adicionado!","success");setShowAddEvent(false);}} addToast={addToast}/>}
+      {showAddEvent&&<AddEventModal onClose={()=>setShowAddEvent(false)} onSave={ev=>{set(ref(db,"events/"+ev.id),ev);addToast(isEN?"Event added!":"Evento adicionado!","success");setShowAddEvent(false);}} addToast={addToast}/>}
       {quickAction&&<QuickActionSheet place={quickAction} entry={entries[quickAction.id]} onClose={()=>setQuickAction(null)} onToggleWant={handleToggleWant} onCheckIn={p=>{setCheckIn(p);setQuickAction(null);}} onSaveToCuradoria={handleSaveToCuradoria}/>}
       {nearbyAlert&&<div onClick={()=>{openModal(nearbyAlert);setNearbyAlert(null);}} style={{ position:"fixed",bottom:80,left:"50%",transform:"translateX(-50%)",background:"#ffffff",border:"1px solid #30d15850",borderRadius:20,padding:"10px 16px",display:"flex",alignItems:"center",gap:10,zIndex:140,boxShadow:"0 4px 20px #00000060",maxWidth:"calc(100% - 32px)",cursor:"pointer" }}>
         <span style={{ fontSize:24 }}>{nearbyAlert.emoji}</span>
