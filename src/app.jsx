@@ -577,12 +577,15 @@ function WeatherWidget() {
   return <div style={{ background:w.outdoor?"#f0fff5":"#fff5f7",border:"1px solid "+(w.outdoor?"#30d15830":"#ff2d5530"),borderRadius:12,padding:"10px 14px",marginBottom:10,display:"flex",alignItems:"center",justifyContent:"space-between" }}><div style={{ display:"flex",alignItems:"center",gap:10 }}><span style={{ fontSize:24 }}>{w.icon}</span><div><div style={{ fontSize:15,fontWeight:700,color:"#1a1a1a" }}>{w.tempC}°C <span style={{ fontSize:12,color:"#8a8a9a" }}>/ {w.tempF}°F · {w.desc}</span></div><div style={{ fontSize:11,color:"#a0a0b0" }}>Min {w.minC}°C / Max {w.maxC}°C</div></div></div><div style={{ fontSize:11,fontWeight:600,color:w.outdoor?"#30d158":"#ff2d55",background:(w.outdoor?"#30d158":"#ff2d55")+"20",borderRadius:20,padding:"4px 10px" }}>{w.outdoor?T.goodOutdoor:T.indoorDay}</div></div>;
 }
 
-function MapTab({ places, entries, onSelect }) {
+function MapTab({ places, entries, onSelect, onNearby, onGeocode }) {
   const mapRef = useRef(null);
   const inst = useRef(null);
   const markers = useRef([]);
   const userMarker = useRef(null);
+  const geocodedRef = useRef(new Set());
   const [ready, setReady] = useState(false);
+  const [filter, setFilter] = useState("todos");
+  const [locating, setLocating] = useState(false);
 
   // Load Leaflet once
   useEffect(() => {
@@ -597,45 +600,104 @@ function MapTab({ places, entries, onSelect }) {
     document.head.appendChild(script);
   }, []);
 
-  // Init map once Leaflet is ready
+  // Init map with light tiles
   useEffect(() => {
     if (!ready || !mapRef.current || inst.current) return;
     inst.current = window.L.map(mapRef.current, { center:[40.730,-73.990], zoom:12, zoomControl:true });
-    window.L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { attribution:"© CartoDB" }).addTo(inst.current);
-    // User location dot - separate from markers
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(pos => {
-        if (!inst.current) return;
-        const dot = window.L.circleMarker([pos.coords.latitude, pos.coords.longitude], {
-          radius: 8, fillColor:"#ff2d55", color:"#fff", weight:2, opacity:1, fillOpacity:1
-        }).addTo(inst.current);
-        userMarker.current = dot;
-      }, () => {}, { enableHighAccuracy: false, timeout: 5000 });
-    }
+    window.L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", { attribution:"© CartoDB" }).addTo(inst.current);
   }, [ready]);
 
-  // Update markers when places change
+  // Auto-geocode places missing coordinates (1 req/s for Nominatim)
+  useEffect(() => {
+    if (!onGeocode) return;
+    const missing = places.filter(p => !p.lat && !p.lng && !geocodedRef.current.has(p.id));
+    if (!missing.length) return;
+    missing.forEach(p => geocodedRef.current.add(p.id));
+    (async () => {
+      for (const p of missing) {
+        const coords = await geocodeAddress((p.nameEN || p.name) + ", New York");
+        if (coords) onGeocode(p.id, coords.lat, coords.lng);
+        await new Promise(r => setTimeout(r, 1200));
+      }
+    })();
+  }, [places, onGeocode]);
+
+  // Update markers on filter/entries change
   useEffect(() => {
     if (!inst.current) return;
     markers.current.forEach(m => m.remove());
     markers.current = [];
     places.forEach(p => {
       if (!p.lat || !p.lng) return;
-      const meta = CAT_META[p.category] || { color:"#ff2d55" };
-      const html = "<div style='width:28px;height:28px;border-radius:50%;background:"+meta.color+"30;border:2px solid "+meta.color+";display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,0.5)'>"+p.emoji+"</div>";
-      const icon = window.L.divIcon({ html, className:"", iconSize:[28,28], iconAnchor:[14,14] });
+      const status = (entries[p.id] || {}).status || null;
+      if (filter === "quero" && status !== "quero") return;
+      if (filter === "fui" && status !== "fui") return;
+      const color = status === "fui" ? "#30d158" : status === "quero" ? "#ff2d55" : "#a0a0b0";
+      const html = "<div style='width:32px;height:32px;border-radius:50%;background:"+color+"22;border:2.5px solid "+color+";display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 2px 8px rgba(0,0,0,0.15)'>"+p.emoji+"</div>";
+      const icon = window.L.divIcon({ html, className:"", iconSize:[32,32], iconAnchor:[16,16] });
       const m = window.L.marker([p.lat, p.lng], { icon }).addTo(inst.current);
       m.on("click", () => onSelect(p));
       markers.current.push(m);
     });
-  }, [ready, places]);
+  }, [ready, places, entries, filter]);
+
+  const handleLocate = () => {
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(pos => {
+      const { latitude: lat, longitude: lng } = pos.coords;
+      if (inst.current) inst.current.setView([lat, lng], 14);
+      if (userMarker.current) userMarker.current.remove();
+      userMarker.current = window.L.circleMarker([lat, lng], {
+        radius:9, fillColor:"#007aff", color:"#fff", weight:2.5, opacity:1, fillOpacity:1
+      }).addTo(inst.current);
+      setLocating(false);
+      if (onNearby) onNearby();
+    }, () => setLocating(false), { enableHighAccuracy:false, timeout:8000 });
+  };
+
+  const filterChips = [
+    { v:"todos", label:isEN?"All":"Todos", color:"#8a8a9a" },
+    { v:"quero", label:isEN?"Want to go":"Quero ir", color:"#ff2d55" },
+    { v:"fui", label:isEN?"Been there":"Ja fui", color:"#30d158" },
+  ];
+
+  const withCoords = places.filter(p => p.lat && p.lng).length;
 
   if (!ready) return <div style={{ height:"60vh", display:"flex", alignItems:"center", justifyContent:"center", color:"#a0a0b0" }}>Carregando mapa...</div>;
+
   return (
-    <div style={{ padding:"0 16px 16px" }}>
-      <div style={{ fontSize:11, color:"#a0a0b0", marginBottom:8, letterSpacing:"0.08em" }}>TOQUE EM UM PIN PARA DETALHES</div>
-      <div style={{ borderRadius:14, border:"1px solid #e8e6e0", overflow:"hidden" }}>
-        <div ref={mapRef} style={{ height:"62vh", width:"100%" }}/>
+    <div style={{ padding:"0 16px 100px" }}>
+      {/* Status filter */}
+      <div style={{ display:"flex", gap:6, marginBottom:10 }}>
+        {filterChips.map(({v,label,color})=>(
+          <button key={v} onClick={()=>setFilter(v)} style={{ flex:1, padding:"8px 4px", borderRadius:20, background:filter===v?color+"20":"#ffffff", border:"1.5px solid "+(filter===v?color:"#e8e6e0"), color:filter===v?color:"#8a8a9a", fontSize:12, fontWeight:filter===v?700:400, cursor:"pointer" }}>{label}</button>
+        ))}
+      </div>
+
+      {/* Map */}
+      <div style={{ borderRadius:16, border:"1px solid #e8e6e0", overflow:"hidden", marginBottom:10, boxShadow:"0 2px 12px #00000010" }}>
+        <div ref={mapRef} style={{ height:"55vh", width:"100%" }}/>
+      </div>
+
+      {/* Actions row */}
+      <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+        <button onClick={handleLocate} disabled={locating} style={{ flex:1, padding:"12px", background:"#007aff", border:"none", borderRadius:12, color:"#ffffff", fontSize:13, fontWeight:700, cursor:locating?"default":"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
+          {locating ? <span className="pulsing">...</span> : <>📍 {isEN?"Near me":"Perto de mim"}</>}
+        </button>
+        <div style={{ textAlign:"center", fontSize:11, color:"#a0a0b0", lineHeight:1.4 }}>
+          <div style={{ fontWeight:600, color:"#1a1a1a" }}>{withCoords}</div>
+          <div>{isEN?"on map":"no mapa"}</div>
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div style={{ display:"flex", gap:14, marginTop:10, padding:"8px 12px", background:"#ffffff", border:"1px solid #e8e6e0", borderRadius:10 }}>
+        {[["#a0a0b0", isEN?"Not added":"Sem status"],["#ff2d55", isEN?"Want to go":"Quero ir"],["#30d158", isEN?"Been there":"Ja fui"]].map(([color,label])=>(
+          <div key={label} style={{ display:"flex", alignItems:"center", gap:5 }}>
+            <div style={{ width:10, height:10, borderRadius:"50%", background:color }}/>
+            <span style={{ fontSize:10, color:"#8a8a9a" }}>{label}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -2590,6 +2652,13 @@ export default function App() {
     await set(ref(db,"customEdits/"+placeId),edits);
   },[]);
 
+  const handleGeocode = useCallback(async(placeId,lat,lng)=>{
+    const current=customEdits[placeId]||{};
+    const updated={...current,lat,lng};
+    setCustomEdits(prev=>({...prev,[placeId]:updated}));
+    await set(ref(db,"customEdits/"+placeId),updated);
+  },[customEdits]);
+
   const handleToggleWant = useCallback(async(place)=>{
     const e=entries[place.id]||{};
     const newStatus=e.status==="quero"?null:"quero";
@@ -2840,7 +2909,7 @@ export default function App() {
           ))}
         </div>}
 
-        {tab==="mapa"&&<MapTab places={filteredPlaces} entries={entries} onSelect={openModal}/>}
+        {tab==="mapa"&&<MapTab places={visiblePlaces} entries={entries} onSelect={openModal} onNearby={()=>setShowNearby(true)} onGeocode={handleGeocode}/>}
         {tab==="memorias"&&<MemoriasTab places={visiblePlaces} entries={entries} onSelect={openModal}/>}
         {tab==="planejar"&&<PlanejArTab events={events} onAddEvent={()=>setShowAddEvent(true)} onSaveEvent={async ev=>{await set(ref(db,"events/"+ev.id),ev);}} onDeleteEvent={async id=>{await remove(ref(db,"events/"+id));setEvents(prev=>prev.filter(e=>e.id!==id));}} onOpenPlanner={()=>setShowPlanner(true)} addToast={addToast}/>}
       </div>
