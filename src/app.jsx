@@ -488,7 +488,7 @@ const injectCSS = () => {
     .slide-up { animation: slideUp 0.22s ease forwards; }
     @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
     @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
-    @keyframes slideIn { from { transform:translateY(100%); } to { transform:translateY(0); } }
+    @keyframes slideIn { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
     @keyframes toastIn { from { opacity:0; transform:translateX(60px); } to { opacity:1; transform:translateX(0); } }
     .fade-up { animation: fadeUp 0.2s ease forwards; }
     .pulsing { animation: pulse 1.5s ease infinite; }
