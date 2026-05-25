@@ -688,19 +688,19 @@ function MapTab({ places, entries, onSelect, onNearby, onGeocode }) {
         <div ref={mapRef} style={{ height:"68vh", width:"100%" }}/>
 
         {/* Status chips — float over map top */}
-        <div style={{ position:"absolute", top:10, left:10, right:10, zIndex:500, display:"flex", gap:6, pointerEvents:"auto" }}>
+        <div style={{ position:"absolute", top:10, left:10, right:10, zIndex:90, display:"flex", gap:6, pointerEvents:"auto" }}>
           {filterChips.map(({v,label,color})=>(
             <button key={v} onClick={()=>setFilter(filter===v&&v!=="todos"?"todos":v)} style={{ flex:1, padding:"7px 4px", borderRadius:20, background:filter===v?color:"#ffffffee", border:"1.5px solid "+(filter===v?color:"#e8e6e020"), color:filter===v?"#ffffff":color, fontSize:12, fontWeight:700, cursor:"pointer", boxShadow:"0 2px 8px #00000020", backdropFilter:"blur(4px)" }}>{label}</button>
           ))}
         </div>
 
         {/* Locate button — float over map bottom-left */}
-        <button onClick={handleLocate} disabled={locating} style={{ position:"absolute", bottom:12, left:12, zIndex:500, width:44, height:44, borderRadius:22, background:"#ffffff", border:"none", boxShadow:"0 2px 12px #00000030", fontSize:20, cursor:locating?"default":"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+        <button onClick={handleLocate} disabled={locating} style={{ position:"absolute", bottom:12, left:12, zIndex:90, width:44, height:44, borderRadius:22, background:"#ffffff", border:"none", boxShadow:"0 2px 12px #00000030", fontSize:20, cursor:locating?"default":"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
           {locating ? <span className="pulsing" style={{ fontSize:14 }}>...</span> : "📍"}
         </button>
 
         {/* Pin count badge — float over map bottom-left, next to locate */}
-        {hasActiveFilter && <div style={{ position:"absolute", bottom:18, left:64, zIndex:500, background:"#ffffffee", borderRadius:20, padding:"5px 12px", fontSize:11, fontWeight:600, color:"#1a1a1a", boxShadow:"0 2px 8px #00000020" }}>{visibleCount} pins</div>}
+        {hasActiveFilter && <div style={{ position:"absolute", bottom:18, left:64, zIndex:90, background:"#ffffffee", borderRadius:20, padding:"5px 12px", fontSize:11, fontWeight:600, color:"#1a1a1a", boxShadow:"0 2px 8px #00000020" }}>{visibleCount} pins</div>}
       </div>
 
       {/* Filters below map — compact */}
