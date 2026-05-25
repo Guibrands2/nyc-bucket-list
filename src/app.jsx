@@ -1732,8 +1732,8 @@ function BottomNav({ tab, setTab }) {
 
   return (
     <nav className="bottom-nav">
-      <NavItem id="explorar" icon={<ExplorarIcon/>} label={isEN?"Explore":"Explorar"}/>
-      <NavItem id="planejar" icon={<PlanejIcon/>} label="Agenda"/>
+      <NavItem id="explorar" icon={<ExplorarIcon/>} label={isEN?"Places":"Lugares"}/>
+      <NavItem id="planejar" icon={<PlanejIcon/>} label={isEN?"Events":"Eventos"}/>
       <NavItem id="mapa" icon={<MapIcon/>} label={isEN?"Map":"Mapa"}/>
       <NavItem id="memorias" icon={<MemoriasIcon/>} label={isEN?"Memories":"Memorias"}/>
     </nav>
@@ -2574,7 +2574,7 @@ function PlanejArTab({ events, places, onAddEvent, onEditEvent, onSaveEvent, onD
       <div onClick={onOpenPlanner} style={{ background:"linear-gradient(135deg,#ff2d55,#ff6b35)",borderRadius:16,padding:"18px 20px",marginBottom:20,cursor:"pointer",position:"relative",overflow:"hidden" }}>
         <div style={{ position:"absolute",right:-10,top:-10,fontSize:60,opacity:0.15 }}>🤖</div>
         <div style={{ fontSize:11,color:"#ffffff",opacity:0.8,letterSpacing:"0.1em",marginBottom:4 }}>{isEN?"AI GUIDE":"GUIA IA"}</div>
-        <div style={{ fontSize:18,fontWeight:800,color:"#ffffff",marginBottom:4 }}>{isEN?"Plan your day in NYC":"Planeje seu dia em NYC"}</div>
+        <div style={{ fontSize:18,fontWeight:800,color:"#ffffff",marginBottom:4 }}>{isEN?"NYC AI Guide & Planner":"Guia IA & Roteiros NYC"}</div>
         <div style={{ fontSize:12,color:"#ffffff",opacity:0.85 }}>{isEN?"Chat, select places, generate a route":"Converse, selecione lugares, gere um roteiro"}</div>
         <div style={{ marginTop:12,background:"#ffffff20",borderRadius:10,padding:"8px 14px",display:"inline-block",fontSize:12,color:"#ffffff",fontWeight:600 }}>{isEN?"Open AI Planner →":"Abrir Planejador →"}</div>
       </div>
