@@ -450,6 +450,7 @@ const injectCSS = () => {
   s.id = "nyc-css";
   s.textContent = `
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { overscroll-behavior-y: none; }
     body { background: #f5f3ee; font-family: 'Inter', system-ui, sans-serif; }
     ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-thumb { background: #d8d5ce; border-radius: 2px; }
