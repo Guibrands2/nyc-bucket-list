@@ -679,10 +679,10 @@ function MapTab({ places, entries, onSelect, onNearby, onGeocode }) {
         <div ref={mapRef} style={{ height:"55vh", width:"100%" }}/>
       </div>
 
-      {/* Actions row */}
+      {/* Center on me + coverage */}
       <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-        <button onClick={handleLocate} disabled={locating} style={{ flex:1, padding:"12px", background:"#007aff", border:"none", borderRadius:12, color:"#ffffff", fontSize:13, fontWeight:700, cursor:locating?"default":"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
-          {locating ? <span className="pulsing">...</span> : <>📍 {isEN?"Near me":"Perto de mim"}</>}
+        <button onClick={handleLocate} disabled={locating} style={{ flex:1, padding:"11px", background:"#ffffff", border:"1.5px solid #e8e6e0", borderRadius:12, color:"#1a1a1a", fontSize:13, fontWeight:600, cursor:locating?"default":"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
+          {locating ? <span className="pulsing">...</span> : <>{isEN?"Center on me":"Centralizar em mim"}</>}
         </button>
         <div style={{ textAlign:"center", fontSize:11, color:"#a0a0b0", lineHeight:1.4 }}>
           <div style={{ fontWeight:600, color:"#1a1a1a" }}>{withCoords}</div>
@@ -2953,6 +2953,9 @@ export default function App() {
       </div>
 
       <BottomNav tab={tab} setTab={setTab}/>
+      {/* Nearby FAB — bottom left, always visible */}
+      <button onClick={()=>setShowNearby(true)} style={{ position:"fixed",bottom:82,left:16,width:48,height:48,borderRadius:24,background:"#1a1210",border:"none",boxShadow:"0 2px 12px #00000035",fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:139 }}>📍</button>
+
       {/* FAB speed-dial */}
       {showAddMenu&&<div style={{ position:"fixed",inset:0,zIndex:138 }} onClick={()=>setShowAddMenu(false)}/>}
       <div style={{ position:"fixed",bottom:82,right:16,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:10,zIndex:139 }}>
