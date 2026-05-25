@@ -2744,11 +2744,27 @@ export default function App() {
           <div data-hscroll style={{ display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",paddingBottom:12 }}>
             {["Todos",...CATEGORIES].map(cat=>{const meta=CAT_META[cat],active=activeCategory===cat;return<button key={cat} onClick={()=>{if(cat==="Todos"){setActiveCategory("Todos");setSortBy("default");}else{setActiveCategory(activeCategory===cat?"Todos":cat);if(activeCategory!==cat)setSortBy("az");}}} className="btn" style={{ padding:"7px 16px",borderRadius:22,background:active?(meta?meta.color:"#ff2d55")+(active?"22":""):"#ffffff",border:"1.5px solid "+(active?(meta?meta.color:"#ff2d55")+"70":"#e8e6e0"),color:active?(meta?meta.color:"#ff2d55"):"#8a8a9a",fontSize:12,whiteSpace:"nowrap",fontWeight:active?700:400,transition:"all 0.15s",boxShadow:active?"none":"0 1px 2px #00000008" }}>{cat==="Todos"?T.all:catLabel(cat)}</button>;})}
           </div>
+          {/* Listas banner */}
+          {lists.length>0&&<div onClick={()=>setShowListas(true)} style={{ background:"#ffffff",border:"1px solid #e8e6e0",borderRadius:14,padding:"12px 14px",marginBottom:10,cursor:"pointer",display:"flex",alignItems:"center",gap:10,boxShadow:"0 1px 3px #00000008" }}>
+            <div style={{ fontSize:22 }}>🔖</div>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:13,fontWeight:700,color:"#1a1a1a" }}>{isEN?"My Lists":"Minhas Listas"}</div>
+              <div style={{ fontSize:11,color:"#8a8a9a" }}>{lists.length} {isEN?(lists.length===1?"list":"lists"):(lists.length===1?"lista":"listas")} · {lists.reduce((s,l)=>s+(l.placeIds?.length||0),0)} {isEN?"places":"lugares"}</div>
+            </div>
+            <div style={{ fontSize:13,color:"#a0a0b0" }}>›</div>
+          </div>}
+          {lists.length===0&&!search&&activeFilter==="todos"&&activeCategory==="Todos"&&<div onClick={()=>setShowListas(true)} style={{ background:"linear-gradient(135deg,#f0f7ff,#f5f0ff)",border:"1px solid #c8deff",borderRadius:14,padding:"12px 14px",marginBottom:10,cursor:"pointer",display:"flex",alignItems:"center",gap:10 }}>
+            <div style={{ fontSize:22 }}>🔖</div>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:13,fontWeight:700,color:"#1a1a1a" }}>{isEN?"Create your first list":"Crie sua primeira lista"}</div>
+              <div style={{ fontSize:11,color:"#8a8a9a" }}>{isEN?"Organize favorites by occasion":"Organize favoritos por ocasiao"}</div>
+            </div>
+            <div style={{ fontSize:12,color:"#007aff",fontWeight:600 }}>+ {isEN?"New":"Nova"}</div>
+          </div>}
           {/* Filter row */}
           <div style={{ display:"flex",gap:6,alignItems:"center",marginBottom:10 }}>
             {[["todos",T.all],["quero","♥ Want"],["fui","✓ Been"]].map(([key,label])=><button key={key} onClick={()=>setActiveFilter(activeFilter===key&&key!=="todos"?"todos":key)} className="btn" style={{ padding:"7px 14px",borderRadius:20,background:activeFilter===key?key==="quero"?"#007aff":key==="fui"?"#30d158":"#ff2d55":"#ffffff",border:"1px solid "+(activeFilter===key?key==="quero"?"#007aff":key==="fui"?"#30d158":"#ff2d55":"#e8e6e0"),color:activeFilter===key?"#ffffff":"#8a8a9a",fontSize:12,fontWeight:activeFilter===key?700:400,whiteSpace:"nowrap",boxShadow:activeFilter===key?"none":"0 1px 2px #00000008" }}>{label}</button>)}
             <div style={{ flex:1 }}/>
-            <button onClick={()=>setShowListas(true)} className="btn" style={{ padding:"5px 12px",borderRadius:20,background:"#ffffff",border:"1px solid #e8e6e0",color:"#8a8a9a",fontSize:12,whiteSpace:"nowrap",boxShadow:"0 1px 2px #00000008" }}>🔖 {isEN?"Lists":"Listas"}</button>
             <button onClick={()=>setShowFilters(!showFilters)} className="btn" style={{ padding:"5px 12px",borderRadius:20,background:activeFiltersCount>0?"#ff9f0a15":"#ffffff",border:"1px solid "+(activeFiltersCount>0?"#ff9f0a60":"#e8e6e0"),color:activeFiltersCount>0?"#ff9f0a":"#a0a0b0",fontSize:12,whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4,boxShadow:"0 1px 2px #00000008" }}>{activeFiltersCount>0&&<span style={{ width:6,height:6,borderRadius:"50%",background:"#ff9f0a",display:"inline-block" }}/>}{T.filters}{activeFiltersCount>0?" ("+activeFiltersCount+")":""}</button>
             {hasAnyFilter&&<button onClick={clearFilters} style={{ background:"none",border:"none",color:"#a0a0b0",fontSize:11,cursor:"pointer",whiteSpace:"nowrap" }}>×</button>}
           </div>
