@@ -585,6 +585,8 @@ function MapTab({ places, entries, onSelect, onNearby, onGeocode }) {
   const geocodedRef = useRef(new Set());
   const [ready, setReady] = useState(false);
   const [filter, setFilter] = useState("todos");
+  const [filterCat, setFilterCat] = useState("Todos");
+  const [filterPrice, setFilterPrice] = useState(null);
   const [locating, setLocating] = useState(false);
 
   // Load Leaflet once
@@ -632,14 +634,18 @@ function MapTab({ places, entries, onSelect, onNearby, onGeocode }) {
       const status = (entries[p.id] || {}).status || null;
       if (filter === "quero" && status !== "quero") return;
       if (filter === "fui" && status !== "fui") return;
+      if (filterCat !== "Todos" && p.category !== filterCat) return;
+      if (filterPrice && p.price !== filterPrice) return;
       const color = status === "fui" ? "#30d158" : status === "quero" ? "#ff2d55" : "#a0a0b0";
-      const html = "<div style='width:32px;height:32px;border-radius:50%;background:"+color+"22;border:2.5px solid "+color+";display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 2px 8px rgba(0,0,0,0.15)'>"+p.emoji+"</div>";
+      const catColor = (CAT_META[p.category] || {}).color || color;
+      const pinColor = filterCat !== "Todos" ? catColor : color;
+      const html = "<div style='width:32px;height:32px;border-radius:50%;background:"+pinColor+"22;border:2.5px solid "+pinColor+";display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 2px 8px rgba(0,0,0,0.15)'>"+p.emoji+"</div>";
       const icon = window.L.divIcon({ html, className:"", iconSize:[32,32], iconAnchor:[16,16] });
       const m = window.L.marker([p.lat, p.lng], { icon }).addTo(inst.current);
       m.on("click", () => onSelect(p));
       markers.current.push(m);
     });
-  }, [ready, places, entries, filter]);
+  }, [ready, places, entries, filter, filterCat, filterPrice]);
 
   const handleLocate = () => {
     setLocating(true);
@@ -661,22 +667,53 @@ function MapTab({ places, entries, onSelect, onNearby, onGeocode }) {
     { v:"fui", label:isEN?"Been there":"Ja fui", color:"#30d158" },
   ];
 
-  const withCoords = places.filter(p => p.lat && p.lng).length;
+  const visibleCount = places.filter(p => {
+    if (!p.lat || !p.lng) return false;
+    const status = (entries[p.id] || {}).status || null;
+    if (filter === "quero" && status !== "quero") return false;
+    if (filter === "fui" && status !== "fui") return false;
+    if (filterCat !== "Todos" && p.category !== filterCat) return false;
+    if (filterPrice && p.price !== filterPrice) return false;
+    return true;
+  }).length;
+  const totalWithCoords = places.filter(p => p.lat && p.lng).length;
+  const hasActiveFilter = filter !== "todos" || filterCat !== "Todos" || filterPrice;
 
   if (!ready) return <div style={{ height:"60vh", display:"flex", alignItems:"center", justifyContent:"center", color:"#a0a0b0" }}>Carregando mapa...</div>;
 
   return (
     <div style={{ padding:"0 16px 100px" }}>
       {/* Status filter */}
-      <div style={{ display:"flex", gap:6, marginBottom:10 }}>
+      <div style={{ display:"flex", gap:6, marginBottom:8 }}>
         {filterChips.map(({v,label,color})=>(
           <button key={v} onClick={()=>setFilter(v)} style={{ flex:1, padding:"8px 4px", borderRadius:20, background:filter===v?color+"20":"#ffffff", border:"1.5px solid "+(filter===v?color:"#e8e6e0"), color:filter===v?color:"#8a8a9a", fontSize:12, fontWeight:filter===v?700:400, cursor:"pointer" }}>{label}</button>
         ))}
       </div>
 
+      {/* Category filter */}
+      <div style={{ display:"flex", gap:6, overflowX:"auto", scrollbarWidth:"none", paddingBottom:8, marginBottom:0 }}>
+        {["Todos",...CATEGORIES].map(cat => {
+          const meta = CAT_META[cat];
+          const active = filterCat === cat;
+          return (
+            <button key={cat} onClick={()=>setFilterCat(cat)} style={{ padding:"6px 12px", borderRadius:20, background:active?(meta?meta.color:"#ff2d55")+"20":"#ffffff", border:"1.5px solid "+(active?(meta?meta.color:"#ff2d55")+"60":"#e8e6e0"), color:active?(meta?meta.color:"#ff2d55"):"#8a8a9a", fontSize:11, fontWeight:active?700:400, whiteSpace:"nowrap", cursor:"pointer", flexShrink:0 }}>
+              {cat === "Todos" ? (isEN?"All categories":"Todas") : catLabel(cat)}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Price filter */}
+      <div style={{ display:"flex", gap:5, marginBottom:10, paddingTop:8 }}>
+        {PRICE_LEVELS.map(p => (
+          <button key={p} onClick={()=>setFilterPrice(filterPrice===p?null:p)} style={{ flex:1, padding:"6px 4px", borderRadius:20, background:filterPrice===p?"#ff9f0a20":"#ffffff", border:"1.5px solid "+(filterPrice===p?"#ff9f0a":"#e8e6e0"), color:filterPrice===p?"#ff9f0a":"#8a8a9a", fontSize:12, fontWeight:filterPrice===p?700:400, cursor:"pointer" }}>{PRICE_EMOJI[p]}</button>
+        ))}
+        {hasActiveFilter && <button onClick={()=>{setFilter("todos");setFilterCat("Todos");setFilterPrice(null);}} style={{ padding:"6px 10px", borderRadius:20, background:"none", border:"1px solid #e8e6e0", color:"#a0a0b0", fontSize:11, cursor:"pointer", whiteSpace:"nowrap" }}>× {isEN?"Clear":"Limpar"}</button>}
+      </div>
+
       {/* Map */}
       <div style={{ borderRadius:16, border:"1px solid #e8e6e0", overflow:"hidden", marginBottom:10, boxShadow:"0 2px 12px #00000010" }}>
-        <div ref={mapRef} style={{ height:"55vh", width:"100%" }}/>
+        <div ref={mapRef} style={{ height:"52vh", width:"100%" }}/>
       </div>
 
       {/* Center on me + coverage */}
@@ -685,20 +722,20 @@ function MapTab({ places, entries, onSelect, onNearby, onGeocode }) {
           {locating ? <span className="pulsing">...</span> : <>{isEN?"Center on me":"Centralizar em mim"}</>}
         </button>
         <div style={{ textAlign:"center", fontSize:11, color:"#a0a0b0", lineHeight:1.4 }}>
-          <div style={{ fontWeight:600, color:"#1a1a1a" }}>{withCoords}</div>
-          <div>{isEN?"on map":"no mapa"}</div>
+          <div style={{ fontWeight:600, color:"#1a1a1a" }}>{visibleCount}{hasActiveFilter?"/"+totalWithCoords:""}</div>
+          <div>{isEN?"pins":"pins"}</div>
         </div>
       </div>
 
-      {/* Legend */}
-      <div style={{ display:"flex", gap:14, marginTop:10, padding:"8px 12px", background:"#ffffff", border:"1px solid #e8e6e0", borderRadius:10 }}>
-        {[["#a0a0b0", isEN?"Not added":"Sem status"],["#ff2d55", isEN?"Want to go":"Quero ir"],["#30d158", isEN?"Been there":"Ja fui"]].map(([color,label])=>(
+      {/* Legend — only when no category filter active */}
+      {filterCat === "Todos" && <div style={{ display:"flex", gap:14, marginTop:10, padding:"8px 12px", background:"#ffffff", border:"1px solid #e8e6e0", borderRadius:10 }}>
+        {[["#a0a0b0", isEN?"No status":"Sem status"],["#ff2d55", isEN?"Want to go":"Quero ir"],["#30d158", isEN?"Been there":"Ja fui"]].map(([color,label])=>(
           <div key={label} style={{ display:"flex", alignItems:"center", gap:5 }}>
             <div style={{ width:10, height:10, borderRadius:"50%", background:color }}/>
             <span style={{ fontSize:10, color:"#8a8a9a" }}>{label}</span>
           </div>
         ))}
-      </div>
+      </div>}
     </div>
   );
 }
