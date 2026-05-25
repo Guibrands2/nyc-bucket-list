@@ -202,7 +202,7 @@ const CAT_META = {
 const catLabel = (cat) => isEN ? (CAT_META[cat]?.en || cat) : cat;
 
 const S = {
-  bg:"#f8f7f4", card:"#ffffff", cardHover:"#f5f4f1",
+  bg:"#f5f3ee", card:"#ffffff", cardHover:"#f5f4f1",
   border:"#e8e6e0", text:"#1a1a1a", textSub:"#8a8a9a", textDim:"#b0aebb",
   accent:"#ff2d55", green:"#30d158", yellow:"#ff9f0a", blue:"#007aff",
 };
@@ -359,7 +359,7 @@ function FilterSection({ label, options, selected, onToggle, renderLabel }) {
       <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>{label}</div>
       <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
         {options.map(opt=>(
-          <button key={opt} onClick={()=>onToggle(opt)} style={{ padding:"5px 10px",borderRadius:20,background:selected.includes(opt)?"#ff2d5515":"#f8f7f4",border:"1px solid "+(selected.includes(opt)?"#ff2d55":"#e8e6e0"),color:selected.includes(opt)?"#ff2d55":"#8a8a9a",fontSize:11,cursor:"pointer" }}>
+          <button key={opt} onClick={()=>onToggle(opt)} style={{ padding:"5px 10px",borderRadius:20,background:selected.includes(opt)?"#ff2d5515":"#f5f3ee",border:"1px solid "+(selected.includes(opt)?"#ff2d55":"#e8e6e0"),color:selected.includes(opt)?"#ff2d55":"#8a8a9a",fontSize:11,cursor:"pointer" }}>
             {renderLabel(opt)}
           </button>
         ))}
@@ -385,7 +385,7 @@ function SeasonalBanner({ places, entries, onSelect }) {
   const [bg,border,text] = SEASON_COLORS[currentSeason]||["#ffffff","#e8e6e0","#1a1a1a"];
   const SEASON_LABEL = { primavera:isEN?"Spring":"Primavera", verao:isEN?"Summer":"Verao", outono:isEN?"Fall":"Outono", inverno:isEN?"Winter":"Inverno" };
   return (
-    <div onClick={()=>onSelect(pick)} style={{ background:"linear-gradient(135deg,"+bg+",#f8f7f4)",border:"1px solid "+border,borderRadius:14,padding:"12px 16px",marginBottom:10,cursor:"pointer",position:"relative",overflow:"hidden" }}>
+    <div onClick={()=>onSelect(pick)} style={{ background:"linear-gradient(135deg,"+bg+",#f5f3ee)",border:"1px solid "+border,borderRadius:14,padding:"12px 16px",marginBottom:10,cursor:"pointer",position:"relative",overflow:"hidden" }}>
       <div style={{ position:"absolute",top:0,left:0,right:0,height:2,background:text }}/>
       <div style={{ fontSize:10,color:text,letterSpacing:"0.15em",marginBottom:6,opacity:0.8 }}>
         {SEASON_EMOJI[currentSeason]} {isEN?"PERFECT FOR THIS SEASON":"PERFEITO PARA ESSA EPOCA"} · {SEASON_LABEL[currentSeason].toUpperCase()}
@@ -467,7 +467,7 @@ const injectCSS = () => {
   s.id = "nyc-css";
   s.textContent = `
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #f8f7f4; font-family: 'Inter', system-ui, sans-serif; }
+    body { background: #f5f3ee; font-family: 'Inter', system-ui, sans-serif; }
     ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-thumb { background: #d8d5ce; border-radius: 2px; }
     input, textarea, select, button { font-family: inherit; }
@@ -481,8 +481,8 @@ const injectCSS = () => {
     .card:active { transform: scale(0.98); background: #f0eeeb !important; }
     .pill-btn:active { opacity: 0.7; transform: scale(0.95); }
     .tab-btn:active { opacity: 0.8; }
-    .bottom-nav { position:fixed; bottom:0; left:0; right:0; background:#ffffff; border-top:1px solid #e8e6e0; display:flex; z-index:150; padding-bottom:env(safe-area-inset-bottom); box-shadow:0 -1px 0 #e8e6e0; }
-    .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:10px 4px 8px; cursor:pointer; border:none; background:none; color:#b0aebb; transition:color 0.15s; font-family:inherit; }
+    .bottom-nav { position:fixed; bottom:0; left:0; right:0; background:#1a1210; border-top:none; display:flex; z-index:150; padding-bottom:env(safe-area-inset-bottom); box-shadow:0 -4px 24px #00000030; }
+    .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:10px 4px 8px; cursor:pointer; border:none; background:none; color:#80746e; transition:color 0.15s; font-family:inherit; }
     .nav-item.active { color:#ff2d55; }
     .nav-item:active { opacity:0.7; transform:scale(0.92); }
     .card-want { border-color:#007aff !important; background:linear-gradient(to right,#007aff08,#ffffff) !important; }
@@ -496,8 +496,9 @@ const injectCSS = () => {
     .mood-chip.active { border-color:#ff2d5560; background:#ff2d5508; color:#ff2d55; }
     .mood-chip:active { transform:scale(0.94); }
     .nearby-banner { position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:#ffffff; border:1px solid #30d15840; border-radius:20px; padding:10px 16px; display:flex; align-items:center; gap:10px; z-index:140; box-shadow:0 4px 20px #00000020; max-width:340px; cursor:pointer; animation:slideUp 0.3s ease; }
-    .cat-bar { position:sticky; top:0; z-index:80; background:#f8f7f4; padding:0 0 8px; margin:0 -16px; padding-left:16px; }
+    .cat-bar { position:sticky; top:0; z-index:80; background:#f5f3ee; padding:0 0 8px; margin:0 -16px; padding-left:16px; }
     .modal-drag { cursor: grab; }
+    .search-header::placeholder { color: rgba(255,255,255,0.55); }
     @keyframes slideUp { from { transform:translateY(30px); opacity:0; } to { transform:translateY(0); opacity:1; } }
     .slide-up { animation: slideUp 0.22s ease forwards; }
     @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
@@ -712,8 +713,8 @@ function CuradoriaTab({ places, lists, onSaveLists, onSelectPlace }) {
           <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start" }}>
             <div><div style={{ fontSize:18,fontWeight:700,color:"#1a1a1a" }}>{editList.emoji} {editList.name}</div>{editList.desc&&<div style={{ fontSize:12,color:"#8a8a9a",marginTop:2 }}>{editList.desc}</div>}<div style={{ fontSize:11,color:"#a0a0b0",marginTop:4 }}>{editList.placeIds.length} {T.places}</div></div>
             <div style={{ display:"flex",gap:6 }}>
-              <button onClick={()=>share(editList)} style={{ padding:"6px 10px",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,color:"#8a8a9a",fontSize:12,cursor:"pointer" }}>{T.shareBtn}</button>
-              <button onClick={()=>del(editList.id)} style={{ padding:"6px 8px",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,color:"#8a8a9a",fontSize:12,cursor:"pointer" }}>🗑</button>
+              <button onClick={()=>share(editList)} style={{ padding:"6px 10px",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,color:"#8a8a9a",fontSize:12,cursor:"pointer" }}>{T.shareBtn}</button>
+              <button onClick={()=>del(editList.id)} style={{ padding:"6px 8px",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,color:"#8a8a9a",fontSize:12,cursor:"pointer" }}>🗑</button>
             </div>
           </div>
           {editList.placeIds.length>0&&<div style={{ marginTop:12,borderTop:"1px solid #e8e6e0",paddingTop:10,display:"flex",flexWrap:"wrap",gap:6 }}>
@@ -734,7 +735,7 @@ function CuradoriaTab({ places, lists, onSaveLists, onSelectPlace }) {
       <div style={{ padding:"0 16px 80px" }}>
         <button onClick={()=>setView("create")} style={{ width:"100%",padding:"13px",background:"#ff2d5515",border:"1px dashed #ff2d5550",borderRadius:12,color:"#ff2d55",fontSize:14,cursor:"pointer",marginBottom:14,fontFamily:"inherit" }}>{T.createCuradoria}</button>
         {!normLists.length&&<div style={{ textAlign:"center",padding:"40px 0",color:"#a0a0b0" }}><div style={{ fontSize:32,marginBottom:8 }}>📋</div><div style={{ fontSize:13 }}>{T.curadoriaEmpty}</div><div style={{ fontSize:12,marginTop:4,color:"#3a3a50" }}>{T.curadoriaEx}</div></div>}
-        {normLists.map(list=>{const lp=list.placeIds.map(pid=>places.find(p=>p.id===pid)).filter(Boolean);return<div key={list.id} onClick={()=>{setEditId(list.id);setView("edit");}} style={{ background:"#ffffff",border:"1px solid #e8e6e0",borderRadius:14,marginBottom:10,padding:"14px",cursor:"pointer" }} className="card"><div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:lp.length?8:0 }}><div><div style={{ fontSize:15,fontWeight:600,color:"#1a1a1a" }}>{list.emoji} {list.name}</div>{list.desc&&<div style={{ fontSize:12,color:"#8a8a9a",marginTop:2 }}>{list.desc}</div>}<div style={{ fontSize:11,color:"#a0a0b0",marginTop:4 }}>{list.placeIds.length} {T.places} · {T.tapToEdit}</div></div><button onClick={e=>{e.stopPropagation();share(list);}} style={{ padding:"5px 10px",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,color:"#8a8a9a",fontSize:12,cursor:"pointer" }}>↗</button></div>{lp.length>0&&<div style={{ display:"flex",flexWrap:"wrap",gap:4 }}>{lp.slice(0,4).map(p=><span key={p.id} style={{ fontSize:11,color:"#8a8a9a",background:"#f8f7f4",borderRadius:20,padding:"3px 8px" }}>{p.emoji} {isEN&&p.nameEN?p.nameEN:p.name}</span>)}{lp.length>4&&<span style={{ fontSize:11,color:"#a0a0b0",padding:"3px 8px" }}>+{lp.length-4}</span>}</div>}</div>;})}
+        {normLists.map(list=>{const lp=list.placeIds.map(pid=>places.find(p=>p.id===pid)).filter(Boolean);return<div key={list.id} onClick={()=>{setEditId(list.id);setView("edit");}} style={{ background:"#ffffff",border:"1px solid #e8e6e0",borderRadius:14,marginBottom:10,padding:"14px",cursor:"pointer" }} className="card"><div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:lp.length?8:0 }}><div><div style={{ fontSize:15,fontWeight:600,color:"#1a1a1a" }}>{list.emoji} {list.name}</div>{list.desc&&<div style={{ fontSize:12,color:"#8a8a9a",marginTop:2 }}>{list.desc}</div>}<div style={{ fontSize:11,color:"#a0a0b0",marginTop:4 }}>{list.placeIds.length} {T.places} · {T.tapToEdit}</div></div><button onClick={e=>{e.stopPropagation();share(list);}} style={{ padding:"5px 10px",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,color:"#8a8a9a",fontSize:12,cursor:"pointer" }}>↗</button></div>{lp.length>0&&<div style={{ display:"flex",flexWrap:"wrap",gap:4 }}>{lp.slice(0,4).map(p=><span key={p.id} style={{ fontSize:11,color:"#8a8a9a",background:"#f5f3ee",borderRadius:20,padding:"3px 8px" }}>{p.emoji} {isEN&&p.nameEN?p.nameEN:p.name}</span>)}{lp.length>4&&<span style={{ fontSize:11,color:"#a0a0b0",padding:"3px 8px" }}>+{lp.length-4}</span>}</div>}</div>;})}
       </div>
     );
   } catch(err) {
@@ -749,7 +750,7 @@ function PhotoGallery({ photos, onChange }) {
   return <div>
     <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:8 }}>
       {photos.map((p,i)=><div key={i} style={{ position:"relative",aspectRatio:"4/3" }}><img src={p} alt="" style={{ width:"100%",height:"100%",objectFit:"cover",borderRadius:10 }}/><button onClick={()=>onChange(prev=>prev.filter((_,j)=>j!==i))} style={{ position:"absolute",top:6,right:6,background:"#000c",border:"none",borderRadius:"50%",width:22,height:22,color:"#fff",cursor:"pointer",fontSize:12,display:"flex",alignItems:"center",justifyContent:"center" }}>×</button></div>)}
-      {photos.length<4&&<div onClick={()=>!uploading&&fileRef.current.click()} style={{ aspectRatio:"4/3",background:"#f8f7f4",border:"1px dashed "+(uploading?"#ff2d55":"#e8e6e0"),borderRadius:10,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",cursor:uploading?"default":"pointer",color:"#a0a0b0",fontSize:12,gap:6,position:"relative",overflow:"hidden",transition:"border-color 0.2s" }}>
+      {photos.length<4&&<div onClick={()=>!uploading&&fileRef.current.click()} style={{ aspectRatio:"4/3",background:"#f5f3ee",border:"1px dashed "+(uploading?"#ff2d55":"#e8e6e0"),borderRadius:10,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",cursor:uploading?"default":"pointer",color:"#a0a0b0",fontSize:12,gap:6,position:"relative",overflow:"hidden",transition:"border-color 0.2s" }}>
         {uploading?<>
           <div style={{ fontSize:22 }}>📸</div>
           <div style={{ fontSize:13,color:"#1a1a1a",fontWeight:700 }}>{progress}%</div>
@@ -771,7 +772,7 @@ function NearbyInModal({ place, places, entries, onSelect }) {
   const [nearby,setNearby]=useState([]);
   useEffect(()=>{if(!place.lat||!place.lng)return;const cands=places.filter(p=>p.id!==place.id&&p.lat&&p.lng&&(entries[p.id]||{}).status!=="fui").map(p=>({...p,distKm:haversineKm(place.lat,place.lng,p.lat,p.lng)})).sort((a,b)=>a.distKm-b.distKm).slice(0,4);setNearby(cands.map(p=>({...p,mins:null,estimated:false})));cands.forEach(async(p,i)=>{const res=await walkingMins(place.lat,place.lng,p.lat,p.lng);setNearby(prev=>prev.map((x,j)=>j===i?{...x,mins:res.mins,estimated:res.estimated}:x));});},[place.id]);
   if(!nearby.length) return null;
-  return <div style={{ marginBottom:16 }}><div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.12em",marginBottom:8 }}>{T.nearbyWalk}</div><div style={{ display:"flex",flexDirection:"column",gap:6 }}>{nearby.map(p=>{const meta=CAT_META[p.category]||{color:"#ff2d55"};return<div key={p.id} onClick={()=>onSelect(p)} style={{ display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:10,cursor:"pointer" }}><div style={{ width:36,height:36,borderRadius:8,background:meta.color+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0 }}>{p.emoji}</div><div style={{ flex:1 }}><div style={{ fontSize:13,color:"#1a1a1a",fontWeight:500 }}>{isEN&&p.nameEN?p.nameEN:p.name}</div><div style={{ fontSize:11,color:"#a0a0b0" }}>{catLabel(p.category)}</div></div><div style={{ textAlign:"right",flexShrink:0 }}>{p.mins!==null?<div style={{ display:"flex",alignItems:"center",gap:4,color:p.estimated?"#ff9f0a":"#30d158",fontSize:12,fontWeight:600 }}><Icons.Walk/>{p.estimated?"~":""}{p.mins} {T.walkMin}</div>:<div className="pulsing" style={{ fontSize:11,color:"#a0a0b0" }}>{T.calc}</div>}<div style={{ fontSize:10,color:"#a0a0b0" }}>{p.distKm<1?(p.distKm*1000).toFixed(0)+"m":(p.distKm.toFixed(1)+"km")}{p.estimated&&p.mins!==null?" ~est":""}</div></div></div>;})} </div></div>;
+  return <div style={{ marginBottom:16 }}><div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.12em",marginBottom:8 }}>{T.nearbyWalk}</div><div style={{ display:"flex",flexDirection:"column",gap:6 }}>{nearby.map(p=>{const meta=CAT_META[p.category]||{color:"#ff2d55"};return<div key={p.id} onClick={()=>onSelect(p)} style={{ display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:10,cursor:"pointer" }}><div style={{ width:36,height:36,borderRadius:8,background:meta.color+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0 }}>{p.emoji}</div><div style={{ flex:1 }}><div style={{ fontSize:13,color:"#1a1a1a",fontWeight:500 }}>{isEN&&p.nameEN?p.nameEN:p.name}</div><div style={{ fontSize:11,color:"#a0a0b0" }}>{catLabel(p.category)}</div></div><div style={{ textAlign:"right",flexShrink:0 }}>{p.mins!==null?<div style={{ display:"flex",alignItems:"center",gap:4,color:p.estimated?"#ff9f0a":"#30d158",fontSize:12,fontWeight:600 }}><Icons.Walk/>{p.estimated?"~":""}{p.mins} {T.walkMin}</div>:<div className="pulsing" style={{ fontSize:11,color:"#a0a0b0" }}>{T.calc}</div>}<div style={{ fontSize:10,color:"#a0a0b0" }}>{p.distKm<1?(p.distKm*1000).toFixed(0)+"m":(p.distKm.toFixed(1)+"km")}{p.estimated&&p.mins!==null?" ~est":""}</div></div></div>;})} </div></div>;
 }
 
 function CheckInModal({ place, onClose, onSave, addToast }) {
@@ -787,7 +788,7 @@ function CheckInModal({ place, onClose, onSave, addToast }) {
 function NearbyDrawer({ userLat, userLng, places, entries, onSelect, onClose }) {
   const [nearby,setNearby]=useState([]);
   useEffect(()=>{const cands=places.filter(p=>p.lat&&p.lng&&(entries[p.id]||{}).status!=="fui").map(p=>({...p,distKm:haversineKm(userLat,userLng,p.lat,p.lng)})).filter(p=>p.distKm<3).sort((a,b)=>a.distKm-b.distKm).slice(0,10);setNearby(cands.map(p=>({...p,mins:null,estimated:false})));cands.forEach(async(p,i)=>{const res=await walkingMins(userLat,userLng,p.lat,p.lng);setNearby(prev=>prev.map((x,j)=>j===i?{...x,mins:res.mins,estimated:res.estimated}:x));});},[]);
-  return <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:400,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={onClose}><div className="modal" style={{ background:"#ffffff",borderTop:"1px solid #e8e6e0",borderRadius:"20px 20px 0 0",padding:"20px 16px 40px",maxWidth:560,width:"100%",maxHeight:"75vh",overflowY:"auto" }} onClick={e=>e.stopPropagation()}><div style={{ width:36,height:3,background:"#e8e6e0",borderRadius:2,margin:"0 auto 16px" }}/><div style={{ fontSize:15,fontWeight:700,color:"#1a1a1a",marginBottom:4 }}>{T.nearbyTitle}</div><div style={{ fontSize:12,color:"#8a8a9a",marginBottom:14 }}>{T.nearbyRadius}</div>{!nearby.length?<div style={{ color:"#a0a0b0",fontSize:13,textAlign:"center",padding:"30px 0" }}>{T.noneNearby}</div>:<div style={{ display:"flex",flexDirection:"column",gap:8 }}>{nearby.map(p=>{const meta=CAT_META[p.category]||{color:"#ff2d55"};return<div key={p.id} onClick={()=>{onClose();setTimeout(()=>onSelect(p),150);}} style={{ display:"flex",alignItems:"center",gap:12,padding:"12px",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:12,cursor:"pointer" }}><div style={{ width:40,height:40,borderRadius:10,background:meta.color+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0 }}>{p.emoji}</div><div style={{ flex:1 }}><div style={{ fontSize:14,color:"#1a1a1a",fontWeight:600 }}>{isEN&&p.nameEN?p.nameEN:p.name}</div><div style={{ fontSize:11,color:"#a0a0b0",marginTop:2 }}>{catLabel(p.category)} · {PRICE_EMOJI[p.price]||"?"}</div></div><div style={{ textAlign:"right",flexShrink:0 }}>{p.mins!==null?<div style={{ display:"flex",alignItems:"center",gap:4,color:p.estimated?"#ff9f0a":"#30d158",fontSize:13,fontWeight:600 }}><Icons.Walk/>{p.estimated?"~":""}{p.mins} {T.walkMin}</div>:<div className="pulsing" style={{ fontSize:11,color:"#a0a0b0" }}>{T.calc}</div>}<div style={{ fontSize:10,color:"#a0a0b0",marginTop:2 }}>{p.distKm<1?(p.distKm*1000).toFixed(0)+"m":(p.distKm.toFixed(1)+"km")}{p.estimated&&p.mins!==null?" est.":""}</div></div></div>;})} </div>}</div></div>;
+  return <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:400,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={onClose}><div className="modal" style={{ background:"#ffffff",borderTop:"1px solid #e8e6e0",borderRadius:"20px 20px 0 0",padding:"20px 16px 40px",maxWidth:560,width:"100%",maxHeight:"75vh",overflowY:"auto" }} onClick={e=>e.stopPropagation()}><div style={{ width:36,height:3,background:"#e8e6e0",borderRadius:2,margin:"0 auto 16px" }}/><div style={{ fontSize:15,fontWeight:700,color:"#1a1a1a",marginBottom:4 }}>{T.nearbyTitle}</div><div style={{ fontSize:12,color:"#8a8a9a",marginBottom:14 }}>{T.nearbyRadius}</div>{!nearby.length?<div style={{ color:"#a0a0b0",fontSize:13,textAlign:"center",padding:"30px 0" }}>{T.noneNearby}</div>:<div style={{ display:"flex",flexDirection:"column",gap:8 }}>{nearby.map(p=>{const meta=CAT_META[p.category]||{color:"#ff2d55"};return<div key={p.id} onClick={()=>{onClose();setTimeout(()=>onSelect(p),150);}} style={{ display:"flex",alignItems:"center",gap:12,padding:"12px",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:12,cursor:"pointer" }}><div style={{ width:40,height:40,borderRadius:10,background:meta.color+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0 }}>{p.emoji}</div><div style={{ flex:1 }}><div style={{ fontSize:14,color:"#1a1a1a",fontWeight:600 }}>{isEN&&p.nameEN?p.nameEN:p.name}</div><div style={{ fontSize:11,color:"#a0a0b0",marginTop:2 }}>{catLabel(p.category)} · {PRICE_EMOJI[p.price]||"?"}</div></div><div style={{ textAlign:"right",flexShrink:0 }}>{p.mins!==null?<div style={{ display:"flex",alignItems:"center",gap:4,color:p.estimated?"#ff9f0a":"#30d158",fontSize:13,fontWeight:600 }}><Icons.Walk/>{p.estimated?"~":""}{p.mins} {T.walkMin}</div>:<div className="pulsing" style={{ fontSize:11,color:"#a0a0b0" }}>{T.calc}</div>}<div style={{ fontSize:10,color:"#a0a0b0",marginTop:2 }}>{p.distKm<1?(p.distKm*1000).toFixed(0)+"m":(p.distKm.toFixed(1)+"km")}{p.estimated&&p.mins!==null?" est.":""}</div></div></div>;})} </div>}</div></div>;
 }
 
 function PlannerChatModal({ places, entries, onClose, addToast, userLat, userLng }) {
@@ -880,7 +881,7 @@ function PlannerChatModal({ places, entries, onClose, addToast, userLat, userLng
 
   const filtPlaces=places.filter(p=>{if(!filterQ)return true;const q=normalize(filterQ);const name=normalize(isEN&&p.nameEN?p.nameEN:p.name);const cat=normalize(catLabel(p.category));return name.includes(q)||cat.includes(q)||(q==="free"&&p.price==="gratis")||(q==="gratis"&&p.price==="gratis");});
 
-  if(showPlan)return <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:300,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={()=>setShowPlan(false)}><div className="modal" style={{ background:"#ffffff",borderTop:"1px solid #e8e6e0",borderRadius:"20px 20px 0 0",padding:"20px 16px 40px",maxWidth:560,width:"100%",height:"88vh",display:"flex",flexDirection:"column" }} onClick={e=>e.stopPropagation()}><div style={{ width:36,height:3,background:"#e8e6e0",borderRadius:2,margin:"0 auto 14px" }}/><div style={{ fontSize:15,fontWeight:700,color:"#1a1a1a",marginBottom:2 }}>{T.routeTitle}</div><div style={{ fontSize:12,color:"#8a8a9a",marginBottom:12 }}>{T.departingFrom} {startLoc}</div>{planLoading?<div style={{ textAlign:"center",padding:"40px 0" }}><div className="pulsing" style={{ fontSize:36,marginBottom:12 }}>🤖</div><div style={{ fontSize:13,color:"#8a8a9a" }}>{T.generating}</div></div>:<><div style={{ flex:1,overflowY:"auto",background:"#f8f7f4",borderRadius:12,padding:"14px",fontSize:13,color:"#1a1a1a",lineHeight:1.7,whiteSpace:"pre-wrap",marginBottom:14 }}>{planResult}</div><div style={{ display:"flex",gap:8 }}><button onClick={()=>{navigator.clipboard.writeText(planResult);addToast(T.routeCopied,"success");}} style={{ flex:1,padding:"12px",background:"#ff2d55",border:"none",borderRadius:10,color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer" }}>{T.copyRoute}</button><button onClick={()=>setShowPlan(false)} style={{ flex:1,padding:"12px",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:10,color:"#8a8a9a",fontSize:13,cursor:"pointer" }}>{T.newRoute}</button></div></>}</div></div>;
+  if(showPlan)return <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:300,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={()=>setShowPlan(false)}><div className="modal" style={{ background:"#ffffff",borderTop:"1px solid #e8e6e0",borderRadius:"20px 20px 0 0",padding:"20px 16px 40px",maxWidth:560,width:"100%",height:"88vh",display:"flex",flexDirection:"column" }} onClick={e=>e.stopPropagation()}><div style={{ width:36,height:3,background:"#e8e6e0",borderRadius:2,margin:"0 auto 14px" }}/><div style={{ fontSize:15,fontWeight:700,color:"#1a1a1a",marginBottom:2 }}>{T.routeTitle}</div><div style={{ fontSize:12,color:"#8a8a9a",marginBottom:12 }}>{T.departingFrom} {startLoc}</div>{planLoading?<div style={{ textAlign:"center",padding:"40px 0" }}><div className="pulsing" style={{ fontSize:36,marginBottom:12 }}>🤖</div><div style={{ fontSize:13,color:"#8a8a9a" }}>{T.generating}</div></div>:<><div style={{ flex:1,overflowY:"auto",background:"#f5f3ee",borderRadius:12,padding:"14px",fontSize:13,color:"#1a1a1a",lineHeight:1.7,whiteSpace:"pre-wrap",marginBottom:14 }}>{planResult}</div><div style={{ display:"flex",gap:8 }}><button onClick={()=>{navigator.clipboard.writeText(planResult);addToast(T.routeCopied,"success");}} style={{ flex:1,padding:"12px",background:"#ff2d55",border:"none",borderRadius:10,color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer" }}>{T.copyRoute}</button><button onClick={()=>setShowPlan(false)} style={{ flex:1,padding:"12px",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:10,color:"#8a8a9a",fontSize:13,cursor:"pointer" }}>{T.newRoute}</button></div></>}</div></div>;
 
   return <>
     {previewPlace&&(
@@ -893,12 +894,12 @@ function PlannerChatModal({ places, entries, onClose, addToast, userLat, userLng
               <div style={{ fontSize:17,fontWeight:700,color:"#1a1a1a" }}>{isEN&&previewPlace.nameEN?previewPlace.nameEN:previewPlace.name}</div>
               <div style={{ display:"flex",gap:6,marginTop:4,flexWrap:"wrap" }}>
                 <span style={{ fontSize:11,color:(CAT_META[previewPlace.category]||{color:"#ff2d55"}).color,background:(CAT_META[previewPlace.category]||{color:"#ff2d55"}).color+"20",borderRadius:6,padding:"2px 8px" }}>{catLabel(previewPlace.category)}</span>
-                {previewPlace.price&&<span style={{ fontSize:11,color:"#8a8a9a",background:"#f8f7f4",borderRadius:6,padding:"2px 8px" }}>{PRICE_EMOJI[previewPlace.price]}</span>}
-                {previewPlace.time&&<span style={{ fontSize:11,color:"#a0a0b0",background:"#f8f7f4",borderRadius:6,padding:"2px 8px" }}>⏱ {previewPlace.time}</span>}
+                {previewPlace.price&&<span style={{ fontSize:11,color:"#8a8a9a",background:"#f5f3ee",borderRadius:6,padding:"2px 8px" }}>{PRICE_EMOJI[previewPlace.price]}</span>}
+                {previewPlace.time&&<span style={{ fontSize:11,color:"#a0a0b0",background:"#f5f3ee",borderRadius:6,padding:"2px 8px" }}>⏱ {previewPlace.time}</span>}
               </div>
             </div>
           </div>
-          <div style={{ fontSize:13,color:"#8a8a9a",lineHeight:1.6,marginBottom:10,padding:"10px 12px",background:"#f8f7f4",borderRadius:10,borderLeft:"2px solid "+(CAT_META[previewPlace.category]||{color:"#ff2d55"}).color }}>
+          <div style={{ fontSize:13,color:"#8a8a9a",lineHeight:1.6,marginBottom:10,padding:"10px 12px",background:"#f5f3ee",borderRadius:10,borderLeft:"2px solid "+(CAT_META[previewPlace.category]||{color:"#ff2d55"}).color }}>
             {isEN&&previewPlace.descEN?previewPlace.descEN:previewPlace.desc}
           </div>
           {(isEN&&previewPlace.repEN?previewPlace.repEN:previewPlace.rep)&&(
@@ -910,7 +911,7 @@ function PlannerChatModal({ places, entries, onClose, addToast, userLat, userLng
             <button onClick={()=>{setSelected(prev=>prev.includes(previewPlace.id)?prev.filter(x=>x!==previewPlace.id):prev.length<8?[...prev,previewPlace.id]:prev);}} style={{ flex:1,padding:"12px",background:selected.includes(previewPlace.id)?"#30d15820":"#ff2d5515",border:"1px solid "+(selected.includes(previewPlace.id)?"#30d158":"#ff2d55"),borderRadius:10,color:selected.includes(previewPlace.id)?"#30d158":"#ff2d55",fontSize:13,fontWeight:600,cursor:"pointer" }}>
               {selected.includes(previewPlace.id)?"✓ "+(isEN?"In route":"No roteiro"):"+ "+(isEN?"Add to route":"Adicionar ao roteiro")}
             </button>
-            <button onClick={()=>setPreviewPlace(null)} style={{ padding:"12px 16px",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:10,color:"#8a8a9a",fontSize:13,cursor:"pointer" }}>
+            <button onClick={()=>setPreviewPlace(null)} style={{ padding:"12px 16px",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:10,color:"#8a8a9a",fontSize:13,cursor:"pointer" }}>
               {isEN?"Close":"Fechar"}
             </button>
           </div>
@@ -921,10 +922,10 @@ function PlannerChatModal({ places, entries, onClose, addToast, userLat, userLng
     <div style={{ padding:"14px 16px 12px",borderBottom:"1px solid #e8e6e0" }}>
       <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10 }}>
         <div><div style={{ fontSize:15,fontWeight:700,color:"#1a1a1a" }}>{T.chatTitle}</div><div style={{ fontSize:11,color:"#8a8a9a" }}>{T.chatSub}</div></div>
-        <button onClick={onClose} style={{ background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,width:32,height:32,color:"#8a8a9a",cursor:"pointer",fontSize:16 }}>×</button>
+        <button onClick={onClose} style={{ background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,width:32,height:32,color:"#8a8a9a",cursor:"pointer",fontSize:16 }}>×</button>
       </div>
       <div style={{ display:"flex",gap:8 }}>
-        <input value={startLoc} onChange={e=>setStartLoc(e.target.value)} style={{ flex:1,background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"7px 10px",color:"#1a1a1a",fontSize:12 }} placeholder={T.departure}/>
+        <input value={startLoc} onChange={e=>setStartLoc(e.target.value)} style={{ flex:1,background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"7px 10px",color:"#1a1a1a",fontSize:12 }} placeholder={T.departure}/>
         <button onClick={detectLoc} style={{ padding:"7px 10px",background:"#ff2d5515",border:"1px solid #ff2d5540",borderRadius:8,color:"#ff2d55",fontSize:11,cursor:"pointer" }}>{locLoading?"...":"📍 "+T.gps}</button>
       </div>
     </div>
@@ -939,7 +940,7 @@ function PlannerChatModal({ places, entries, onClose, addToast, userLat, userLng
         <div key={i} style={{ marginBottom:12,display:"flex",justifyContent:m.role==="user"?"flex-end":"flex-start",flexDirection:"column",alignItems:m.role==="user"?"flex-end":"flex-start" }}>
           <div style={{ display:"flex",alignItems:"flex-end",gap:8,justifyContent:m.role==="user"?"flex-end":"flex-start" }}>
             {m.role==="assistant"&&<div style={{ width:28,height:28,borderRadius:"50%",background:"#ff2d5515",border:"1px solid #ff2d5540",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0 }}>🤖</div>}
-            <div style={{ maxWidth:"80%",padding:"10px 14px",borderRadius:m.role==="user"?"18px 18px 4px 18px":"18px 18px 18px 4px",background:m.role==="user"?"#ff2d55":"#f8f7f4",border:m.role==="user"?"none":"1px solid #e8e6e0",color:"#1a1a1a",fontSize:13,lineHeight:1.6,whiteSpace:"pre-wrap" }}>{m.content}</div>
+            <div style={{ maxWidth:"80%",padding:"10px 14px",borderRadius:m.role==="user"?"18px 18px 4px 18px":"18px 18px 18px 4px",background:m.role==="user"?"#ff2d55":"#f5f3ee",border:m.role==="user"?"none":"1px solid #e8e6e0",color:"#1a1a1a",fontSize:13,lineHeight:1.6,whiteSpace:"pre-wrap" }}>{m.content}</div>
           </div>
           {/* Linked place chips */}
           {m.linkedPlaces&&m.linkedPlaces.length>0&&(
@@ -969,7 +970,7 @@ function PlannerChatModal({ places, entries, onClose, addToast, userLat, userLng
           )}
         </div>
       ))}
-      {loading&&<div style={{ display:"flex",alignItems:"flex-end",gap:8,marginBottom:10 }}><div style={{ width:28,height:28,borderRadius:"50%",background:"#ff2d5515",border:"1px solid #ff2d5540",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14 }}>🤖</div><div style={{ padding:"10px 14px",borderRadius:"18px 18px 18px 4px",background:"#f8f7f4",border:"1px solid #e8e6e0" }}><span className="pulsing" style={{ color:"#8a8a9a",fontSize:13 }}>{T.typing}</span></div></div>}
+      {loading&&<div style={{ display:"flex",alignItems:"flex-end",gap:8,marginBottom:10 }}><div style={{ width:28,height:28,borderRadius:"50%",background:"#ff2d5515",border:"1px solid #ff2d5540",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14 }}>🤖</div><div style={{ padding:"10px 14px",borderRadius:"18px 18px 18px 4px",background:"#f5f3ee",border:"1px solid #e8e6e0" }}><span className="pulsing" style={{ color:"#8a8a9a",fontSize:13 }}>{T.typing}</span></div></div>}
       <div ref={bottomRef}/>
     </div>
     <div style={{ borderTop:"1px solid #e8e6e0",padding:"10px 16px 16px" }}>
@@ -977,13 +978,13 @@ function PlannerChatModal({ places, entries, onClose, addToast, userLat, userLng
         <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em" }}>{T.placesCount} ({selected.length}/8)</div>
         {selected.length>0&&<button onClick={()=>setSelected([])} style={{ background:"none",border:"none",color:"#a0a0b0",fontSize:11,cursor:"pointer" }}>{T.clearSel}</button>}
       </div>
-      <input value={filterQ} onChange={e=>setFilterQ(e.target.value)} placeholder={T.filterPlaces} style={{ width:"100%",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"6px 10px",color:"#1a1a1a",fontSize:12,marginBottom:8 }}/>
+      <input value={filterQ} onChange={e=>setFilterQ(e.target.value)} placeholder={T.filterPlaces} style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"6px 10px",color:"#1a1a1a",fontSize:12,marginBottom:8 }}/>
       <div style={{ display:"flex",gap:5,overflowX:"auto",scrollbarWidth:"none",paddingBottom:8 }}>
-        {filtPlaces.map(p=>{const on=selected.includes(p.id),meta=CAT_META[p.category]||{color:"#ff2d55"};return<div key={p.id} onClick={()=>toggleSel(p.id)} style={{ display:"flex",alignItems:"center",gap:5,padding:"5px 10px",background:on?meta.color+"20":"#f8f7f4",border:"1px solid "+(on?meta.color:"#e8e6e0"),borderRadius:20,cursor:"pointer",flexShrink:0,transition:"all 0.12s" }}><span style={{ fontSize:13 }}>{p.emoji}</span><span style={{ fontSize:11,color:on?"#1a1a1a":"#8a8a9a",whiteSpace:"nowrap" }}>{isEN&&p.nameEN?p.nameEN:p.name}</span>{on&&<span style={{ fontSize:11,color:meta.color }}>✓</span>}</div>;})}
+        {filtPlaces.map(p=>{const on=selected.includes(p.id),meta=CAT_META[p.category]||{color:"#ff2d55"};return<div key={p.id} onClick={()=>toggleSel(p.id)} style={{ display:"flex",alignItems:"center",gap:5,padding:"5px 10px",background:on?meta.color+"20":"#f5f3ee",border:"1px solid "+(on?meta.color:"#e8e6e0"),borderRadius:20,cursor:"pointer",flexShrink:0,transition:"all 0.12s" }}><span style={{ fontSize:13 }}>{p.emoji}</span><span style={{ fontSize:11,color:on?"#1a1a1a":"#8a8a9a",whiteSpace:"nowrap" }}>{isEN&&p.nameEN?p.nameEN:p.name}</span>{on&&<span style={{ fontSize:11,color:meta.color }}>✓</span>}</div>;})}
       </div>
       {selected.length>0&&<button onClick={genPlan} style={{ width:"100%",padding:"10px",background:"#ff2d55",border:"none",borderRadius:10,color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer",marginBottom:8 }}>{T.genRoute} ({selected.length}) →</button>}
       <div style={{ display:"flex",gap:8 }}>
-        <input autoFocus value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder={userMsgCount>=MAX_INTERACTIONS?(isEN?"Limit reached - copy context above":"Limite atingido - copie o contexto acima"):T.askNYC} disabled={userMsgCount>=MAX_INTERACTIONS} style={{ flex:1,background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:20,padding:"9px 14px",color:userMsgCount>=MAX_INTERACTIONS?"#a0a0b0":"#1a1a1a",fontSize:13,opacity:userMsgCount>=MAX_INTERACTIONS?0.5:1 }}/>
+        <input autoFocus value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder={userMsgCount>=MAX_INTERACTIONS?(isEN?"Limit reached - copy context above":"Limite atingido - copie o contexto acima"):T.askNYC} disabled={userMsgCount>=MAX_INTERACTIONS} style={{ flex:1,background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:20,padding:"9px 14px",color:userMsgCount>=MAX_INTERACTIONS?"#a0a0b0":"#1a1a1a",fontSize:13,opacity:userMsgCount>=MAX_INTERACTIONS?0.5:1 }}/>
         <button onClick={send} disabled={!input.trim()||loading||userMsgCount>=MAX_INTERACTIONS} style={{ background:input.trim()&&!loading&&userMsgCount<MAX_INTERACTIONS?"#ff2d55":"#e8e6e0",border:"none",borderRadius:20,padding:"9px 14px",color:input.trim()&&!loading&&userMsgCount<MAX_INTERACTIONS?"#fff":"#a0a0b0",cursor:input.trim()&&!loading&&userMsgCount<MAX_INTERACTIONS?"pointer":"default",fontSize:14,fontWeight:600,transition:"all 0.15s" }}>↑</button>
       </div>
     </div>
@@ -996,7 +997,7 @@ function EditNameModal({ place, onClose, onSave }) {
   const [emoji,setEmoji]=useState(place.emoji);
   const [desc,setDesc]=useState(isEN&&place.descEN?place.descEN:place.desc||"");
   const handle=()=>{if(!name.trim())return;const updated={...place};if(isEN){updated.nameEN=name.trim();updated.descEN=desc.trim();}else{updated.name=name.trim();updated.desc=desc.trim();}updated.emoji=emoji;onSave(updated);onClose();};
-  return <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:400,display:"flex",alignItems:"center",justifyContent:"center",padding:20 }} onClick={onClose}><div style={{ background:"#ffffff",border:"1px solid #e8e6e0",borderRadius:16,padding:"20px",maxWidth:400,width:"100%" }} onClick={e=>e.stopPropagation()}><div style={{ fontSize:15,fontWeight:700,color:"#1a1a1a",marginBottom:14 }}>{T.editPlace}</div><div style={{ display:"flex",gap:10,marginBottom:12 }}><input value={emoji} onChange={e=>setEmoji(e.target.value)} maxLength={2} style={{ width:50,background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px",color:"#1a1a1a",fontSize:22,textAlign:"center" }}/><input value={name} onChange={e=>setName(e.target.value)} style={{ flex:1,background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:14 }}/></div><textarea value={desc} onChange={e=>setDesc(e.target.value)} placeholder={T.descLabel} rows={3} style={{ width:"100%",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13,resize:"none",marginBottom:14 }}/><div style={{ display:"flex",gap:8 }}><button onClick={handle} style={{ flex:1,padding:"11px",background:"#ff2d55",border:"none",borderRadius:10,color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer" }}>{T.save}</button><button onClick={onClose} style={{ flex:1,padding:"11px",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:10,color:"#8a8a9a",fontSize:13,cursor:"pointer" }}>{T.cancel}</button></div></div></div>;
+  return <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:400,display:"flex",alignItems:"center",justifyContent:"center",padding:20 }} onClick={onClose}><div style={{ background:"#ffffff",border:"1px solid #e8e6e0",borderRadius:16,padding:"20px",maxWidth:400,width:"100%" }} onClick={e=>e.stopPropagation()}><div style={{ fontSize:15,fontWeight:700,color:"#1a1a1a",marginBottom:14 }}>{T.editPlace}</div><div style={{ display:"flex",gap:10,marginBottom:12 }}><input value={emoji} onChange={e=>setEmoji(e.target.value)} maxLength={2} style={{ width:50,background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px",color:"#1a1a1a",fontSize:22,textAlign:"center" }}/><input value={name} onChange={e=>setName(e.target.value)} style={{ flex:1,background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:14 }}/></div><textarea value={desc} onChange={e=>setDesc(e.target.value)} placeholder={T.descLabel} rows={3} style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13,resize:"none",marginBottom:14 }}/><div style={{ display:"flex",gap:8 }}><button onClick={handle} style={{ flex:1,padding:"11px",background:"#ff2d55",border:"none",borderRadius:10,color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer" }}>{T.save}</button><button onClick={onClose} style={{ flex:1,padding:"11px",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:10,color:"#8a8a9a",fontSize:13,cursor:"pointer" }}>{T.cancel}</button></div></div></div>;
 }
 
 function DetailModal({ place, entry, places, entries, onClose, onSave, onDelete, onSelectNearby, onEditPlace, addToast, userLat, userLng }) {
@@ -1057,42 +1058,42 @@ function DetailModal({ place, entry, places, entries, onClose, onSave, onDelete,
                 </div>
                 <div style={{ display:"flex",gap:5,marginTop:4,flexWrap:"wrap" }}>
                   <span style={{ fontSize:11,color:meta.color,background:meta.color+"20",borderRadius:6,padding:"2px 8px" }}>{catLabel(place.category)}</span>
-                  {price&&<span style={{ fontSize:11,color:"#8a8a9a",background:"#f8f7f4",borderRadius:6,padding:"2px 8px" }}>{PRICE_EMOJI[price]}</span>}
-                  {place.time&&<span style={{ fontSize:11,color:"#a0a0b0",background:"#f8f7f4",borderRadius:6,padding:"2px 8px" }}>⏱ {place.time}</span>}
+                  {price&&<span style={{ fontSize:11,color:"#8a8a9a",background:"#f5f3ee",borderRadius:6,padding:"2px 8px" }}>{PRICE_EMOJI[price]}</span>}
+                  {place.time&&<span style={{ fontSize:11,color:"#a0a0b0",background:"#f5f3ee",borderRadius:6,padding:"2px 8px" }}>⏱ {place.time}</span>}
                   {petFriendly&&<span style={{ fontSize:11,color:"#4ade80",background:"#4ade8020",borderRadius:6,padding:"2px 8px" }}>🐾</span>}
                   {publicBathroom&&<span style={{ fontSize:11,color:"#60a5fa",background:"#60a5fa20",borderRadius:6,padding:"2px 8px" }}>🚻</span>}
                   {needsRes&&<span style={{ fontSize:11,color:"#f59e0b",background:"#f59e0b20",borderRadius:6,padding:"2px 8px" }}>📋 {isEN?"Reserve":"Reservar"}</span>}
-                  {hours&&<span style={{ fontSize:11,color:"#8a8a9a",background:"#f8f7f4",borderRadius:6,padding:"2px 8px" }}>🕐 {hours.split(",")[0]}</span>}
+                  {hours&&<span style={{ fontSize:11,color:"#8a8a9a",background:"#f5f3ee",borderRadius:6,padding:"2px 8px" }}>🕐 {hours.split(",")[0]}</span>}
                 </div>
               </div>
             </div>
           </div>
           <div style={{ display:"flex",gap:5,flexWrap:"wrap" }}>
-            <a href={mapsUrl} target="_blank" rel="noreferrer" style={{ background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"0 10px",height:34,color:"#8a8a9a",display:"flex",alignItems:"center",gap:5,textDecoration:"none",fontSize:11,whiteSpace:"nowrap" }}>📍 Maps</a>
-            {cityUrl&&<a href={cityUrl} target="_blank" rel="noreferrer" style={{ background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"0 10px",height:34,color:"#8a8a9a",display:"flex",alignItems:"center",gap:5,textDecoration:"none",fontSize:11,whiteSpace:"nowrap" }}>🗺 Rota</a>}
-            {link&&<a href={link} target="_blank" rel="noreferrer" style={{ background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"0 10px",height:34,color:"#8a8a9a",display:"flex",alignItems:"center",gap:5,textDecoration:"none",fontSize:11,whiteSpace:"nowrap" }}>🔗 Site</a>}
-            {status==="quero"&&(()=>{const gcName=encodeURIComponent(isEN&&place.nameEN?place.nameEN:place.name);const gcLoc=encodeURIComponent("New York, NY");const gcUrl="https://calendar.google.com/calendar/render?action=TEMPLATE&text="+gcName+"&location="+gcLoc+"&details="+encodeURIComponent((isEN&&place.descEN?place.descEN:place.desc)||"");return<a href={gcUrl} target="_blank" rel="noreferrer" style={{ background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"0 10px",height:34,color:"#8a8a9a",display:"flex",alignItems:"center",gap:5,textDecoration:"none",fontSize:11,whiteSpace:"nowrap" }}>📅 {isEN?"Calendar":"Agenda"}</a>;})()} 
-            <button onClick={onClose} style={{ background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,width:34,height:34,color:"#8a8a9a",cursor:"pointer",fontSize:18 }}>×</button>
+            <a href={mapsUrl} target="_blank" rel="noreferrer" style={{ background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"0 10px",height:34,color:"#8a8a9a",display:"flex",alignItems:"center",gap:5,textDecoration:"none",fontSize:11,whiteSpace:"nowrap" }}>📍 Maps</a>
+            {cityUrl&&<a href={cityUrl} target="_blank" rel="noreferrer" style={{ background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"0 10px",height:34,color:"#8a8a9a",display:"flex",alignItems:"center",gap:5,textDecoration:"none",fontSize:11,whiteSpace:"nowrap" }}>🗺 Rota</a>}
+            {link&&<a href={link} target="_blank" rel="noreferrer" style={{ background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"0 10px",height:34,color:"#8a8a9a",display:"flex",alignItems:"center",gap:5,textDecoration:"none",fontSize:11,whiteSpace:"nowrap" }}>🔗 Site</a>}
+            {status==="quero"&&(()=>{const gcName=encodeURIComponent(isEN&&place.nameEN?place.nameEN:place.name);const gcLoc=encodeURIComponent("New York, NY");const gcUrl="https://calendar.google.com/calendar/render?action=TEMPLATE&text="+gcName+"&location="+gcLoc+"&details="+encodeURIComponent((isEN&&place.descEN?place.descEN:place.desc)||"");return<a href={gcUrl} target="_blank" rel="noreferrer" style={{ background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"0 10px",height:34,color:"#8a8a9a",display:"flex",alignItems:"center",gap:5,textDecoration:"none",fontSize:11,whiteSpace:"nowrap" }}>📅 {isEN?"Calendar":"Agenda"}</a>;})()} 
+            <button onClick={onClose} style={{ background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,width:34,height:34,color:"#8a8a9a",cursor:"pointer",fontSize:18 }}>×</button>
           </div>
         </div>
-        <div style={{ fontSize:13,color:"#8a8a9a",lineHeight:1.6,marginBottom:10,padding:"10px 12px",background:"#f8f7f4",borderRadius:10,borderLeft:"2px solid "+meta.color }}>{displayDesc}</div>
+        <div style={{ fontSize:13,color:"#8a8a9a",lineHeight:1.6,marginBottom:10,padding:"10px 12px",background:"#f5f3ee",borderRadius:10,borderLeft:"2px solid "+meta.color }}>{displayDesc}</div>
         {displayRep&&<div style={{ fontSize:12,color:"#ff9f0a",lineHeight:1.5,marginBottom:14,padding:"8px 12px",background:"#ff9f0a10",borderRadius:10,borderLeft:"2px solid #ff9f0a" }}>⭐ {displayRep}</div>}
         <div style={{ marginBottom:14 }}>
           <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.12em",marginBottom:8 }}>{T.status}</div>
-          <div style={{ display:"flex",gap:8 }}>{Object.entries(STATUS).map(([key,cfg])=><button key={key} onClick={()=>setStatus(key)} style={{ flex:1,padding:"10px 4px",borderRadius:10,background:status===key?cfg.color+"18":"#f8f7f4",border:"1px solid "+(status===key?cfg.color+"60":"#e8e6e0"),color:status===key?cfg.color:"#a0a0b0",fontSize:14,cursor:"pointer",transition:"all 0.15s" }}><div>{status===key?cfg.sel:cfg.icon}</div><div style={{ fontSize:10,marginTop:3 }}>{cfg.label}</div></button>)}</div>
+          <div style={{ display:"flex",gap:8 }}>{Object.entries(STATUS).map(([key,cfg])=><button key={key} onClick={()=>setStatus(key)} style={{ flex:1,padding:"10px 4px",borderRadius:10,background:status===key?cfg.color+"18":"#f5f3ee",border:"1px solid "+(status===key?cfg.color+"60":"#e8e6e0"),color:status===key?cfg.color:"#a0a0b0",fontSize:14,cursor:"pointer",transition:"all 0.15s" }}><div>{status===key?cfg.sel:cfg.icon}</div><div style={{ fontSize:10,marginTop:3 }}>{cfg.label}</div></button>)}</div>
         </div>
         {status==="fui"&&<>
-          <div style={{ marginBottom:14 }}><div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.12em",marginBottom:8 }}>{T.whoWent}</div><div style={{ display:"flex",gap:8 }}>{WHO_OPTIONS.map(w=><button key={w} onClick={()=>setWho(w)} style={{ flex:1,padding:"10px 4px",borderRadius:10,background:who===w?"#ff9f0a18":"#f8f7f4",border:"1px solid "+(who===w?"#ff9f0a60":"#e8e6e0"),color:who===w?"#ff9f0a":"#a0a0b0",fontSize:13,cursor:"pointer",transition:"all 0.15s" }}><div>{WHO_EMOJI[w]}</div><div style={{ fontSize:10,marginTop:3 }}>{WHO_LABELS[w]}</div></button>)}</div></div>
-          <div style={{ marginBottom:14 }}><div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.12em",marginBottom:8 }}>{T.when}</div><input type="date" value={date} onChange={ev=>setDate(ev.target.value)} style={{ width:"100%",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:10,padding:"10px 14px",color:"#1a1a1a",fontSize:14 }}/></div>
+          <div style={{ marginBottom:14 }}><div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.12em",marginBottom:8 }}>{T.whoWent}</div><div style={{ display:"flex",gap:8 }}>{WHO_OPTIONS.map(w=><button key={w} onClick={()=>setWho(w)} style={{ flex:1,padding:"10px 4px",borderRadius:10,background:who===w?"#ff9f0a18":"#f5f3ee",border:"1px solid "+(who===w?"#ff9f0a60":"#e8e6e0"),color:who===w?"#ff9f0a":"#a0a0b0",fontSize:13,cursor:"pointer",transition:"all 0.15s" }}><div>{WHO_EMOJI[w]}</div><div style={{ fontSize:10,marginTop:3 }}>{WHO_LABELS[w]}</div></button>)}</div></div>
+          <div style={{ marginBottom:14 }}><div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.12em",marginBottom:8 }}>{T.when}</div><input type="date" value={date} onChange={ev=>setDate(ev.target.value)} style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:10,padding:"10px 14px",color:"#1a1a1a",fontSize:14 }}/></div>
         </>}
-        <div style={{ marginBottom:14 }}><div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.12em",marginBottom:8 }}>{T.price}</div><div style={{ display:"flex",gap:6 }}>{PRICE_LEVELS.map(p=><button key={p} onClick={()=>setPrice(price===p?null:p)} style={{ flex:1,padding:"8px 4px",borderRadius:10,background:price===p?"#ff9f0a18":"#f8f7f4",border:"1px solid "+(price===p?"#ff9f0a60":"#e8e6e0"),color:price===p?"#ff9f0a":"#a0a0b0",fontSize:13,cursor:"pointer",transition:"all 0.15s" }}>{PRICE_EMOJI[p]}</button>)}</div></div>
-        <div style={{ marginBottom:14 }}><div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.12em",marginBottom:8 }}>{T.bestSeason}</div><div style={{ display:"flex",gap:5,flexWrap:"wrap" }}>{SEASONS.map(s=><button key={s} onClick={()=>setSeason(s)} style={{ padding:"6px 10px",borderRadius:20,background:season===s?"#ff9f0a18":"#f8f7f4",border:"1px solid "+(season===s?"#ff9f0a60":"#e8e6e0"),color:season===s?"#ff9f0a":"#a0a0b0",fontSize:12,cursor:"pointer",transition:"all 0.15s" }}>{SEASON_EMOJI[s]} {SEASON_LABELS[s]}</button>)}</div></div>
-        <div style={{ marginBottom:14 }}><div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.12em",marginBottom:8 }}>{T.vibe}</div><div style={{ display:"flex",flexWrap:"wrap",gap:6 }}>{VIBES.map(v=><button key={v} onClick={()=>setVibes(prev=>prev.includes(v)?prev.filter(x=>x!==v):[...prev,v])} style={{ padding:"6px 12px",borderRadius:20,background:vibes.includes(v)?"#ff2d5518":"#f8f7f4",border:"1px solid "+(vibes.includes(v)?"#ff2d5560":"#e8e6e0"),color:vibes.includes(v)?"#ff2d55":"#a0a0b0",fontSize:12,cursor:"pointer",transition:"all 0.15s" }}>{VIBE_EMOJI[v]} {VIBE_LABELS[v]}</button>)}</div></div>
-        <div style={{ marginBottom:14 }}><div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.12em",marginBottom:8 }}>{T.facilities}</div><div style={{ display:"flex",gap:8 }}><button onClick={()=>setPetFriendly(!petFriendly)} style={{ flex:1,padding:"9px",borderRadius:10,background:petFriendly?"#4ade8018":"#f8f7f4",border:"1px solid "+(petFriendly?"#4ade8060":"#e8e6e0"),color:petFriendly?"#4ade80":"#a0a0b0",fontSize:12,cursor:"pointer",transition:"all 0.15s" }}>{T.pet}</button><button onClick={()=>setPublicBathroom(!publicBathroom)} style={{ flex:1,padding:"9px",borderRadius:10,background:publicBathroom?"#60a5fa18":"#f8f7f4",border:"1px solid "+(publicBathroom?"#60a5fa60":"#e8e6e0"),color:publicBathroom?"#60a5fa":"#a0a0b0",fontSize:12,cursor:"pointer",transition:"all 0.15s" }}>{T.bathroom}</button></div></div>
-        {status==="fui"&&<div style={{ marginBottom:14 }}><div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.12em",marginBottom:8 }}>{T.rating}</div><div style={{ display:"flex",gap:4,marginBottom:10 }}>{[1,2,3,4,5].map(n=><span key={n} onClick={()=>setStars(stars===n?0:n)} style={{ fontSize:26,cursor:"pointer",color:n<=stars?"#ff9f0a":"#a0a0b0",transition:"color 0.1s" }}>★</span>)}</div><div style={{ display:"flex",gap:8 }}><button onClick={()=>setThumb(thumb==="up"?null:"up")} style={{ flex:1,padding:"10px",borderRadius:10,background:thumb==="up"?"#30d15820":"#f8f7f4",border:"1px solid "+(thumb==="up"?"#30d158":"#e8e6e0"),fontSize:20,cursor:"pointer",transition:"all 0.15s" }}>👍</button><button onClick={()=>setThumb(thumb==="down"?null:"down")} style={{ flex:1,padding:"10px",borderRadius:10,background:thumb==="down"?"#ff2d5515":"#f8f7f4",border:"1px solid "+(thumb==="down"?"#ff2d55":"#e8e6e0"),fontSize:20,cursor:"pointer",transition:"all 0.15s" }}>👎</button></div></div>}
+        <div style={{ marginBottom:14 }}><div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.12em",marginBottom:8 }}>{T.price}</div><div style={{ display:"flex",gap:6 }}>{PRICE_LEVELS.map(p=><button key={p} onClick={()=>setPrice(price===p?null:p)} style={{ flex:1,padding:"8px 4px",borderRadius:10,background:price===p?"#ff9f0a18":"#f5f3ee",border:"1px solid "+(price===p?"#ff9f0a60":"#e8e6e0"),color:price===p?"#ff9f0a":"#a0a0b0",fontSize:13,cursor:"pointer",transition:"all 0.15s" }}>{PRICE_EMOJI[p]}</button>)}</div></div>
+        <div style={{ marginBottom:14 }}><div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.12em",marginBottom:8 }}>{T.bestSeason}</div><div style={{ display:"flex",gap:5,flexWrap:"wrap" }}>{SEASONS.map(s=><button key={s} onClick={()=>setSeason(s)} style={{ padding:"6px 10px",borderRadius:20,background:season===s?"#ff9f0a18":"#f5f3ee",border:"1px solid "+(season===s?"#ff9f0a60":"#e8e6e0"),color:season===s?"#ff9f0a":"#a0a0b0",fontSize:12,cursor:"pointer",transition:"all 0.15s" }}>{SEASON_EMOJI[s]} {SEASON_LABELS[s]}</button>)}</div></div>
+        <div style={{ marginBottom:14 }}><div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.12em",marginBottom:8 }}>{T.vibe}</div><div style={{ display:"flex",flexWrap:"wrap",gap:6 }}>{VIBES.map(v=><button key={v} onClick={()=>setVibes(prev=>prev.includes(v)?prev.filter(x=>x!==v):[...prev,v])} style={{ padding:"6px 12px",borderRadius:20,background:vibes.includes(v)?"#ff2d5518":"#f5f3ee",border:"1px solid "+(vibes.includes(v)?"#ff2d5560":"#e8e6e0"),color:vibes.includes(v)?"#ff2d55":"#a0a0b0",fontSize:12,cursor:"pointer",transition:"all 0.15s" }}>{VIBE_EMOJI[v]} {VIBE_LABELS[v]}</button>)}</div></div>
+        <div style={{ marginBottom:14 }}><div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.12em",marginBottom:8 }}>{T.facilities}</div><div style={{ display:"flex",gap:8 }}><button onClick={()=>setPetFriendly(!petFriendly)} style={{ flex:1,padding:"9px",borderRadius:10,background:petFriendly?"#4ade8018":"#f5f3ee",border:"1px solid "+(petFriendly?"#4ade8060":"#e8e6e0"),color:petFriendly?"#4ade80":"#a0a0b0",fontSize:12,cursor:"pointer",transition:"all 0.15s" }}>{T.pet}</button><button onClick={()=>setPublicBathroom(!publicBathroom)} style={{ flex:1,padding:"9px",borderRadius:10,background:publicBathroom?"#60a5fa18":"#f5f3ee",border:"1px solid "+(publicBathroom?"#60a5fa60":"#e8e6e0"),color:publicBathroom?"#60a5fa":"#a0a0b0",fontSize:12,cursor:"pointer",transition:"all 0.15s" }}>{T.bathroom}</button></div></div>
+        {status==="fui"&&<div style={{ marginBottom:14 }}><div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.12em",marginBottom:8 }}>{T.rating}</div><div style={{ display:"flex",gap:4,marginBottom:10 }}>{[1,2,3,4,5].map(n=><span key={n} onClick={()=>setStars(stars===n?0:n)} style={{ fontSize:26,cursor:"pointer",color:n<=stars?"#ff9f0a":"#a0a0b0",transition:"color 0.1s" }}>★</span>)}</div><div style={{ display:"flex",gap:8 }}><button onClick={()=>setThumb(thumb==="up"?null:"up")} style={{ flex:1,padding:"10px",borderRadius:10,background:thumb==="up"?"#30d15820":"#f5f3ee",border:"1px solid "+(thumb==="up"?"#30d158":"#e8e6e0"),fontSize:20,cursor:"pointer",transition:"all 0.15s" }}>👍</button><button onClick={()=>setThumb(thumb==="down"?null:"down")} style={{ flex:1,padding:"10px",borderRadius:10,background:thumb==="down"?"#ff2d5515":"#f5f3ee",border:"1px solid "+(thumb==="down"?"#ff2d55":"#e8e6e0"),fontSize:20,cursor:"pointer",transition:"all 0.15s" }}>👎</button></div></div>}
         {status==="fui"&&<div style={{ marginBottom:14 }}>
           <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.12em",marginBottom:8 }}>{T.spending}</div>
-          <div style={{ display:"flex",alignItems:"center",gap:10,background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:10,padding:"10px 14px" }}>
+          <div style={{ display:"flex",alignItems:"center",gap:10,background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:10,padding:"10px 14px" }}>
             <span style={{ fontSize:18 }}>💸</span>
             <span style={{ fontSize:16,color:"#a0a0b0",fontWeight:600 }}>$</span>
             <input type="number" min="0" step="0.01" value={spent} onChange={ev=>setSpent(ev.target.value)} placeholder={T.spendingPlaceholder} style={{ flex:1,background:"none",border:"none",color:"#1a1a1a",fontSize:16,fontWeight:600 }}/>
@@ -1102,30 +1103,30 @@ function DetailModal({ place, entry, places, entries, onClose, onSave, onDelete,
         <div style={{ marginBottom:14 }}>
           <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.12em",marginBottom:8 }}>{T.needsReservation}</div>
           <div style={{ display:"flex",gap:8 }}>
-            <button onClick={()=>setNeedsRes(true)} style={{ flex:1,padding:"10px",borderRadius:10,background:needsRes?"#f59e0b20":"#f8f7f4",border:"1px solid "+(needsRes?"#f59e0b60":"#e8e6e0"),color:needsRes?"#f59e0b":"#a0a0b0",fontSize:13,cursor:"pointer",transition:"all 0.15s",display:"flex",alignItems:"center",justifyContent:"center",gap:6 }}>
+            <button onClick={()=>setNeedsRes(true)} style={{ flex:1,padding:"10px",borderRadius:10,background:needsRes?"#f59e0b20":"#f5f3ee",border:"1px solid "+(needsRes?"#f59e0b60":"#e8e6e0"),color:needsRes?"#f59e0b":"#a0a0b0",fontSize:13,cursor:"pointer",transition:"all 0.15s",display:"flex",alignItems:"center",justifyContent:"center",gap:6 }}>
               <span>📋</span><span>{isEN?"Yes, reserve":"Sim, reservar"}</span>
             </button>
-            <button onClick={()=>setNeedsRes(false)} style={{ flex:1,padding:"10px",borderRadius:10,background:!needsRes?"#f8f7f480":"#f8f7f4",border:"1px solid "+((!needsRes)?"#e8e6e0":"#e8e6e0"),color:!needsRes?"#8a8a9a":"#a0a0b0",fontSize:13,cursor:"pointer",transition:"all 0.15s",display:"flex",alignItems:"center",justifyContent:"center",gap:6 }}>
+            <button onClick={()=>setNeedsRes(false)} style={{ flex:1,padding:"10px",borderRadius:10,background:!needsRes?"#f5f3ee80":"#f5f3ee",border:"1px solid "+((!needsRes)?"#e8e6e0":"#e8e6e0"),color:!needsRes?"#8a8a9a":"#a0a0b0",fontSize:13,cursor:"pointer",transition:"all 0.15s",display:"flex",alignItems:"center",justifyContent:"center",gap:6 }}>
               <span>✓</span><span>{isEN?"No need":"Nao precisa"}</span>
             </button>
           </div>
         </div>
         <div style={{ marginBottom:14 }}>
           <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.12em",marginBottom:8 }}>{T.openingHours}</div>
-          <input value={hours} onChange={ev=>setHours(ev.target.value)} placeholder={T.hoursPlaceholder} style={{ width:"100%",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:10,padding:"10px 14px",color:"#1a1a1a",fontSize:13 }}/>
+          <input value={hours} onChange={ev=>setHours(ev.target.value)} placeholder={T.hoursPlaceholder} style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:10,padding:"10px 14px",color:"#1a1a1a",fontSize:13 }}/>
         </div>
         <div style={{ marginBottom:14 }}>
           <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8 }}>
             <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.12em" }}>{status==="fui"?T.howWasIt:T.notes}</div>
             <button onClick={improveNote} disabled={!note.trim()||improving} style={{ background:"none",border:"1px solid #e8e6e0",borderRadius:8,padding:"3px 8px",color:note.trim()&&!improving?"#8a8a9a":"#3a3a50",fontSize:11,cursor:note.trim()&&!improving?"pointer":"default" }}>{improving?<span className="pulsing">{T.improving}</span>:T.improveBtn}</button>
           </div>
-          <textarea value={note} onChange={ev=>setNote(ev.target.value)} placeholder={status==="fui"?T.notePlaceholder:T.reminderPlaceholder} rows={3} style={{ width:"100%",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:10,padding:"10px 14px",color:"#1a1a1a",fontSize:14,resize:"none" }}/>
+          <textarea value={note} onChange={ev=>setNote(ev.target.value)} placeholder={status==="fui"?T.notePlaceholder:T.reminderPlaceholder} rows={3} style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:10,padding:"10px 14px",color:"#1a1a1a",fontSize:14,resize:"none" }}/>
         </div>
-        <div style={{ marginBottom:14 }}><div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.12em",marginBottom:8 }}>{T.link}</div><input value={link} onChange={ev=>setLink(ev.target.value)} placeholder="https://..." style={{ width:"100%",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:10,padding:"10px 14px",color:"#1a1a1a",fontSize:13 }}/></div>
+        <div style={{ marginBottom:14 }}><div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.12em",marginBottom:8 }}>{T.link}</div><input value={link} onChange={ev=>setLink(ev.target.value)} placeholder="https://..." style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:10,padding:"10px 14px",color:"#1a1a1a",fontSize:13 }}/></div>
         <div style={{ marginBottom:14 }}><div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.12em",marginBottom:8 }}>{T.photos}</div><PhotoGallery photos={photos} onChange={setPhotos}/></div>
         <NearbyInModal place={place} places={places} entries={entries} onSelect={p=>{onClose();setTimeout(()=>onSelectNearby(p),150);}}/>
         <button onClick={handleSave} disabled={saving} style={{ width:"100%",padding:"14px",background:saving?"#e8e6e0":"#ff2d55",border:"none",borderRadius:12,color:saving?"#a0a0b0":"#fff",fontSize:14,fontWeight:700,cursor:saving?"default":"pointer",marginBottom:10,transition:"all 0.2s",display:"flex",alignItems:"center",justifyContent:"center",gap:8 }}>{saving?<><span className="pulsing">●</span> {T.saving2}</>:T.save}</button>
-        {confirmDel?<div style={{ display:"flex",gap:8 }}><button onClick={()=>setConfirmDel(false)} style={{ flex:1,padding:"11px",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:10,color:"#8a8a9a",fontSize:13,cursor:"pointer" }}>{T.cancel}</button><button onClick={handleDelete} style={{ flex:1,padding:"11px",background:"#4a0000",border:"1px solid #883333",borderRadius:10,color:"#ff8888",fontSize:13,cursor:"pointer" }}>{T.confirm}</button></div>:<button onClick={()=>setConfirmDel(true)} style={{ width:"100%",padding:"11px",background:"none",border:"1px solid #e8e6e0",borderRadius:10,color:"#a0a0b0",fontSize:13,cursor:"pointer" }}>{T.remove}</button>}
+        {confirmDel?<div style={{ display:"flex",gap:8 }}><button onClick={()=>setConfirmDel(false)} style={{ flex:1,padding:"11px",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:10,color:"#8a8a9a",fontSize:13,cursor:"pointer" }}>{T.cancel}</button><button onClick={handleDelete} style={{ flex:1,padding:"11px",background:"#4a0000",border:"1px solid #883333",borderRadius:10,color:"#ff8888",fontSize:13,cursor:"pointer" }}>{T.confirm}</button></div>:<button onClick={()=>setConfirmDel(true)} style={{ width:"100%",padding:"11px",background:"none",border:"1px solid #e8e6e0",borderRadius:10,color:"#a0a0b0",fontSize:13,cursor:"pointer" }}>{T.remove}</button>}
       </div>
     </div>
     {showEdit&&<EditNameModal place={place} onClose={()=>setShowEdit(false)} onSave={updated=>{onEditPlace(place.id,{name:updated.name,nameEN:updated.nameEN,emoji:updated.emoji,desc:updated.desc,descEN:updated.descEN});setShowEdit(false);}}/>}
@@ -1151,33 +1152,33 @@ function AddModal({ onClose, onAdd, addToast }) {
   return <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:300,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={onClose}><div className="modal" style={{ background:"#ffffff",borderTop:"1px solid #e8e6e0",borderRadius:"20px 20px 0 0",padding:"20px 16px 48px",maxWidth:560,width:"100%",maxHeight:"85vh",overflowY:"auto" }} onClick={ev=>ev.stopPropagation()}>
     <div style={{ width:36,height:3,background:"#e8e6e0",borderRadius:2,margin:"0 auto 16px" }}/>
     <div style={{ fontSize:15,fontWeight:700,color:"#1a1a1a",marginBottom:16 }}>{T.addNew}</div>
-    <div style={{ display:"flex",gap:10,marginBottom:12 }}><input value={emoji} onChange={ev=>setEmoji(ev.target.value)} maxLength={2} style={{ width:50,background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px",color:"#1a1a1a",fontSize:22,textAlign:"center" }}/><input value={name} onChange={ev=>setName(ev.target.value)} placeholder={isEN?"Place name...":"Nome do lugar..."} style={{ flex:1,background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:14 }}/></div>
-    <div style={{ display:"flex",gap:8,marginBottom:12 }}><select value={category} onChange={ev=>setCategory(ev.target.value)} style={{ flex:1,background:"#ffffff",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 10px",color:"#1a1a1a",fontSize:13 }}>{CATEGORIES.map(c=><option key={c} value={c}>{catLabel(c)}</option>)}</select><div style={{ display:"flex",gap:4 }}>{PRICE_LEVELS.map(p=><button key={p} onClick={()=>setPrice(p)} style={{ padding:"8px",borderRadius:8,background:price===p?"#ff2d5515":"#f8f7f4",border:"1px solid "+(price===p?"#ff2d55":"#e8e6e0"),color:price===p?"#ff2d55":"#a0a0b0",fontSize:12,cursor:"pointer" }}>{PRICE_EMOJI[p]}</button>)}</div></div>
-    <div style={{ display:"flex",gap:5,flexWrap:"wrap",marginBottom:12 }}>{TIME_OPTIONS.map(t=><button key={t} onClick={()=>setTime(t)} style={{ padding:"5px 10px",borderRadius:20,background:time===t?"#ff2d5515":"#f8f7f4",border:"1px solid "+(time===t?"#ff2d55":"#e8e6e0"),color:time===t?"#ff2d55":"#a0a0b0",fontSize:11,cursor:"pointer" }}>{t}</button>)}</div>
-    <textarea value={desc} onChange={ev=>setDesc(ev.target.value)} placeholder={T.descLabel} rows={2} style={{ width:"100%",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13,resize:"none",marginBottom:10 }}/>
-    <input value={address} onChange={ev=>setAddress(ev.target.value)} placeholder={T.addressOptional} style={{ width:"100%",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13,marginBottom:10 }}/>
-    <input value={link} onChange={ev=>setLink(ev.target.value)} placeholder={T.linkOptional} style={{ width:"100%",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13,marginBottom:14 }}/>
+    <div style={{ display:"flex",gap:10,marginBottom:12 }}><input value={emoji} onChange={ev=>setEmoji(ev.target.value)} maxLength={2} style={{ width:50,background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px",color:"#1a1a1a",fontSize:22,textAlign:"center" }}/><input value={name} onChange={ev=>setName(ev.target.value)} placeholder={isEN?"Place name...":"Nome do lugar..."} style={{ flex:1,background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:14 }}/></div>
+    <div style={{ display:"flex",gap:8,marginBottom:12 }}><select value={category} onChange={ev=>setCategory(ev.target.value)} style={{ flex:1,background:"#ffffff",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 10px",color:"#1a1a1a",fontSize:13 }}>{CATEGORIES.map(c=><option key={c} value={c}>{catLabel(c)}</option>)}</select><div style={{ display:"flex",gap:4 }}>{PRICE_LEVELS.map(p=><button key={p} onClick={()=>setPrice(p)} style={{ padding:"8px",borderRadius:8,background:price===p?"#ff2d5515":"#f5f3ee",border:"1px solid "+(price===p?"#ff2d55":"#e8e6e0"),color:price===p?"#ff2d55":"#a0a0b0",fontSize:12,cursor:"pointer" }}>{PRICE_EMOJI[p]}</button>)}</div></div>
+    <div style={{ display:"flex",gap:5,flexWrap:"wrap",marginBottom:12 }}>{TIME_OPTIONS.map(t=><button key={t} onClick={()=>setTime(t)} style={{ padding:"5px 10px",borderRadius:20,background:time===t?"#ff2d5515":"#f5f3ee",border:"1px solid "+(time===t?"#ff2d55":"#e8e6e0"),color:time===t?"#ff2d55":"#a0a0b0",fontSize:11,cursor:"pointer" }}>{t}</button>)}</div>
+    <textarea value={desc} onChange={ev=>setDesc(ev.target.value)} placeholder={T.descLabel} rows={2} style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13,resize:"none",marginBottom:10 }}/>
+    <input value={address} onChange={ev=>setAddress(ev.target.value)} placeholder={T.addressOptional} style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13,marginBottom:10 }}/>
+    <input value={link} onChange={ev=>setLink(ev.target.value)} placeholder={T.linkOptional} style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13,marginBottom:14 }}/>
 
     {/* Status */}
     <div style={{ marginBottom:14 }}>
       <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:8 }}>{isEN?"HAVE YOU BEEN?":"JA FORAM?"}</div>
       <div style={{ display:"flex",gap:6 }}>
         {[{v:null,label:isEN?"Not yet":"Ainda nao",color:"#a0a0b0"},{v:"quero",label:isEN?"Want to go":"Quero ir",color:"#ff2d55"},{v:"fui",label:isEN?"Been there!":"Ja fui!",color:"#30d158"}].map(({v,label,color})=>(
-          <button key={String(v)} onClick={()=>setStatus(v)} style={{ flex:1,padding:"9px 4px",borderRadius:10,background:status===v?color+"20":"#f8f7f4",border:"1px solid "+(status===v?color:"#e8e6e0"),color:status===v?color:"#a0a0b0",fontSize:12,cursor:"pointer",fontWeight:status===v?700:400 }}>{label}</button>
+          <button key={String(v)} onClick={()=>setStatus(v)} style={{ flex:1,padding:"9px 4px",borderRadius:10,background:status===v?color+"20":"#f5f3ee",border:"1px solid "+(status===v?color:"#e8e6e0"),color:status===v?color:"#a0a0b0",fontSize:12,cursor:"pointer",fontWeight:status===v?700:400 }}>{label}</button>
         ))}
       </div>
     </div>
 
     {/* Date + who — only when "fui" */}
-    {status==="fui"&&<div style={{ background:"#f8f7f480",border:"1px solid #e8e6e0",borderRadius:10,padding:"12px",marginBottom:14 }}>
+    {status==="fui"&&<div style={{ background:"#f5f3ee80",border:"1px solid #e8e6e0",borderRadius:10,padding:"12px",marginBottom:14 }}>
       <div style={{ display:"flex",gap:10,marginBottom:10 }}>
         <div style={{ flex:1 }}>
           <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"DATE":"DATA"}</div>
-          <input type="date" value={visitDate} onChange={ev=>setVisitDate(ev.target.value)} style={{ width:"100%",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 10px",color:"#1a1a1a",fontSize:13 }}/>
+          <input type="date" value={visitDate} onChange={ev=>setVisitDate(ev.target.value)} style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 10px",color:"#1a1a1a",fontSize:13 }}/>
         </div>
       </div>
       <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"WHO WENT?":"QUEM FOI?"}</div>
-      <div style={{ display:"flex",gap:6 }}>{WHO_OPTIONS.map(w=><button key={w} onClick={()=>setWho(w)} style={{ flex:1,padding:"8px 4px",borderRadius:8,background:who===w?"#007aff20":"#f8f7f4",border:"1px solid "+(who===w?"#007aff":"#e8e6e0"),color:who===w?"#007aff":"#8a8a9a",fontSize:12,cursor:"pointer" }}>{WHO_EMOJI[w]} {WHO_LABELS[w]}</button>)}</div>
+      <div style={{ display:"flex",gap:6 }}>{WHO_OPTIONS.map(w=><button key={w} onClick={()=>setWho(w)} style={{ flex:1,padding:"8px 4px",borderRadius:8,background:who===w?"#007aff20":"#f5f3ee",border:"1px solid "+(who===w?"#007aff":"#e8e6e0"),color:who===w?"#007aff":"#8a8a9a",fontSize:12,cursor:"pointer" }}>{WHO_EMOJI[w]} {WHO_LABELS[w]}</button>)}</div>
     </div>}
 
     <button onClick={handle} disabled={saving||geocoding} style={{ width:"100%",padding:"13px",background:saving||geocoding?"#e8e6e0":"#ff2d55",border:"none",borderRadius:10,color:saving||geocoding?"#a0a0b0":"#fff",fontSize:14,fontWeight:700,cursor:saving||geocoding?"default":"pointer" }}>{geocoding?isEN?"Getting location...":"Buscando localizacao...":saving?T.adding:T.add}</button>
@@ -1193,9 +1194,9 @@ function ShareModal({ places, entries, onClose, addToast }) {
     <div style={{ fontSize:15,fontWeight:700,color:"#1a1a1a",marginBottom:6 }}>{T.shareTitle}</div>
     <div style={{ fontSize:12,color:"#8a8a9a",marginBottom:14 }}>{recs.length} {T.shareWith}</div>
     {!recs.length?<div style={{ color:"#a0a0b0",fontSize:13,textAlign:"center",padding:"20px 0" }}>{T.rateFirst}</div>:<>
-      <div style={{ background:"#f8f7f4",borderRadius:10,padding:"12px",marginBottom:14,maxHeight:160,overflowY:"auto" }}>{recs.map(p=>{const e=entries[p.id]||{};return<div key={p.id} style={{ display:"flex",alignItems:"center",gap:10,padding:"6px 0",borderBottom:"1px solid #e8e6e0" }}><span style={{ fontSize:16 }}>{p.emoji}</span><div style={{ flex:1 }}><div style={{ fontSize:13,color:"#1a1a1a" }}>{isEN&&p.nameEN?p.nameEN:p.name}</div><div style={{ fontSize:11,color:"#a0a0b0" }}>{e.stars>0&&"★".repeat(e.stars)} {e.thumb==="up"?"👍":""}</div></div></div>;})}</div>
+      <div style={{ background:"#f5f3ee",borderRadius:10,padding:"12px",marginBottom:14,maxHeight:160,overflowY:"auto" }}>{recs.map(p=>{const e=entries[p.id]||{};return<div key={p.id} style={{ display:"flex",alignItems:"center",gap:10,padding:"6px 0",borderBottom:"1px solid #e8e6e0" }}><span style={{ fontSize:16 }}>{p.emoji}</span><div style={{ flex:1 }}><div style={{ fontSize:13,color:"#1a1a1a" }}>{isEN&&p.nameEN?p.nameEN:p.name}</div><div style={{ fontSize:11,color:"#a0a0b0" }}>{e.stars>0&&"★".repeat(e.stars)} {e.thumb==="up"?"👍":""}</div></div></div>;})}</div>
       <button onClick={()=>copy(T.favoritesList+"\n\n"+recs.map(p=>{const e=entries[p.id]||{};return p.emoji+" "+(isEN&&p.nameEN?p.nameEN:p.name)+(e.stars?" "+"★".repeat(e.stars):"");}).join("\n")+"\n\n"+url)} style={{ width:"100%",padding:"13px",background:"#ff2d55",border:"none",borderRadius:10,color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",marginBottom:8 }}>{T.copyWhatsApp}</button>
-      <button onClick={()=>copy(url)} style={{ width:"100%",padding:"13px",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:10,color:"#1a1a1a",fontSize:13,cursor:"pointer" }}>{T.copyLink}</button>
+      <button onClick={()=>copy(url)} style={{ width:"100%",padding:"13px",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:10,color:"#1a1a1a",fontSize:13,cursor:"pointer" }}>{T.copyLink}</button>
           <div style={{ height:1,background:"#e8e6e0",margin:"14px 0" }}/>
           <a href={"mailto:guibrandao.pagamentos@gmail.com?subject="+encodeURIComponent("Feedback - NYC Bucket List")+"&body="+encodeURIComponent(isEN?"Describe your bug or suggestion:\n\n":"Descreva seu bug ou sugestao:\n\n")} style={{ width:"100%",padding:"11px",background:"none",border:"1px solid #e8e6e0",borderRadius:10,color:"#a0a0b0",fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6,textDecoration:"none",boxSizing:"border-box" }}>🐛 {isEN?"Report bug / suggestion":"Reportar bug ou sugestao"}</a>
     </>}
@@ -1296,7 +1297,7 @@ function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveList
   };
 
   const CHIP = (label, active, onClick, color="#ff2d55") => (
-    <button onClick={onClick} style={{ padding:"7px 14px",borderRadius:20,background:active?color+"20":"#f8f7f4",border:"1px solid "+(active?color+"60":"#e8e6e0"),color:active?color:"#8a8a9a",fontSize:12,cursor:"pointer",fontFamily:"inherit",transition:"all 0.15s" }}>{label}</button>
+    <button onClick={onClick} style={{ padding:"7px 14px",borderRadius:20,background:active?color+"20":"#f5f3ee",border:"1px solid "+(active?color+"60":"#e8e6e0"),color:active?color:"#8a8a9a",fontSize:12,cursor:"pointer",fontFamily:"inherit",transition:"all 0.15s" }}>{label}</button>
   );
 
   if(step==="loading") return (
@@ -1321,9 +1322,9 @@ function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveList
               <div><div style={{ fontSize:17,fontWeight:700,color:"#1a1a1a" }}>{isEN&&previewPlace.nameEN?previewPlace.nameEN:previewPlace.name}</div>
               <div style={{ fontSize:12,color:"#8a8a9a",marginTop:2 }}>{catLabel(previewPlace.category)} · {PRICE_EMOJI[previewPlace.price]||"?"} · {previewPlace.time}</div></div>
             </div>
-            <div style={{ fontSize:13,color:"#8a8a9a",lineHeight:1.6,padding:"10px 12px",background:"#f8f7f4",borderRadius:10,marginBottom:12,borderLeft:"2px solid "+(CAT_META[previewPlace.category]||{color:"#ff2d55"}).color }}>{isEN&&previewPlace.descEN?previewPlace.descEN:previewPlace.desc}</div>
+            <div style={{ fontSize:13,color:"#8a8a9a",lineHeight:1.6,padding:"10px 12px",background:"#f5f3ee",borderRadius:10,marginBottom:12,borderLeft:"2px solid "+(CAT_META[previewPlace.category]||{color:"#ff2d55"}).color }}>{isEN&&previewPlace.descEN?previewPlace.descEN:previewPlace.desc}</div>
             {(isEN&&previewPlace.repEN?previewPlace.repEN:previewPlace.rep)&&<div style={{ fontSize:12,color:"#ff9f0a",padding:"8px 12px",background:"#ff9f0a10",borderRadius:10,borderLeft:"2px solid #ff9f0a",marginBottom:12 }}>⭐ {isEN&&previewPlace.repEN?previewPlace.repEN:previewPlace.rep}</div>}
-            <button onClick={()=>setPreviewPlace(null)} style={{ width:"100%",padding:"11px",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:10,color:"#8a8a9a",fontSize:13,cursor:"pointer" }}>{isEN?"Close":"Fechar"}</button>
+            <button onClick={()=>setPreviewPlace(null)} style={{ width:"100%",padding:"11px",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:10,color:"#8a8a9a",fontSize:13,cursor:"pointer" }}>{isEN?"Close":"Fechar"}</button>
           </div>
         </div>
       )}
@@ -1332,7 +1333,7 @@ function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveList
           <div style={{ width:36,height:3,background:"#e8e6e0",borderRadius:2,margin:"0 auto 14px" }}/>
           <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10 }}>
             <div style={{ fontSize:16,fontWeight:700,color:"#1a1a1a" }}>🎲 {isEN?"Your surprise day!":"Seu dia surpresa!"}</div>
-            <button onClick={onClose} style={{ background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,width:32,height:32,color:"#8a8a9a",cursor:"pointer",fontSize:16 }}>×</button>
+            <button onClick={onClose} style={{ background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,width:32,height:32,color:"#8a8a9a",cursor:"pointer",fontSize:16 }}>×</button>
           </div>
           {linkedPlaces.length>0&&(
             <div style={{ marginBottom:10 }}>
@@ -1342,11 +1343,11 @@ function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveList
               </div>
             </div>
           )}
-          <div style={{ flex:1,overflowY:"auto",background:"#f8f7f4",borderRadius:12,padding:"14px",fontSize:13,color:"#1a1a1a",lineHeight:1.7,whiteSpace:"pre-wrap",marginBottom:12 }}>{result}</div>
+          <div style={{ flex:1,overflowY:"auto",background:"#f5f3ee",borderRadius:12,padding:"14px",fontSize:13,color:"#1a1a1a",lineHeight:1.7,whiteSpace:"pre-wrap",marginBottom:12 }}>{result}</div>
           <div style={{ display:"flex",gap:8 }}>
             <button onClick={()=>{navigator.clipboard.writeText(result);addToast(isEN?"Copied!":"Copiado!","success");}} style={{ flex:1,padding:"11px",background:"#ff2d55",border:"none",borderRadius:10,color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer" }}>{isEN?"Copy":"Copiar"}</button>
-            {linkedPlaces.length>0&&<button onClick={saveAsCuradoria} style={{ flex:1,padding:"11px",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:10,color:"#8a8a9a",fontSize:13,cursor:"pointer" }}>💾 {isEN?"Save curadoria":"Salvar curadoria"}</button>}
-            <button onClick={()=>{setStep("form");setResult("");setLinkedPlaces([]);}} style={{ padding:"11px 14px",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:10,color:"#8a8a9a",fontSize:13,cursor:"pointer" }}>🎲</button>
+            {linkedPlaces.length>0&&<button onClick={saveAsCuradoria} style={{ flex:1,padding:"11px",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:10,color:"#8a8a9a",fontSize:13,cursor:"pointer" }}>💾 {isEN?"Save curadoria":"Salvar curadoria"}</button>}
+            <button onClick={()=>{setStep("form");setResult("");setLinkedPlaces([]);}} style={{ padding:"11px 14px",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:10,color:"#8a8a9a",fontSize:13,cursor:"pointer" }}>🎲</button>
           </div>
         </div>
       </div>
@@ -1359,7 +1360,7 @@ function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveList
         <div style={{ width:36,height:3,background:"#e8e6e0",borderRadius:2,margin:"0 auto 14px" }}/>
         <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4 }}>
           <div style={{ fontSize:16,fontWeight:700,color:"#1a1a1a" }}>🎲 {isEN?"Surprise me!":"Me surpreenda!"}</div>
-          <button onClick={onClose} style={{ background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,width:32,height:32,color:"#8a8a9a",cursor:"pointer",fontSize:16 }}>×</button>
+          <button onClick={onClose} style={{ background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,width:32,height:32,color:"#8a8a9a",cursor:"pointer",fontSize:16 }}>×</button>
         </div>
         <div style={{ fontSize:12,color:"#8a8a9a",marginBottom:16 }}>{isEN?"Answer a few questions and Claude builds your perfect day.":"Responda algumas perguntas e o Claude monta seu dia perfeito."}</div>
 
@@ -1368,7 +1369,7 @@ function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveList
             <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em" }}>{isEN?"DEPARTURE":"SAINDO DE"}</div>
             <button onClick={detectLoc} style={{ fontSize:11,color:"#ff2d55",background:"none",border:"none",cursor:"pointer" }}>{locLoading?"...":"📍 GPS"}</button>
           </div>
-          <input value={startLoc} onChange={e=>setStartLoc(e.target.value)} style={{ width:"100%",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:10,padding:"9px 12px",color:"#1a1a1a",fontSize:13 }}/>
+          <input value={startLoc} onChange={e=>setStartLoc(e.target.value)} style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:10,padding:"9px 12px",color:"#1a1a1a",fontSize:13 }}/>
         </div>
 
         <div style={{ marginBottom:14 }}>
@@ -1437,7 +1438,7 @@ function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveList
         <div style={{ marginBottom:20 }}>
           <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:8 }}>{isEN?"EXCLUDE CATEGORIES?":"EXCLUIR CATEGORIAS?"}</div>
           <div style={{ display:"flex",gap:5,flexWrap:"wrap" }}>
-            {CATEGORIES.map(cat=>{const meta=CAT_META[cat]||{color:"#ff2d55"};const excluded=params.exclusoes.includes(cat);return<button key={cat} onClick={()=>toggleExclusao(cat)} style={{ padding:"5px 10px",borderRadius:20,background:excluded?"#ff2d5515":"#f8f7f4",border:"1px solid "+(excluded?"#ff2d5560":"#e8e6e0"),color:excluded?"#ff2d55":"#8a8a9a",fontSize:11,cursor:"pointer",fontFamily:"inherit",textDecoration:excluded?"line-through":"none" }}>{catLabel(cat)}</button>;})}
+            {CATEGORIES.map(cat=>{const meta=CAT_META[cat]||{color:"#ff2d55"};const excluded=params.exclusoes.includes(cat);return<button key={cat} onClick={()=>toggleExclusao(cat)} style={{ padding:"5px 10px",borderRadius:20,background:excluded?"#ff2d5515":"#f5f3ee",border:"1px solid "+(excluded?"#ff2d5560":"#e8e6e0"),color:excluded?"#ff2d55":"#8a8a9a",fontSize:11,cursor:"pointer",fontFamily:"inherit",textDecoration:excluded?"line-through":"none" }}>{catLabel(cat)}</button>;})}
           </div>
         </div>
 
@@ -1503,8 +1504,8 @@ function EventCard({ ev, onSave, onDelete, addToast }) {
         <div style={{ padding:"0 14px 14px", borderTop:"1px solid #e8e6e0" }}>
           {ev.desc&&<div style={{ fontSize:13, color:"#8a8a9a", lineHeight:1.6, marginTop:10, marginBottom:10 }}>{ev.desc}</div>}
           <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:10 }}>
-            <a href={gcUrl} target="_blank" rel="noreferrer" style={{ padding:"6px 12px", background:"#f8f7f4", border:"1px solid #e8e6e0", borderRadius:8, color:"#8a8a9a", fontSize:11, textDecoration:"none" }}>📅 {isEN?"Add to Calendar":"Adicionar ao Google Calendar"}</a>
-            {cityUrl&&<a href={cityUrl} target="_blank" rel="noreferrer" style={{ padding:"6px 12px", background:"#f8f7f4", border:"1px solid #e8e6e0", borderRadius:8, color:"#8a8a9a", fontSize:11, textDecoration:"none" }}>🗺 {isEN?"Get directions":"Como chegar"}</a>}
+            <a href={gcUrl} target="_blank" rel="noreferrer" style={{ padding:"6px 12px", background:"#f5f3ee", border:"1px solid #e8e6e0", borderRadius:8, color:"#8a8a9a", fontSize:11, textDecoration:"none" }}>📅 {isEN?"Add to Calendar":"Adicionar ao Google Calendar"}</a>
+            {cityUrl&&<a href={cityUrl} target="_blank" rel="noreferrer" style={{ padding:"6px 12px", background:"#f5f3ee", border:"1px solid #e8e6e0", borderRadius:8, color:"#8a8a9a", fontSize:11, textDecoration:"none" }}>🗺 {isEN?"Get directions":"Como chegar"}</a>}
             {ev.ticketLink&&<a href={ev.ticketLink} target="_blank" rel="noreferrer" style={{ padding:"6px 12px", background:"#ff2d5515", border:"1px solid #ff2d5540", borderRadius:8, color:"#ff2d55", fontSize:11, textDecoration:"none" }}>🎟 {isEN?"Buy ticket":"Comprar ingresso"}</a>}
           </div>
           {!isPast&&<div style={{ display:"flex", gap:8 }}>
@@ -1547,42 +1548,42 @@ function AddEventModal({ onClose, onSave, addToast }) {
         <div style={{ width:36,height:3,background:"#e8e6e0",borderRadius:2,margin:"0 auto 16px" }}/>
         <div style={{ fontSize:15,fontWeight:700,color:"#1a1a1a",marginBottom:14 }}>{isEN?"New Event":"Novo Evento"}</div>
         <div style={{ display:"flex",gap:10,marginBottom:12 }}>
-          <input value={emoji} onChange={e=>setEmoji(e.target.value)} maxLength={2} style={{ width:50,background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px",color:"#1a1a1a",fontSize:22,textAlign:"center" }}/>
-          <input value={name} onChange={e=>setName(e.target.value)} placeholder={isEN?"Event name...":"Nome do evento..."} style={{ flex:1,background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:14 }}/>
+          <input value={emoji} onChange={e=>setEmoji(e.target.value)} maxLength={2} style={{ width:50,background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px",color:"#1a1a1a",fontSize:22,textAlign:"center" }}/>
+          <input value={name} onChange={e=>setName(e.target.value)} placeholder={isEN?"Event name...":"Nome do evento..."} style={{ flex:1,background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:14 }}/>
         </div>
         <div style={{ marginBottom:12 }}>
           <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"CATEGORY":"CATEGORIA"}</div>
           <div style={{ display:"flex",gap:5,flexWrap:"wrap" }}>
-            {EVENT_CATS.map(cat=><button key={cat} onClick={()=>setCategory(cat)} style={{ padding:"6px 12px",borderRadius:20,background:category===cat?"#ff2d5515":"#f8f7f4",border:"1px solid "+(category===cat?"#ff2d55":"#e8e6e0"),color:category===cat?"#ff2d55":"#8a8a9a",fontSize:12,cursor:"pointer",fontFamily:"inherit" }}>{EVENT_CAT_EMOJI[cat]} {evCatLabel(cat)}</button>)}
+            {EVENT_CATS.map(cat=><button key={cat} onClick={()=>setCategory(cat)} style={{ padding:"6px 12px",borderRadius:20,background:category===cat?"#ff2d5515":"#f5f3ee",border:"1px solid "+(category===cat?"#ff2d55":"#e8e6e0"),color:category===cat?"#ff2d55":"#8a8a9a",fontSize:12,cursor:"pointer",fontFamily:"inherit" }}>{EVENT_CAT_EMOJI[cat]} {evCatLabel(cat)}</button>)}
           </div>
         </div>
         <div style={{ display:"flex",gap:8,marginBottom:12 }}>
           <div style={{ flex:2 }}>
             <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"DATE *":"DATA *"}</div>
-            <input type="date" value={date} onChange={e=>setDate(e.target.value)} style={{ width:"100%",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:14 }}/>
+            <input type="date" value={date} onChange={e=>setDate(e.target.value)} style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:14 }}/>
           </div>
           <div style={{ flex:1 }}>
             <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"TIME":"HORA"}</div>
-            <input type="time" value={time} onChange={e=>setTime(e.target.value)} style={{ width:"100%",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:14 }}/>
+            <input type="time" value={time} onChange={e=>setTime(e.target.value)} style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:14 }}/>
           </div>
         </div>
         <div style={{ marginBottom:12 }}>
           <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"LOCATION":"LOCAL"}</div>
-          <input value={location} onChange={e=>setLocation(e.target.value)} placeholder={isEN?"Venue name or address...":"Nome do local ou endereco..."} style={{ width:"100%",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13 }}/>
+          <input value={location} onChange={e=>setLocation(e.target.value)} placeholder={isEN?"Venue name or address...":"Nome do local ou endereco..."} style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13 }}/>
         </div>
         <div style={{ marginBottom:12 }}>
           <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"PRICE":"PRECO"}</div>
           <div style={{ display:"flex",gap:6 }}>
-            {["gratis","$","$$","$$$"].map(p=><button key={p} onClick={()=>setPrice(price===p?"":p)} style={{ flex:1,padding:"8px 4px",borderRadius:8,background:price===p?"#ff9f0a18":"#f8f7f4",border:"1px solid "+(price===p?"#ff9f0a":"#e8e6e0"),color:price===p?"#ff9f0a":"#8a8a9a",fontSize:12,cursor:"pointer",fontFamily:"inherit" }}>{p==="gratis"?"🆓":p}</button>)}
+            {["gratis","$","$$","$$$"].map(p=><button key={p} onClick={()=>setPrice(price===p?"":p)} style={{ flex:1,padding:"8px 4px",borderRadius:8,background:price===p?"#ff9f0a18":"#f5f3ee",border:"1px solid "+(price===p?"#ff9f0a":"#e8e6e0"),color:price===p?"#ff9f0a":"#8a8a9a",fontSize:12,cursor:"pointer",fontFamily:"inherit" }}>{p==="gratis"?"🆓":p}</button>)}
           </div>
         </div>
         <div style={{ marginBottom:12 }}>
           <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"DESCRIPTION":"DESCRICAO"}</div>
-          <textarea value={desc} onChange={e=>setDesc(e.target.value)} placeholder={isEN?"Notes about this event...":"Notas sobre o evento..."} rows={2} style={{ width:"100%",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13,resize:"none" }}/>
+          <textarea value={desc} onChange={e=>setDesc(e.target.value)} placeholder={isEN?"Notes about this event...":"Notas sobre o evento..."} rows={2} style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13,resize:"none" }}/>
         </div>
         <div style={{ marginBottom:16 }}>
           <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>🎟 {isEN?"TICKET LINK":"LINK DO INGRESSO"}</div>
-          <input value={ticketLink} onChange={e=>setTicketLink(e.target.value)} placeholder="https://..." style={{ width:"100%",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13 }}/>
+          <input value={ticketLink} onChange={e=>setTicketLink(e.target.value)} placeholder="https://..." style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13 }}/>
         </div>
         <button onClick={handle} disabled={!name.trim()||!date||saving} style={{ width:"100%",padding:"13px",background:name.trim()&&date&&!saving?"#ff2d55":"#e8e6e0",border:"none",borderRadius:10,color:name.trim()&&date&&!saving?"#fff":"#a0a0b0",fontSize:14,fontWeight:700,cursor:name.trim()&&date&&!saving?"pointer":"default" }}>
           {saving?(isEN?"Saving...":"Salvando..."):(isEN?"Add Event":"Adicionar Evento")}
@@ -1873,12 +1874,13 @@ const PlaceCard = memo(function PlaceCard({ place, entry, onSelect, onCheckIn, i
         onTouchEnd={onTouchEnd}
         onClick={()=>{ if(Math.abs(swipeDx)<5) onSelect(place); }}
         style={{
-          background: isBeen ? meta.color+"08" : "#ffffff",
-          border: "1px solid "+(isBeen?meta.color+"40":isWant?"#007aff25":"#eceae4"),
-          borderRadius:16, padding:"14px 14px 14px 14px", cursor:"pointer", display:"flex", gap:14,
+          background: isBeen ? meta.color+"0a" : "#ffffff",
+          border: "1px solid "+(isBeen?meta.color+"30":isWant?"#007aff20":"#eae7e0"),
+          borderLeft: "4px solid "+(isBeen?meta.color:isWant?"#007aff":meta.color+"60"),
+          borderRadius:14, padding:"13px 13px 13px 12px", cursor:"pointer", display:"flex", gap:13,
           transform: swipeDx ? `translateX(${swipeDx}px)` : "none",
           transition: swiping ? "none" : "transform 0.2s ease",
-          boxShadow: isBeen?"none":"0 1px 3px #00000008"
+          boxShadow: "0 1px 4px #00000010"
         }}
       >
         <div style={{ position:"relative", flexShrink:0 }}>
@@ -2108,22 +2110,22 @@ Retorne este JSON (type = "place" ou "event"):
 
         {/* Type badge */}
         <div style={{ display:"flex",gap:8,marginBottom:14 }}>
-          {["place","event"].map(t=><button key={t} onClick={()=>setEditResult(p=>({...p,type:t}))} style={{ flex:1,padding:"8px",borderRadius:10,background:editResult.type===t||(!editResult.type&&t==="place")?"#ff2d5515":"#f8f7f4",border:"1px solid "+(editResult.type===t?"#ff2d55":"#e8e6e0"),color:editResult.type===t?"#ff2d55":"#a0a0b0",fontSize:12,cursor:"pointer" }}>
+          {["place","event"].map(t=><button key={t} onClick={()=>setEditResult(p=>({...p,type:t}))} style={{ flex:1,padding:"8px",borderRadius:10,background:editResult.type===t||(!editResult.type&&t==="place")?"#ff2d5515":"#f5f3ee",border:"1px solid "+(editResult.type===t?"#ff2d55":"#e8e6e0"),color:editResult.type===t?"#ff2d55":"#a0a0b0",fontSize:12,cursor:"pointer" }}>
             {t==="place"?(isEN?"📍 Place":"📍 Lugar"):(isEN?"📅 Event":"📅 Evento")}
           </button>)}
         </div>
 
         {/* Emoji + Name */}
         <div style={{ display:"flex",gap:10,marginBottom:12 }}>
-          <input value={editResult.emoji||""} onChange={e=>setEditResult(p=>({...p,emoji:e.target.value}))} maxLength={2} style={{ width:52,background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px",color:"#1a1a1a",fontSize:22,textAlign:"center" }}/>
-          <input value={editResult.name||""} onChange={e=>setEditResult(p=>({...p,name:e.target.value}))} style={{ flex:1,background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:14,fontWeight:600 }}/>
+          <input value={editResult.emoji||""} onChange={e=>setEditResult(p=>({...p,emoji:e.target.value}))} maxLength={2} style={{ width:52,background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px",color:"#1a1a1a",fontSize:22,textAlign:"center" }}/>
+          <input value={editResult.name||""} onChange={e=>setEditResult(p=>({...p,name:e.target.value}))} style={{ flex:1,background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:14,fontWeight:600 }}/>
         </div>
 
         {/* Category */}
         {(editResult.type==="place"||!editResult.eventDate) && <div style={{ marginBottom:12 }}>
           <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>CATEGORIA</div>
           <div style={{ display:"flex",gap:5,flexWrap:"wrap" }}>
-            {CATEGORIES_LIST.map(cat=><button key={cat} onClick={()=>setEditResult(p=>({...p,category:cat}))} style={{ padding:"5px 10px",borderRadius:20,background:editResult.category===cat?"#ff2d5515":"#f8f7f4",border:"1px solid "+(editResult.category===cat?"#ff2d55":"#e8e6e0"),color:editResult.category===cat?"#ff2d55":"#8a8a9a",fontSize:11,cursor:"pointer" }}>{catLabel(cat)}</button>)}
+            {CATEGORIES_LIST.map(cat=><button key={cat} onClick={()=>setEditResult(p=>({...p,category:cat}))} style={{ padding:"5px 10px",borderRadius:20,background:editResult.category===cat?"#ff2d5515":"#f5f3ee",border:"1px solid "+(editResult.category===cat?"#ff2d55":"#e8e6e0"),color:editResult.category===cat?"#ff2d55":"#8a8a9a",fontSize:11,cursor:"pointer" }}>{catLabel(cat)}</button>)}
           </div>
         </div>}
 
@@ -2131,18 +2133,18 @@ Retorne este JSON (type = "place" ou "event"):
         {(editResult.type==="event"||editResult.eventDate) && <div style={{ display:"flex",gap:8,marginBottom:12 }}>
           <div style={{ flex:2 }}>
             <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>DATA</div>
-            <input type="date" value={editResult.eventDate||""} onChange={e=>setEditResult(p=>({...p,eventDate:e.target.value}))} style={{ width:"100%",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13 }}/>
+            <input type="date" value={editResult.eventDate||""} onChange={e=>setEditResult(p=>({...p,eventDate:e.target.value}))} style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13 }}/>
           </div>
           <div style={{ flex:1 }}>
             <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>HORA</div>
-            <input type="time" value={editResult.eventTime||""} onChange={e=>setEditResult(p=>({...p,eventTime:e.target.value}))} style={{ width:"100%",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13 }}/>
+            <input type="time" value={editResult.eventTime||""} onChange={e=>setEditResult(p=>({...p,eventTime:e.target.value}))} style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13 }}/>
           </div>
         </div>}
 
         {/* Desc */}
         <div style={{ marginBottom:12 }}>
           <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>DESCRICAO</div>
-          <textarea value={editResult.desc||""} onChange={e=>setEditResult(p=>({...p,desc:e.target.value}))} rows={2} style={{ width:"100%",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13,resize:"none" }}/>
+          <textarea value={editResult.desc||""} onChange={e=>setEditResult(p=>({...p,desc:e.target.value}))} rows={2} style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13,resize:"none" }}/>
         </div>
 
         {/* Price + Time row */}
@@ -2150,13 +2152,13 @@ Retorne este JSON (type = "place" ou "event"):
           <div style={{ flex:1 }}>
             <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>PRECO</div>
             <div style={{ display:"flex",gap:4 }}>
-              {["gratis","$","$$","$$$"].map(p=><button key={p} onClick={()=>setEditResult(prev=>({...prev,price:p}))} style={{ flex:1,padding:"7px 4px",borderRadius:8,background:editResult.price===p?"#ff9f0a18":"#f8f7f4",border:"1px solid "+(editResult.price===p?"#ff9f0a":"#e8e6e0"),color:editResult.price===p?"#ff9f0a":"#8a8a9a",fontSize:11,cursor:"pointer" }}>{p==="gratis"?"🆓":p}</button>)}
+              {["gratis","$","$$","$$$"].map(p=><button key={p} onClick={()=>setEditResult(prev=>({...prev,price:p}))} style={{ flex:1,padding:"7px 4px",borderRadius:8,background:editResult.price===p?"#ff9f0a18":"#f5f3ee",border:"1px solid "+(editResult.price===p?"#ff9f0a":"#e8e6e0"),color:editResult.price===p?"#ff9f0a":"#8a8a9a",fontSize:11,cursor:"pointer" }}>{p==="gratis"?"🆓":p}</button>)}
             </div>
           </div>
           <div style={{ flex:1 }}>
             <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>TEMPO</div>
             <div style={{ display:"flex",gap:4 }}>
-              {["30min","1h","2h","3h+"].map(t=><button key={t} onClick={()=>setEditResult(prev=>({...prev,time:t}))} style={{ flex:1,padding:"7px 2px",borderRadius:8,background:editResult.time===t?"#007aff18":"#f8f7f4",border:"1px solid "+(editResult.time===t?"#007aff":"#e8e6e0"),color:editResult.time===t?"#007aff":"#8a8a9a",fontSize:11,cursor:"pointer" }}>{t}</button>)}
+              {["30min","1h","2h","3h+"].map(t=><button key={t} onClick={()=>setEditResult(prev=>({...prev,time:t}))} style={{ flex:1,padding:"7px 2px",borderRadius:8,background:editResult.time===t?"#007aff18":"#f5f3ee",border:"1px solid "+(editResult.time===t?"#007aff":"#e8e6e0"),color:editResult.time===t?"#007aff":"#8a8a9a",fontSize:11,cursor:"pointer" }}>{t}</button>)}
             </div>
           </div>
         </div>
@@ -2170,17 +2172,17 @@ Retorne este JSON (type = "place" ou "event"):
         {/* Hours + Link */}
         {editResult.hours&&<div style={{ marginBottom:12 }}>
           <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>HORARIOS</div>
-          <input value={editResult.hours||""} onChange={e=>setEditResult(p=>({...p,hours:e.target.value}))} style={{ width:"100%",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13 }}/>
+          <input value={editResult.hours||""} onChange={e=>setEditResult(p=>({...p,hours:e.target.value}))} style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13 }}/>
         </div>}
         {editResult.link&&<div style={{ marginBottom:14 }}>
           <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>LINK</div>
-          <input value={editResult.link||""} onChange={e=>setEditResult(p=>({...p,link:e.target.value}))} style={{ width:"100%",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13 }}/>
+          <input value={editResult.link||""} onChange={e=>setEditResult(p=>({...p,link:e.target.value}))} style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 12px",color:"#1a1a1a",fontSize:13 }}/>
         </div>}
 
         {/* Flags */}
         <div style={{ display:"flex",gap:8,marginBottom:16 }}>
           {[["needsReservation","📋","Reserva"],["petFriendly","🐾","Pet"],["publicBathroom","🚻","Banheiro"]].map(([k,emoji,label])=>(
-            <button key={k} onClick={()=>setEditResult(p=>({...p,[k]:!p[k]}))} style={{ flex:1,padding:"8px 4px",borderRadius:10,background:editResult[k]?"#ff2d5518":"#f8f7f4",border:"1px solid "+(editResult[k]?"#ff2d55":"#e8e6e0"),color:editResult[k]?"#ff2d55":"#a0a0b0",fontSize:11,cursor:"pointer" }}>
+            <button key={k} onClick={()=>setEditResult(p=>({...p,[k]:!p[k]}))} style={{ flex:1,padding:"8px 4px",borderRadius:10,background:editResult[k]?"#ff2d5518":"#f5f3ee",border:"1px solid "+(editResult[k]?"#ff2d55":"#e8e6e0"),color:editResult[k]?"#ff2d55":"#a0a0b0",fontSize:11,cursor:"pointer" }}>
               {emoji} {label}
             </button>
           ))}
@@ -2191,17 +2193,17 @@ Retorne este JSON (type = "place" ou "event"):
           <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:8 }}>{isEN?"HAVE YOU BEEN?":"JA FORAM?"}</div>
           <div style={{ display:"flex",gap:6 }}>
             {[{v:null,label:isEN?"Not yet":"Ainda nao",color:"#a0a0b0"},{v:"quero",label:isEN?"Want to go":"Quero ir",color:"#ff2d55"},{v:"fui",label:isEN?"Been there!":"Ja fui!",color:"#30d158"}].map(({v,label,color})=>(
-              <button key={String(v)} onClick={()=>setAddStatus(v)} style={{ flex:1,padding:"9px 4px",borderRadius:10,background:addStatus===v?color+"20":"#f8f7f4",border:"1px solid "+(addStatus===v?color:"#e8e6e0"),color:addStatus===v?color:"#a0a0b0",fontSize:12,cursor:"pointer",fontWeight:addStatus===v?700:400 }}>{label}</button>
+              <button key={String(v)} onClick={()=>setAddStatus(v)} style={{ flex:1,padding:"9px 4px",borderRadius:10,background:addStatus===v?color+"20":"#f5f3ee",border:"1px solid "+(addStatus===v?color:"#e8e6e0"),color:addStatus===v?color:"#a0a0b0",fontSize:12,cursor:"pointer",fontWeight:addStatus===v?700:400 }}>{label}</button>
             ))}
           </div>
         </div>
-        {addStatus==="fui"&&<div style={{ background:"#f8f7f480",border:"1px solid #e8e6e0",borderRadius:10,padding:"12px",marginBottom:14 }}>
+        {addStatus==="fui"&&<div style={{ background:"#f5f3ee80",border:"1px solid #e8e6e0",borderRadius:10,padding:"12px",marginBottom:14 }}>
           <div style={{ marginBottom:10 }}>
             <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"DATE":"DATA"}</div>
-            <input type="date" value={addDate} onChange={e=>setAddDate(e.target.value)} style={{ width:"100%",background:"#f8f7f4",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 10px",color:"#1a1a1a",fontSize:13 }}/>
+            <input type="date" value={addDate} onChange={e=>setAddDate(e.target.value)} style={{ width:"100%",background:"#f5f3ee",border:"1px solid #e8e6e0",borderRadius:8,padding:"8px 10px",color:"#1a1a1a",fontSize:13 }}/>
           </div>
           <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"WHO WENT?":"QUEM FOI?"}</div>
-          <div style={{ display:"flex",gap:6 }}>{WHO_OPTIONS.map(w=><button key={w} onClick={()=>setAddWho(w)} style={{ flex:1,padding:"8px 4px",borderRadius:8,background:addWho===w?"#007aff20":"#f8f7f4",border:"1px solid "+(addWho===w?"#007aff":"#e8e6e0"),color:addWho===w?"#007aff":"#8a8a9a",fontSize:12,cursor:"pointer" }}>{WHO_EMOJI[w]} {WHO_LABELS[w]}</button>)}</div>
+          <div style={{ display:"flex",gap:6 }}>{WHO_OPTIONS.map(w=><button key={w} onClick={()=>setAddWho(w)} style={{ flex:1,padding:"8px 4px",borderRadius:8,background:addWho===w?"#007aff20":"#f5f3ee",border:"1px solid "+(addWho===w?"#007aff":"#e8e6e0"),color:addWho===w?"#007aff":"#8a8a9a",fontSize:12,cursor:"pointer" }}>{WHO_EMOJI[w]} {WHO_LABELS[w]}</button>)}</div>
         </div>}
 
         <button onClick={confirm} disabled={saving} style={{ width:"100%",padding:"14px",background:saving?"#e8e6e0":"#ff2d55",border:"none",borderRadius:12,color:saving?"#a0a0b0":"#fff",fontSize:14,fontWeight:700,cursor:saving?"default":"pointer" }}>
@@ -2238,7 +2240,7 @@ Retorne este JSON (type = "place" ou "event"):
           <div style={{ flex:1,height:1,background:"#e8e6e0" }}/>
         </div>
 
-        <input value={inputText} onChange={e=>setInputText(e.target.value)} onKeyDown={e=>e.key==="Enter"&&analyze()} placeholder={isEN?"e.g. Roberta's Pizza Brooklyn, or describe an event...":"ex: Roberta's Pizza Brooklyn, ou descreva um evento..."} style={{ width:"100%",background:"#f8f7f4",border:"1.5px solid "+(inputText?"#ff2d5550":"#e8e6e0"),borderRadius:12,padding:"12px 14px",color:"#1a1a1a",fontSize:14,marginBottom:14,transition:"border-color 0.2s" }}/>
+        <input value={inputText} onChange={e=>setInputText(e.target.value)} onKeyDown={e=>e.key==="Enter"&&analyze()} placeholder={isEN?"e.g. Roberta's Pizza Brooklyn, or describe an event...":"ex: Roberta's Pizza Brooklyn, ou descreva um evento..."} style={{ width:"100%",background:"#f5f3ee",border:"1.5px solid "+(inputText?"#ff2d5550":"#e8e6e0"),borderRadius:12,padding:"12px 14px",color:"#1a1a1a",fontSize:14,marginBottom:14,transition:"border-color 0.2s" }}/>
 
         <button onClick={analyze} disabled={!inputText.trim()&&!imageBase64} style={{ width:"100%",padding:"14px",background:inputText.trim()||imageBase64?"#ff2d55":"#e8e6e0",border:"none",borderRadius:12,color:inputText.trim()||imageBase64?"#fff":"#a0a0b0",fontSize:14,fontWeight:700,cursor:inputText.trim()||imageBase64?"pointer":"default",transition:"all 0.2s" }}>
           {isEN?"Analyze with Claude ✨":"Analisar com Claude ✨"}
@@ -2399,7 +2401,7 @@ function PlanejArTab({ events, onAddEvent, onSaveEvent, onDeleteEvent, onOpenPla
 
       {upcoming.map(ev=>(
         <div key={ev.id} style={{ background:"#ffffff",borderRadius:14,padding:"14px 16px",marginBottom:10,border:"1px solid #e8e6e0",boxShadow:"0 1px 3px #00000008",display:"flex",gap:12,alignItems:"flex-start" }}>
-          <div style={{ background:ev.date===today?"#ff2d5515":"#f8f7f4",borderRadius:10,padding:"8px 10px",textAlign:"center",minWidth:44,flexShrink:0,border:"1px solid "+(ev.date===today?"#ff2d5530":"#e8e6e0") }}>
+          <div style={{ background:ev.date===today?"#ff2d5515":"#f5f3ee",borderRadius:10,padding:"8px 10px",textAlign:"center",minWidth:44,flexShrink:0,border:"1px solid "+(ev.date===today?"#ff2d5530":"#e8e6e0") }}>
             <div style={{ fontSize:11,fontWeight:800,color:ev.date===today?"#ff2d55":"#8a8a9a" }}>{ev.date?new Date(ev.date+"T12:00:00").getDate():"-"}</div>
             <div style={{ fontSize:9,color:ev.date===today?"#ff2d55":"#b0aebb",textTransform:"uppercase" }}>{ev.date?new Date(ev.date+"T12:00:00").toLocaleDateString(isEN?"en-US":"pt-BR",{month:"short"}):""}</div>
           </div>
@@ -2677,11 +2679,11 @@ export default function App() {
   const activeFiltersCount = [activeCategory!=="Todos",activeFilter!=="todos",filterVibes.length>0,filterPrices.length>0,filterSeasons.length>0,filterStars>0,filterThumb,filterPet,filterBathroom,filterRegion].filter(Boolean).length;
 
   if(loading)return(
-    <div style={{ minHeight:"100vh",background:"#f8f7f4",fontFamily:"'Inter',system-ui,sans-serif" }}>
-      <div style={{ background:"#f8f7f4",borderBottom:"1px solid #e8e6e0",padding:"14px 16px" }}>
-        <div style={{ height:12,width:100,background:"#e8e6e0",borderRadius:6,marginBottom:6 }}/>
-        <div style={{ height:22,width:180,background:"#e0ddd8",borderRadius:8,marginBottom:10 }}/>
-        <div style={{ height:6,background:"#e8e6e0",borderRadius:4 }}/>
+    <div style={{ minHeight:"100vh",background:"#f5f3ee",fontFamily:"'Inter',system-ui,sans-serif" }}>
+      <div style={{ background:"linear-gradient(135deg,#ff2d55,#ff6b35)",padding:"16px 16px 20px" }}>
+        <div style={{ height:10,width:80,background:"#ffffff30",borderRadius:6,marginBottom:8 }}/>
+        <div style={{ height:24,width:200,background:"#ffffff30",borderRadius:8,marginBottom:12 }}/>
+        <div style={{ height:5,background:"#ffffff25",borderRadius:4 }}><div style={{ width:"68%",height:"100%",background:"#ffffff",borderRadius:4,opacity:0.7 }}/></div>
       </div>
       <div style={{ maxWidth:600,margin:"0 auto",padding:"16px" }}>
         {[1,2,3,4,5,6].map(i=>(
@@ -2698,39 +2700,36 @@ export default function App() {
   );
 
   return (
-    <div style={{ minHeight:"100vh",background:"#f8f7f4",color:"#1a1a1a",fontFamily:"'Inter',system-ui,sans-serif",paddingBottom:80 }}>
+    <div style={{ minHeight:"100vh",background:"#f5f3ee",color:"#1a1a1a",fontFamily:"'Inter',system-ui,sans-serif",paddingBottom:80 }}>
       <div style={{ maxWidth:600,margin:"0 auto" }}>
-        {/* Header */}
-        <div style={{ padding:"14px 16px 10px",position:"sticky",top:0,background:"#f8f7f4",zIndex:100,borderBottom:"1px solid #e8e6e0" }}>
-          <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10 }}>
-            <div onClick={()=>window.location.reload()} style={{ cursor:"pointer" }}>
-              <div style={{ fontSize:10,color:"#b0aebb",letterSpacing:"0.12em",fontWeight:500 }}>{T.byGuiGab} {syncing&&<span className="pulsing" style={{ color:"#ff2d55" }}>·</span>}</div>
-              <div style={{ fontSize:20,fontWeight:800,letterSpacing:"-0.02em",background:"linear-gradient(90deg,#ff2d55,#ff6b35,#ff9f0a)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",lineHeight:1.2 }}>{T.appTitle} 🗽</div>
-            </div>
-            <div style={{ display:"flex",gap:6 }}>
-              <button onClick={()=>setShowAIAdd(true)} style={{ background:"#ffffff",border:"1px solid #e8e6e0",borderRadius:20,padding:"8px 14px",cursor:"pointer",fontSize:12,color:"#8a8a9a",fontWeight:500,boxShadow:"0 1px 3px #00000010" }}>
+        {/* Header — gradient brand */}
+        <div style={{ position:"sticky",top:0,zIndex:100,background:"linear-gradient(135deg,#ff2d55,#ff6b35)",boxShadow:"0 2px 16px #ff2d5530" }}>
+          <div style={{ padding:"14px 16px 12px" }}>
+            <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10 }}>
+              <div onClick={()=>window.location.reload()} style={{ cursor:"pointer" }}>
+                <div style={{ fontSize:10,color:"#ffffff80",letterSpacing:"0.14em",fontWeight:600 }}>{T.byGuiGab} {syncing&&<span className="pulsing">·</span>}</div>
+                <div style={{ fontSize:22,fontWeight:900,letterSpacing:"-0.03em",color:"#ffffff",lineHeight:1.1 }}>{T.appTitle} 🗽</div>
+              </div>
+              <button onClick={()=>setShowAIAdd(true)} style={{ background:"#ffffff20",border:"1px solid #ffffff40",borderRadius:20,padding:"8px 16px",cursor:"pointer",fontSize:12,color:"#ffffff",fontWeight:600 }}>
                 ✨ AI
               </button>
             </div>
-          </div>
-          {/* Progress bar */}
-          <div style={{ marginBottom:tab==="explorar"?8:0 }}>
-            <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5 }}>
-              <div style={{ display:"flex",gap:10,alignItems:"center" }}>
-                <span style={{ fontSize:11,color:"#30d158",fontWeight:700 }}>✓ {visitedCount} {isEN?"visited":"visitados"}</span>
-                {hasAnyFilter&&filteredPlaces.length!==total&&<span style={{ fontSize:11,color:"#ff9f0a" }}>· {filteredPlaces.length} {isEN?"shown":"exibidos"}</span>}
+            {/* Progress bar — white on gradient */}
+            <div>
+              <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5 }}>
+                <span style={{ fontSize:11,color:"#ffffff",fontWeight:700,opacity:0.9 }}>✓ {visitedCount} {isEN?"visited":"visitados"}{hasAnyFilter&&filteredPlaces.length!==total?" · "+filteredPlaces.length+" "+isEN?"shown":"filtrados":""}</span>
+                <span style={{ fontSize:13,fontWeight:900,color:"#ffffff" }}>{pct}%</span>
               </div>
-              <span style={{ fontSize:12,fontWeight:800,color:"#ff2d55" }}>{pct}%</span>
-            </div>
-            <div style={{ height:4,background:"#e8e6e0",borderRadius:4 }}>
-              <div style={{ height:"100%",width:pct+"%",background:"linear-gradient(90deg,#ff2d55,#ff6b35,#ff9f0a)",borderRadius:4,transition:"width 0.6s ease" }}/>
+              <div style={{ height:5,background:"#ffffff30",borderRadius:4 }}>
+                <div style={{ height:"100%",width:pct+"%",background:"#ffffff",borderRadius:4,transition:"width 0.6s ease",opacity:0.9 }}/>
+              </div>
             </div>
           </div>
-          {/* Search — only in Explorar */}
-          {tab==="explorar"&&<div style={{ position:"relative",marginTop:10 }}>
-            <span style={{ position:"absolute",left:13,top:"50%",transform:"translateY(-50%)",color:"#b0aebb",fontSize:15 }}>🔍</span>
-            <input value={searchInput} onChange={ev=>{setSearchInput(ev.target.value);clearTimeout(searchDebounce.current);searchDebounce.current=setTimeout(()=>setSearch(ev.target.value),200);}} placeholder={T.search} style={{ width:"100%",background:"#ffffff",border:"1.5px solid "+(searchInput?"#ff2d5550":"#e8e6e0"),borderRadius:12,padding:"10px 36px 10px 38px",color:"#1a1a1a",fontSize:14,transition:"border-color 0.2s",boxShadow:"0 1px 3px #00000008" }}/>
-            {searchInput&&<button onClick={()=>{setSearchInput("");setSearch("");}} style={{ position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",background:"#e8e6e0",border:"none",borderRadius:"50%",width:20,height:20,color:"#8a8a9a",cursor:"pointer",fontSize:12,display:"flex",alignItems:"center",justifyContent:"center" }}>×</button>}
+          {/* Search — only in Explorar, sits below gradient */}
+          {tab==="explorar"&&<div style={{ padding:"0 16px 14px",position:"relative" }}>
+            <span style={{ position:"absolute",left:28,top:"50%",transform:"translateY(-60%)",color:"#ffffff60",fontSize:15 }}>🔍</span>
+            <input className="search-header" value={searchInput} onChange={ev=>{setSearchInput(ev.target.value);clearTimeout(searchDebounce.current);searchDebounce.current=setTimeout(()=>setSearch(ev.target.value),200);}} placeholder={T.search} style={{ width:"100%",background:"#ffffff20",border:"1px solid #ffffff35",borderRadius:12,padding:"10px 36px 10px 38px",color:"#ffffff",fontSize:13,transition:"background 0.2s" }}/>
+            {searchInput&&<button onClick={()=>{setSearchInput("");setSearch("");}} style={{ position:"absolute",right:28,top:"50%",transform:"translateY(-60%)",background:"#ffffff30",border:"none",borderRadius:"50%",width:20,height:20,color:"#ffffff",cursor:"pointer",fontSize:12,display:"flex",alignItems:"center",justifyContent:"center" }}>×</button>}
           </div>}
         </div>
 
@@ -2776,15 +2775,15 @@ export default function App() {
             <FilterSection label={T.filterSeason} options={SEASONS} selected={filterSeasons} onToggle={v=>setFilterSeasons(prev=>prev.includes(v)?prev.filter(x=>x!==v):[...prev,v])} renderLabel={v=><span>{SEASON_EMOJI[v]} {SEASON_LABELS[v]}</span>}/>
             <div style={{ marginBottom:14 }}>
               <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:8 }}>{T.filterStars}</div>
-              <div style={{ display:"flex",gap:6 }}>{[1,2,3,4,5].map(n=><button key={n} onClick={()=>setFilterStars(filterStars===n?0:n)} style={{ flex:1,padding:"6px",borderRadius:8,background:filterStars>=n?"#ff9f0a20":"#f8f7f4",border:"1px solid "+(filterStars>=n?"#ff9f0a":"#e8e6e0"),color:"#ff9f0a",fontSize:14,cursor:"pointer" }}>★</button>)}</div>
+              <div style={{ display:"flex",gap:6 }}>{[1,2,3,4,5].map(n=><button key={n} onClick={()=>setFilterStars(filterStars===n?0:n)} style={{ flex:1,padding:"6px",borderRadius:8,background:filterStars>=n?"#ff9f0a20":"#f5f3ee",border:"1px solid "+(filterStars>=n?"#ff9f0a":"#e8e6e0"),color:"#ff9f0a",fontSize:14,cursor:"pointer" }}>★</button>)}</div>
             </div>
             <div style={{ display:"flex",gap:8,marginBottom:14 }}>
-              <button onClick={()=>setFilterPet(!filterPet)} style={{ flex:1,padding:"8px",borderRadius:10,background:filterPet?"#4ade8020":"#f8f7f4",border:"1px solid "+(filterPet?"#4ade80":"#e8e6e0"),color:filterPet?"#4ade80":"#a0a0b0",fontSize:12,cursor:"pointer" }}>🐾 {T.filterPet}</button>
-              <button onClick={()=>setFilterBathroom(!filterBathroom)} style={{ flex:1,padding:"8px",borderRadius:10,background:filterBathroom?"#60a5fa20":"#f8f7f4",border:"1px solid "+(filterBathroom?"#60a5fa":"#e8e6e0"),color:filterBathroom?"#60a5fa":"#a0a0b0",fontSize:12,cursor:"pointer" }}>🚻 {T.filterBathroom}</button>
+              <button onClick={()=>setFilterPet(!filterPet)} style={{ flex:1,padding:"8px",borderRadius:10,background:filterPet?"#4ade8020":"#f5f3ee",border:"1px solid "+(filterPet?"#4ade80":"#e8e6e0"),color:filterPet?"#4ade80":"#a0a0b0",fontSize:12,cursor:"pointer" }}>🐾 {T.filterPet}</button>
+              <button onClick={()=>setFilterBathroom(!filterBathroom)} style={{ flex:1,padding:"8px",borderRadius:10,background:filterBathroom?"#60a5fa20":"#f5f3ee",border:"1px solid "+(filterBathroom?"#60a5fa":"#e8e6e0"),color:filterBathroom?"#60a5fa":"#a0a0b0",fontSize:12,cursor:"pointer" }}>🚻 {T.filterBathroom}</button>
             </div>
             <div style={{ marginBottom:14 }}>
               <div style={{ fontSize:10,color:"#a0a0b0",letterSpacing:"0.1em",marginBottom:8 }}>{T.filterRegion}</div>
-              <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>{Object.keys(REGIONS).map(r=><button key={r} onClick={()=>setFilterRegion(filterRegion===r?null:r)} style={{ padding:"6px 12px",borderRadius:20,background:filterRegion===r?"#007aff20":"#f8f7f4",border:"1px solid "+(filterRegion===r?"#007aff":"#e8e6e0"),color:filterRegion===r?"#007aff":"#8a8a9a",fontSize:11,cursor:"pointer" }}>{r}</button>)}</div>
+              <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>{Object.keys(REGIONS).map(r=><button key={r} onClick={()=>setFilterRegion(filterRegion===r?null:r)} style={{ padding:"6px 12px",borderRadius:20,background:filterRegion===r?"#007aff20":"#f5f3ee",border:"1px solid "+(filterRegion===r?"#007aff":"#e8e6e0"),color:filterRegion===r?"#007aff":"#8a8a9a",fontSize:11,cursor:"pointer" }}>{r}</button>)}</div>
             </div>
             <div style={{ display:"flex",gap:6,marginBottom:14 }}>
               {filterRegion&&<div style={{ padding:"6px 12px",background:"#007aff15",border:"1px solid #007aff30",borderRadius:20,fontSize:11,color:"#007aff" }}>📍 {filterRegion}</div>}
@@ -2842,7 +2841,7 @@ export default function App() {
 
       {/* Listas drawer */}
       {showListas&&<div style={{ position:"fixed",inset:0,background:"#000000c0",zIndex:200 }} onClick={()=>setShowListas(false)}>
-        <div onClick={e=>e.stopPropagation()} style={{ position:"absolute",bottom:0,left:0,right:0,background:"#f8f7f4",borderRadius:"20px 20px 0 0",padding:"0 0 40px",maxWidth:600,margin:"0 auto",maxHeight:"88vh",display:"flex",flexDirection:"column" }}>
+        <div onClick={e=>e.stopPropagation()} style={{ position:"absolute",bottom:0,left:0,right:0,background:"#f5f3ee",borderRadius:"20px 20px 0 0",padding:"0 0 40px",maxWidth:600,margin:"0 auto",maxHeight:"88vh",display:"flex",flexDirection:"column" }}>
           <div style={{ padding:"16px 20px 0" }}>
             <div style={{ width:36,height:3,background:"#e8e6e0",borderRadius:2,margin:"0 auto 16px" }}/>
             <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4 }}>
