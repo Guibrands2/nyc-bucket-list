@@ -1137,11 +1137,16 @@ function AddModal({ onClose, onAdd, addToast }) {
   const [name,setName]=useState(""),[desc,setDesc]=useState(""),[emoji,setEmoji]=useState("📍");
   const [category,setCategory]=useState(CATEGORIES[0]),[price,setPrice]=useState("$"),[time,setTime]=useState("2h"),[link,setLink]=useState("");
   const [address,setAddress]=useState(""),[geocoding,setGeocoding]=useState(false),[saving,setSaving]=useState(false);
+  const [status,setStatus]=useState(null); // null | "quero" | "fui"
+  const [visitDate,setVisitDate]=useState(new Date().toISOString().split("T")[0]);
+  const [who,setWho]=useState("juntos");
   const handle=async()=>{
     if(!name.trim())return;setSaving(true);
     let lat=null,lng=null;
     if(address.trim()){setGeocoding(true);const coords=await geocodeAddress(address);if(coords){lat=coords.lat;lng=coords.lng;}setGeocoding(false);}
-    await onAdd({id:"u"+Date.now(),name:name.trim(),nameEN:name.trim(),desc:desc.trim(),descEN:desc.trim(),emoji,category,price,time,link,custom:true,season:"sempre",lat,lng});
+    const place={id:"u"+Date.now(),name:name.trim(),nameEN:name.trim(),desc:desc.trim(),descEN:desc.trim(),emoji,category,price,time,link,custom:true,season:"sempre",lat,lng};
+    const entry=status?{status,date:status==="fui"?visitDate:null,who:status==="fui"?who:null}:null;
+    await onAdd(place,entry);
     addToast(name+" "+T.addedToast,"success");setSaving(false);onClose();
   };
   return <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:300,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={onClose}><div className="modal" style={{ background:"#1a1a22",borderTop:"1px solid #2a2a38",borderRadius:"20px 20px 0 0",padding:"20px 16px 48px",maxWidth:560,width:"100%",maxHeight:"85vh",overflowY:"auto" }} onClick={ev=>ev.stopPropagation()}>
@@ -1153,6 +1158,29 @@ function AddModal({ onClose, onAdd, addToast }) {
     <textarea value={desc} onChange={ev=>setDesc(ev.target.value)} placeholder={T.descLabel} rows={2} style={{ width:"100%",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:8,padding:"8px 12px",color:"#f0eeff",fontSize:13,resize:"none",marginBottom:10 }}/>
     <input value={address} onChange={ev=>setAddress(ev.target.value)} placeholder={T.addressOptional} style={{ width:"100%",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:8,padding:"8px 12px",color:"#f0eeff",fontSize:13,marginBottom:10 }}/>
     <input value={link} onChange={ev=>setLink(ev.target.value)} placeholder={T.linkOptional} style={{ width:"100%",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:8,padding:"8px 12px",color:"#f0eeff",fontSize:13,marginBottom:14 }}/>
+
+    {/* Status */}
+    <div style={{ marginBottom:14 }}>
+      <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:8 }}>{isEN?"HAVE YOU BEEN?":"JA FORAM?"}</div>
+      <div style={{ display:"flex",gap:6 }}>
+        {[{v:null,label:isEN?"Not yet":"Ainda nao",color:"#50506a"},{v:"quero",label:isEN?"Want to go":"Quero ir",color:"#ff3366"},{v:"fui",label:isEN?"Been there!":"Ja fui!",color:"#00e676"}].map(({v,label,color})=>(
+          <button key={String(v)} onClick={()=>setStatus(v)} style={{ flex:1,padding:"9px 4px",borderRadius:10,background:status===v?color+"20":"#0f0f13",border:"1px solid "+(status===v?color:"#2a2a38"),color:status===v?color:"#50506a",fontSize:12,cursor:"pointer",fontWeight:status===v?700:400 }}>{label}</button>
+        ))}
+      </div>
+    </div>
+
+    {/* Date + who — only when "fui" */}
+    {status==="fui"&&<div style={{ background:"#0f0f1380",border:"1px solid #2a2a38",borderRadius:10,padding:"12px",marginBottom:14 }}>
+      <div style={{ display:"flex",gap:10,marginBottom:10 }}>
+        <div style={{ flex:1 }}>
+          <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"DATE":"DATA"}</div>
+          <input type="date" value={visitDate} onChange={ev=>setVisitDate(ev.target.value)} style={{ width:"100%",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:8,padding:"8px 10px",color:"#f0eeff",fontSize:13 }}/>
+        </div>
+      </div>
+      <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"WHO WENT?":"QUEM FOI?"}</div>
+      <div style={{ display:"flex",gap:6 }}>{WHO_OPTIONS.map(w=><button key={w} onClick={()=>setWho(w)} style={{ flex:1,padding:"8px 4px",borderRadius:8,background:who===w?"#4da6ff20":"#0f0f13",border:"1px solid "+(who===w?"#4da6ff":"#2a2a38"),color:who===w?"#4da6ff":"#9090b0",fontSize:12,cursor:"pointer" }}>{WHO_EMOJI[w]} {WHO_LABELS[w]}</button>)}</div>
+    </div>}
+
     <button onClick={handle} disabled={saving||geocoding} style={{ width:"100%",padding:"13px",background:saving||geocoding?"#2a2a38":"#ff3366",border:"none",borderRadius:10,color:saving||geocoding?"#50506a":"#fff",fontSize:14,fontWeight:700,cursor:saving||geocoding?"default":"pointer" }}>{geocoding?isEN?"Getting location...":"Buscando localizacao...":saving?T.adding:T.add}</button>
   </div></div>;
 }
@@ -1928,6 +1956,9 @@ function AIAddModal({ onClose, onSavePlace, onSaveEvent, addToast }) {
   const [editResult, setEditResult] = useState(null);
   const [saving, setSaving] = useState(false);
   const [imageMediaType, setImageMediaType] = useState("image/jpeg");
+  const [addStatus, setAddStatus] = useState(null); // null | "quero" | "fui"
+  const [addDate, setAddDate] = useState(new Date().toISOString().split("T")[0]);
+  const [addWho, setAddWho] = useState("juntos");
   const fileRef = useRef(null);
   const drag = useDragToDismiss(onClose);
 
@@ -2079,6 +2110,7 @@ Retorne este JSON (type = "place" ou "event"):
         lat:null, lng:null
       };
       await onSavePlace(place);
+      if(addStatus) await set(ref(db,"entries/"+place.id),{status:addStatus,date:addStatus==="fui"?addDate:null,who:addStatus==="fui"?addWho:null});
       addToast(isEN?"Place added!":"Lugar adicionado!","success");
     }
     setSaving(false);
@@ -2186,6 +2218,24 @@ Retorne este JSON (type = "place" ou "event"):
             </button>
           ))}
         </div>
+
+        {/* Status */}
+        <div style={{ marginBottom:14 }}>
+          <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:8 }}>{isEN?"HAVE YOU BEEN?":"JA FORAM?"}</div>
+          <div style={{ display:"flex",gap:6 }}>
+            {[{v:null,label:isEN?"Not yet":"Ainda nao",color:"#50506a"},{v:"quero",label:isEN?"Want to go":"Quero ir",color:"#ff3366"},{v:"fui",label:isEN?"Been there!":"Ja fui!",color:"#00e676"}].map(({v,label,color})=>(
+              <button key={String(v)} onClick={()=>setAddStatus(v)} style={{ flex:1,padding:"9px 4px",borderRadius:10,background:addStatus===v?color+"20":"#0f0f13",border:"1px solid "+(addStatus===v?color:"#2a2a38"),color:addStatus===v?color:"#50506a",fontSize:12,cursor:"pointer",fontWeight:addStatus===v?700:400 }}>{label}</button>
+            ))}
+          </div>
+        </div>
+        {addStatus==="fui"&&<div style={{ background:"#0f0f1380",border:"1px solid #2a2a38",borderRadius:10,padding:"12px",marginBottom:14 }}>
+          <div style={{ marginBottom:10 }}>
+            <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"DATE":"DATA"}</div>
+            <input type="date" value={addDate} onChange={e=>setAddDate(e.target.value)} style={{ width:"100%",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:8,padding:"8px 10px",color:"#f0eeff",fontSize:13 }}/>
+          </div>
+          <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"WHO WENT?":"QUEM FOI?"}</div>
+          <div style={{ display:"flex",gap:6 }}>{WHO_OPTIONS.map(w=><button key={w} onClick={()=>setAddWho(w)} style={{ flex:1,padding:"8px 4px",borderRadius:8,background:addWho===w?"#4da6ff20":"#0f0f13",border:"1px solid "+(addWho===w?"#4da6ff":"#2a2a38"),color:addWho===w?"#4da6ff":"#9090b0",fontSize:12,cursor:"pointer" }}>{WHO_EMOJI[w]} {WHO_LABELS[w]}</button>)}</div>
+        </div>}
 
         <button onClick={confirm} disabled={saving} style={{ width:"100%",padding:"14px",background:saving?"#2a2a38":"#ff3366",border:"none",borderRadius:12,color:saving?"#50506a":"#fff",fontSize:14,fontWeight:700,cursor:saving?"default":"pointer" }}>
           {saving?"Salvando...":(isEN?"Add to my list ✓":"Adicionar à minha lista ✓")}
@@ -2627,7 +2677,7 @@ export default function App() {
       {selected&&<DetailModal place={selected} entry={entries[selected.id]} places={visiblePlaces} entries={entries} onClose={closeModal} onSave={async data=>{await handleSave(selected.id,data);}} onDelete={()=>handleDelete(selected.id,isEN&&selected.nameEN?selected.nameEN:selected.name)} onSelectNearby={openModal} onEditPlace={handleEditPlace} addToast={addToast} userLat={userLat} userLng={userLng}/>}
       {checkIn&&<CheckInModal place={checkIn} onClose={()=>setCheckIn(null)} onSave={async data=>{await handleSave(checkIn.id,data);}} addToast={addToast}/>}
       {showAIAdd&&<AIAddModal onClose={()=>setShowAIAdd(false)} onSavePlace={async place=>{await set(ref(db,"customPlaces/"+place.id),place);}} onSaveEvent={async ev=>{await set(ref(db,"events/"+ev.id),ev);setShowAIAdd(false);}} addToast={addToast}/>}
-      {showAdd&&<AddModal onClose={()=>setShowAdd(false)} onAdd={async place=>{await set(ref(db,"customPlaces/"+place.id),place);}} addToast={addToast}/>}
+      {showAdd&&<AddModal onClose={()=>setShowAdd(false)} onAdd={async(place,entry)=>{await set(ref(db,"customPlaces/"+place.id),place);if(entry)await set(ref(db,"entries/"+place.id),entry);}} addToast={addToast}/>}
       {showShare&&<ShareModal places={visiblePlaces} entries={entries} onClose={()=>setShowShare(false)} addToast={addToast}/>}
       {showPlanner&&<PlannerChatModal places={visiblePlaces} entries={entries} onClose={()=>setShowPlanner(false)} addToast={addToast} userLat={userLat} userLng={userLng}/>}
       {showNearby&&userLat&&<NearbyDrawer userLat={userLat} userLng={userLng} places={visiblePlaces} entries={entries} onSelect={openModal} onClose={()=>setShowNearby(false)}/>}
