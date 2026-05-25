@@ -2839,6 +2839,7 @@ export default function App() {
           <div style={{ display:"flex",gap:6,alignItems:"center",marginBottom:10 }}>
             {[["todos",T.all],["quero","♥ Want"],["fui","✓ Been"]].map(([key,label])=><button key={key} onClick={()=>setActiveFilter(activeFilter===key&&key!=="todos"?"todos":key)} className="btn" style={{ padding:"7px 14px",borderRadius:20,background:activeFilter===key?key==="quero"?"#007aff":key==="fui"?"#30d158":"#ff2d55":"#ffffff",border:"1px solid "+(activeFilter===key?key==="quero"?"#007aff":key==="fui"?"#30d158":"#ff2d55":"#e8e6e0"),color:activeFilter===key?"#ffffff":"#8a8a9a",fontSize:12,fontWeight:activeFilter===key?700:400,whiteSpace:"nowrap",boxShadow:activeFilter===key?"none":"0 1px 2px #00000008" }}>{label}</button>)}
             <div style={{ flex:1 }}/>
+            <button onClick={()=>setShowNearby(true)} className="btn" style={{ padding:"5px 12px",borderRadius:20,background:"#ffffff",border:"1px solid #e8e6e0",color:"#8a8a9a",fontSize:12,whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4,boxShadow:"0 1px 2px #00000008" }}>📍 {isEN?"Near":"Perto"}</button>
             <button onClick={()=>setShowFilters(!showFilters)} className="btn" style={{ padding:"5px 12px",borderRadius:20,background:activeFiltersCount>0?"#ff9f0a15":"#ffffff",border:"1px solid "+(activeFiltersCount>0?"#ff9f0a60":"#e8e6e0"),color:activeFiltersCount>0?"#ff9f0a":"#a0a0b0",fontSize:12,whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4,boxShadow:"0 1px 2px #00000008" }}>{activeFiltersCount>0&&<span style={{ width:6,height:6,borderRadius:"50%",background:"#ff9f0a",display:"inline-block" }}/>}{T.filters}{activeFiltersCount>0?" ("+activeFiltersCount+")":""}</button>
             {hasAnyFilter&&<button onClick={clearFilters} style={{ background:"none",border:"none",color:"#a0a0b0",fontSize:11,cursor:"pointer",whiteSpace:"nowrap" }}>×</button>}
           </div>
@@ -2953,9 +2954,6 @@ export default function App() {
       </div>
 
       <BottomNav tab={tab} setTab={setTab}/>
-      {/* Nearby FAB — bottom left, always visible */}
-      <button onClick={()=>setShowNearby(true)} style={{ position:"fixed",bottom:82,left:16,width:48,height:48,borderRadius:24,background:"#1a1210",border:"none",boxShadow:"0 2px 12px #00000035",fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",zIndex:139 }}>📍</button>
-
       {/* FAB speed-dial */}
       {showAddMenu&&<div style={{ position:"fixed",inset:0,zIndex:138 }} onClick={()=>setShowAddMenu(false)}/>}
       <div style={{ position:"fixed",bottom:82,right:16,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:10,zIndex:139 }}>
