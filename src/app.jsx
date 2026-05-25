@@ -2243,7 +2243,7 @@ export default function App() {
   const [selected, setSelected] = useState(null);
   const [checkIn, setCheckIn] = useState(null);
   const [tab, setTab] = useState("list");
-  useSwipeTabs(tab, setTab);
+  // useSwipeTabs disabled — tab switching is intentional only via bottom nav
   const [activeFilter, setActiveFilter] = useState("todos");
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [filterVibes, setFilterVibes] = useState([]);
