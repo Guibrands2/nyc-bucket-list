@@ -2357,6 +2357,8 @@ Retorne este JSON (type = "place" ou "event"):
 }
 
 function MemoriasTab({ places, entries, onSelect }) {
+  const [drill, setDrill] = useState(null); // null | "fui" | "quero" | "spent"
+
   const visited = places.filter(p=>(entries[p.id]||{}).status==="fui");
   const want = places.filter(p=>(entries[p.id]||{}).status==="quero");
   const totalSpent = visited.reduce((s,p)=>s+((entries[p.id]||{}).spent||0),0);
@@ -2382,18 +2384,78 @@ function MemoriasTab({ places, entries, onSelect }) {
   const months = Object.keys(byMonth).sort((a,b)=>b.localeCompare(a));
   const MONTH_NAMES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
+  // Drill-down view
+  if (drill) {
+    let drillPlaces = [];
+    let drillTitle = "";
+    let drillColor = "#ff2d55";
+    if (drill === "fui") {
+      drillPlaces = [...visited].sort((a,b)=>((entries[b.id]||{}).date||"").localeCompare((entries[a.id]||{}).date||""));
+      drillTitle = isEN?"Visited ("+visited.length+")":"Visitados ("+visited.length+")";
+      drillColor = "#ff2d55";
+    } else if (drill === "quero") {
+      drillPlaces = [...want].sort((a,b)=>(isEN&&a.nameEN?a.nameEN:a.name).localeCompare(isEN&&b.nameEN?b.nameEN:b.name));
+      drillTitle = isEN?"Want to go ("+want.length+")":"Quero ir ("+want.length+")";
+      drillColor = "#007aff";
+    } else if (drill === "spent") {
+      drillPlaces = visited.filter(p=>(entries[p.id]||{}).spent>0).sort((a,b)=>((entries[b.id]||{}).spent||0)-((entries[a.id]||{}).spent||0));
+      drillTitle = isEN?"Spending breakdown":"Gastos por lugar";
+      drillColor = "#30d158";
+    } else if (drill.startsWith("cat:")) {
+      const cat = drill.slice(4);
+      drillPlaces = visited.filter(p=>p.category===cat).sort((a,b)=>((entries[b.id]||{}).date||"").localeCompare((entries[a.id]||{}).date||""));
+      drillTitle = catLabel(cat)+" ("+drillPlaces.length+")";
+      drillColor = CAT_META[cat]?.color||"#ff2d55";
+    }
+    return (
+      <div style={{ padding:"16px 16px 120px" }}>
+        <button onClick={()=>setDrill(null)} style={{ background:"none",border:"none",color:"#8a8a9a",fontSize:13,cursor:"pointer",marginBottom:16,display:"flex",alignItems:"center",gap:4,padding:0 }}>← {isEN?"Back":"Voltar"}</button>
+        <div style={{ fontSize:16,fontWeight:700,color:"#1a1a1a",marginBottom:16 }}>{drillTitle}</div>
+        {drillPlaces.length===0&&<div style={{ textAlign:"center",padding:"40px 20px",color:"#a0a0b0" }}><div style={{ fontSize:32,marginBottom:8 }}>🤷</div><div style={{ fontSize:13 }}>{isEN?"Nothing here yet":"Nada aqui ainda"}</div></div>}
+        {drillPlaces.map(p=>{
+          const e=entries[p.id]||{};
+          const meta=CAT_META[p.category]||{color:"#ff2d55"};
+          return (
+            <div key={p.id} onClick={()=>{setDrill(null);onSelect(p);}} style={{ background:"#ffffff",borderRadius:12,padding:"12px 14px",marginBottom:8,display:"flex",gap:12,alignItems:"center",cursor:"pointer",border:"1px solid #e8e6e0",boxShadow:"0 1px 3px #00000008" }}>
+              <div style={{ width:42,height:42,borderRadius:10,background:meta.color+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0 }}>{p.emoji}</div>
+              <div style={{ flex:1,minWidth:0 }}>
+                <div style={{ fontSize:14,fontWeight:600,color:"#1a1a1a",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis" }}>{isEN&&p.nameEN?p.nameEN:p.name}</div>
+                <div style={{ fontSize:11,color:"#8a8a9a",marginTop:2 }}>
+                  {catLabel(p.category)}
+                  {e.date&&" · "+new Date(e.date+"T12:00:00").toLocaleDateString(isEN?"en-US":"pt-BR",{day:"numeric",month:"short",year:"numeric"})}
+                  {e.who&&" · "+WHO_LABELS[e.who]}
+                </div>
+                {e.stars>0&&<div style={{ fontSize:11,color:"#ff9f0a",marginTop:2 }}>{"★".repeat(e.stars)}</div>}
+              </div>
+              {drill==="spent"&&e.spent>0&&<div style={{ textAlign:"right",flexShrink:0 }}>
+                <div style={{ fontSize:14,fontWeight:700,color:"#30d158" }}>${Math.round(e.spent)}</div>
+                <div style={{ fontSize:10,color:"#a0a0b0" }}>USD</div>
+              </div>}
+              {drill==="quero"&&<div style={{ fontSize:12,color:"#007aff" }}>♥</div>}
+            </div>
+          );
+        })}
+        {drill==="spent"&&drillPlaces.length>0&&<div style={{ marginTop:12,padding:"12px 14px",background:"#f5f3ee",borderRadius:12,display:"flex",justifyContent:"space-between",alignItems:"center" }}>
+          <span style={{ fontSize:12,color:"#8a8a9a" }}>{isEN?"Total spent":"Total gasto"}</span>
+          <span style={{ fontSize:16,fontWeight:800,color:"#30d158" }}>${Math.round(totalSpent)} USD</span>
+        </div>}
+      </div>
+    );
+  }
+
   return (
     <div style={{ padding:"16px 16px 120px" }}>
       {/* Stats header */}
       <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:20 }}>
         {[
-          [visited.length,isEN?"visited":"visitados","#ff2d55"],
-          [want.length,isEN?"want to go":"quero ir","#007aff"],
-          [totalSpent>0?"$"+Math.round(totalSpent):"-",isEN?"spent":"gasto","#30d158"],
-        ].map(([val,label,color])=>(
-          <div key={label} style={{ background:"#ffffff",borderRadius:14,padding:"14px 10px",textAlign:"center",boxShadow:"0 1px 4px #00000010",border:"1px solid #e8e6e0" }}>
+          [visited.length,isEN?"visited":"visitados","#ff2d55","fui"],
+          [want.length,isEN?"want to go":"quero ir","#007aff","quero"],
+          [totalSpent>0?"$"+Math.round(totalSpent):"-",isEN?"spent":"gasto","#30d158","spent"],
+        ].map(([val,label,color,key])=>(
+          <div key={label} onClick={()=>setDrill(key)} style={{ background:"#ffffff",borderRadius:14,padding:"14px 10px",textAlign:"center",boxShadow:"0 1px 4px #00000010",border:"1px solid #e8e6e0",cursor:"pointer",transition:"transform 0.1s,box-shadow 0.1s",active:{transform:"scale(0.97)"} }}>
             <div style={{ fontSize:22,fontWeight:800,color }}>{val}</div>
             <div style={{ fontSize:10,color:"#8a8a9a",marginTop:2,letterSpacing:"0.05em" }}>{label}</div>
+            <div style={{ fontSize:9,color:color+"80",marginTop:3 }}>{isEN?"tap to see":"ver →"}</div>
           </div>
         ))}
       </div>
@@ -2414,10 +2476,10 @@ function MemoriasTab({ places, entries, onSelect }) {
       {catSorted.length>0&&<div style={{ background:"#ffffff",borderRadius:14,padding:"14px 16px",marginBottom:20,boxShadow:"0 1px 4px #00000010",border:"1px solid #e8e6e0" }}>
         <div style={{ fontSize:11,fontWeight:700,color:"#8a8a9a",letterSpacing:"0.1em",marginBottom:12 }}>{isEN?"BY CATEGORY":"POR CATEGORIA"}</div>
         {catSorted.map(([cat,count])=>(
-          <div key={cat} style={{ marginBottom:10 }}>
+          <div key={cat} onClick={()=>setDrill("cat:"+cat)} style={{ marginBottom:10,cursor:"pointer" }}>
             <div style={{ display:"flex",justifyContent:"space-between",marginBottom:4 }}>
               <span style={{ fontSize:12,color:"#1a1a1a" }}>{catLabel(cat)}</span>
-              <span style={{ fontSize:12,fontWeight:700,color:CAT_META[cat]?.color||"#ff2d55" }}>{count}</span>
+              <span style={{ fontSize:12,fontWeight:700,color:CAT_META[cat]?.color||"#ff2d55" }}>{count} →</span>
             </div>
             <div style={{ height:4,background:"#f0eeeb",borderRadius:2 }}>
               <div style={{ height:"100%",width:(count/maxCat*100)+"%",background:CAT_META[cat]?.color||"#ff2d55",borderRadius:2 }}/>
