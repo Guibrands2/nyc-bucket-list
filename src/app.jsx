@@ -679,63 +679,53 @@ function MapTab({ places, entries, onSelect, onNearby, onGeocode }) {
   const totalWithCoords = places.filter(p => p.lat && p.lng).length;
   const hasActiveFilter = filter !== "todos" || filterCat !== "Todos" || filterPrice;
 
-  if (!ready) return <div style={{ height:"60vh", display:"flex", alignItems:"center", justifyContent:"center", color:"#a0a0b0" }}>Carregando mapa...</div>;
+  if (!ready) return <div style={{ height:"80vh", display:"flex", alignItems:"center", justifyContent:"center", color:"#a0a0b0" }}>Carregando mapa...</div>;
 
   return (
-    <div style={{ padding:"0 16px 100px" }}>
-      {/* Status filter */}
-      <div style={{ display:"flex", gap:6, marginBottom:8 }}>
-        {filterChips.map(({v,label,color})=>(
-          <button key={v} onClick={()=>setFilter(v)} style={{ flex:1, padding:"8px 4px", borderRadius:20, background:filter===v?color+"20":"#ffffff", border:"1.5px solid "+(filter===v?color:"#e8e6e0"), color:filter===v?color:"#8a8a9a", fontSize:12, fontWeight:filter===v?700:400, cursor:"pointer" }}>{label}</button>
-        ))}
-      </div>
+    <div style={{ paddingBottom:80 }}>
+      {/* Map — full width, hero */}
+      <div style={{ position:"relative" }}>
+        <div ref={mapRef} style={{ height:"68vh", width:"100%" }}/>
 
-      {/* Category filter */}
-      <div style={{ display:"flex", gap:6, overflowX:"auto", scrollbarWidth:"none", paddingBottom:8, marginBottom:0 }}>
-        {["Todos",...CATEGORIES].map(cat => {
-          const meta = CAT_META[cat];
-          const active = filterCat === cat;
-          return (
-            <button key={cat} onClick={()=>setFilterCat(cat)} style={{ padding:"6px 12px", borderRadius:20, background:active?(meta?meta.color:"#ff2d55")+"20":"#ffffff", border:"1.5px solid "+(active?(meta?meta.color:"#ff2d55")+"60":"#e8e6e0"), color:active?(meta?meta.color:"#ff2d55"):"#8a8a9a", fontSize:11, fontWeight:active?700:400, whiteSpace:"nowrap", cursor:"pointer", flexShrink:0 }}>
-              {cat === "Todos" ? (isEN?"All categories":"Todas") : catLabel(cat)}
-            </button>
-          );
-        })}
-      </div>
+        {/* Status chips — float over map top */}
+        <div style={{ position:"absolute", top:10, left:10, right:10, zIndex:500, display:"flex", gap:6, pointerEvents:"auto" }}>
+          {filterChips.map(({v,label,color})=>(
+            <button key={v} onClick={()=>setFilter(v)} style={{ flex:1, padding:"7px 4px", borderRadius:20, background:filter===v?color:"#ffffffee", border:"1.5px solid "+(filter===v?color:"#e8e6e020"), color:filter===v?"#ffffff":color, fontSize:12, fontWeight:700, cursor:"pointer", boxShadow:"0 2px 8px #00000020", backdropFilter:"blur(4px)" }}>{label}</button>
+          ))}
+        </div>
 
-      {/* Price filter */}
-      <div style={{ display:"flex", gap:5, marginBottom:10, paddingTop:8 }}>
-        {PRICE_LEVELS.map(p => (
-          <button key={p} onClick={()=>setFilterPrice(filterPrice===p?null:p)} style={{ flex:1, padding:"6px 4px", borderRadius:20, background:filterPrice===p?"#ff9f0a20":"#ffffff", border:"1.5px solid "+(filterPrice===p?"#ff9f0a":"#e8e6e0"), color:filterPrice===p?"#ff9f0a":"#8a8a9a", fontSize:12, fontWeight:filterPrice===p?700:400, cursor:"pointer" }}>{PRICE_EMOJI[p]}</button>
-        ))}
-        {hasActiveFilter && <button onClick={()=>{setFilter("todos");setFilterCat("Todos");setFilterPrice(null);}} style={{ padding:"6px 10px", borderRadius:20, background:"none", border:"1px solid #e8e6e0", color:"#a0a0b0", fontSize:11, cursor:"pointer", whiteSpace:"nowrap" }}>× {isEN?"Clear":"Limpar"}</button>}
-      </div>
-
-      {/* Map */}
-      <div style={{ borderRadius:16, border:"1px solid #e8e6e0", overflow:"hidden", marginBottom:10, boxShadow:"0 2px 12px #00000010" }}>
-        <div ref={mapRef} style={{ height:"52vh", width:"100%" }}/>
-      </div>
-
-      {/* Center on me + coverage */}
-      <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-        <button onClick={handleLocate} disabled={locating} style={{ flex:1, padding:"11px", background:"#ffffff", border:"1.5px solid #e8e6e0", borderRadius:12, color:"#1a1a1a", fontSize:13, fontWeight:600, cursor:locating?"default":"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:6 }}>
-          {locating ? <span className="pulsing">...</span> : <>{isEN?"Center on me":"Centralizar em mim"}</>}
+        {/* Locate button — float over map bottom-right */}
+        <button onClick={handleLocate} disabled={locating} style={{ position:"absolute", bottom:12, right:12, zIndex:500, width:44, height:44, borderRadius:22, background:"#ffffff", border:"none", boxShadow:"0 2px 12px #00000030", fontSize:20, cursor:locating?"default":"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+          {locating ? <span className="pulsing" style={{ fontSize:14 }}>...</span> : "📍"}
         </button>
-        <div style={{ textAlign:"center", fontSize:11, color:"#a0a0b0", lineHeight:1.4 }}>
-          <div style={{ fontWeight:600, color:"#1a1a1a" }}>{visibleCount}{hasActiveFilter?"/"+totalWithCoords:""}</div>
-          <div>{isEN?"pins":"pins"}</div>
+
+        {/* Pin count badge — float over map bottom-left */}
+        {hasActiveFilter && <div style={{ position:"absolute", bottom:12, left:12, zIndex:500, background:"#ffffffee", borderRadius:20, padding:"5px 12px", fontSize:11, fontWeight:600, color:"#1a1a1a", boxShadow:"0 2px 8px #00000020" }}>{visibleCount} pins</div>}
+      </div>
+
+      {/* Filters below map — compact */}
+      <div style={{ padding:"10px 16px 0" }}>
+        {/* Category scroll */}
+        <div style={{ display:"flex", gap:6, overflowX:"auto", scrollbarWidth:"none", paddingBottom:8 }}>
+          {["Todos",...CATEGORIES].map(cat => {
+            const meta = CAT_META[cat];
+            const active = filterCat === cat;
+            return (
+              <button key={cat} onClick={()=>setFilterCat(cat)} style={{ padding:"5px 12px", borderRadius:20, background:active?(meta?meta.color:"#ff2d55")+"20":"#ffffff", border:"1.5px solid "+(active?(meta?meta.color:"#ff2d55")+"60":"#e8e6e0"), color:active?(meta?meta.color:"#ff2d55"):"#8a8a9a", fontSize:11, fontWeight:active?700:400, whiteSpace:"nowrap", cursor:"pointer", flexShrink:0 }}>
+                {cat === "Todos" ? (isEN?"All":"Todas") : catLabel(cat)}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Price + clear row */}
+        <div style={{ display:"flex", gap:5, alignItems:"center" }}>
+          {PRICE_LEVELS.map(p => (
+            <button key={p} onClick={()=>setFilterPrice(filterPrice===p?null:p)} style={{ flex:1, padding:"5px 4px", borderRadius:20, background:filterPrice===p?"#ff9f0a20":"#ffffff", border:"1.5px solid "+(filterPrice===p?"#ff9f0a":"#e8e6e0"), color:filterPrice===p?"#ff9f0a":"#8a8a9a", fontSize:12, fontWeight:filterPrice===p?700:400, cursor:"pointer" }}>{PRICE_EMOJI[p]}</button>
+          ))}
+          {hasActiveFilter && <button onClick={()=>{setFilter("todos");setFilterCat("Todos");setFilterPrice(null);}} style={{ padding:"5px 10px", borderRadius:20, background:"none", border:"1px solid #e8e6e0", color:"#a0a0b0", fontSize:11, cursor:"pointer", whiteSpace:"nowrap" }}>× {isEN?"Clear":"Limpar"}</button>}
         </div>
       </div>
-
-      {/* Legend — only when no category filter active */}
-      {filterCat === "Todos" && <div style={{ display:"flex", gap:14, marginTop:10, padding:"8px 12px", background:"#ffffff", border:"1px solid #e8e6e0", borderRadius:10 }}>
-        {[["#a0a0b0", isEN?"No status":"Sem status"],["#ff2d55", isEN?"Want to go":"Quero ir"],["#30d158", isEN?"Been there":"Ja fui"]].map(([color,label])=>(
-          <div key={label} style={{ display:"flex", alignItems:"center", gap:5 }}>
-            <div style={{ width:10, height:10, borderRadius:"50%", background:color }}/>
-            <span style={{ fontSize:10, color:"#8a8a9a" }}>{label}</span>
-          </div>
-        ))}
-      </div>}
     </div>
   );
 }
