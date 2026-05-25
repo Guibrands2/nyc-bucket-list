@@ -690,7 +690,7 @@ function MapTab({ places, entries, onSelect, onNearby, onGeocode }) {
         {/* Status chips — float over map top */}
         <div style={{ position:"absolute", top:10, left:10, right:10, zIndex:500, display:"flex", gap:6, pointerEvents:"auto" }}>
           {filterChips.map(({v,label,color})=>(
-            <button key={v} onClick={()=>setFilter(v)} style={{ flex:1, padding:"7px 4px", borderRadius:20, background:filter===v?color:"#ffffffee", border:"1.5px solid "+(filter===v?color:"#e8e6e020"), color:filter===v?"#ffffff":color, fontSize:12, fontWeight:700, cursor:"pointer", boxShadow:"0 2px 8px #00000020", backdropFilter:"blur(4px)" }}>{label}</button>
+            <button key={v} onClick={()=>setFilter(filter===v&&v!=="todos"?"todos":v)} style={{ flex:1, padding:"7px 4px", borderRadius:20, background:filter===v?color:"#ffffffee", border:"1.5px solid "+(filter===v?color:"#e8e6e020"), color:filter===v?"#ffffff":color, fontSize:12, fontWeight:700, cursor:"pointer", boxShadow:"0 2px 8px #00000020", backdropFilter:"blur(4px)" }}>{label}</button>
           ))}
         </div>
 
@@ -711,7 +711,7 @@ function MapTab({ places, entries, onSelect, onNearby, onGeocode }) {
             const meta = CAT_META[cat];
             const active = filterCat === cat;
             return (
-              <button key={cat} onClick={()=>setFilterCat(cat)} style={{ padding:"5px 12px", borderRadius:20, background:active?(meta?meta.color:"#ff2d55")+"20":"#ffffff", border:"1.5px solid "+(active?(meta?meta.color:"#ff2d55")+"60":"#e8e6e0"), color:active?(meta?meta.color:"#ff2d55"):"#8a8a9a", fontSize:11, fontWeight:active?700:400, whiteSpace:"nowrap", cursor:"pointer", flexShrink:0 }}>
+              <button key={cat} onClick={()=>setFilterCat(filterCat===cat&&cat!=="Todos"?"Todos":cat)} style={{ padding:"5px 12px", borderRadius:20, background:active?(meta?meta.color:"#ff2d55")+"20":"#ffffff", border:"1.5px solid "+(active?(meta?meta.color:"#ff2d55")+"60":"#e8e6e0"), color:active?(meta?meta.color:"#ff2d55"):"#8a8a9a", fontSize:11, fontWeight:active?700:400, whiteSpace:"nowrap", cursor:"pointer", flexShrink:0 }}>
                 {cat === "Todos" ? (isEN?"All":"Todas") : catLabel(cat)}
               </button>
             );
