@@ -1135,17 +1135,14 @@ function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveList
   const [startLoc, setStartLoc] = useState("Jersey City, NJ");
   const [locLoading, setLocLoading] = useState(false);
   const [params, setParams] = useState({
-    horas: null, horaSaida: null, humor: [],
-    ambiente: [], budget: null, quem: null,
+    horas: null, horaSaida: null, humor: null,
+    ambiente: null, budget: null, quem: null,
     ocasiao: null, raio: null, refeicao: null,
     exclusoes: [], incluirVisitados: false
   });
 
   const setP = (key, val) => setParams(prev => ({...prev, [key]: val}));
-  const toggleP = (key, val) => setParams(prev => {
-    const arr = prev[key]||[];
-    return {...prev, [key]: arr.includes(val)?arr.filter(x=>x!==val):[...arr,val]};
-  });
+
   const toggleExclusao = cat => setParams(prev => ({...prev, exclusoes: prev.exclusoes.includes(cat)?prev.exclusoes.filter(x=>x!==cat):[...prev.exclusoes,cat]}));
 
   const detectLoc = () => {
@@ -1190,7 +1187,7 @@ function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveList
       "- Saindo de: "+startLoc+"\n"+
       "- Hora de saida: "+(params.horaSaida||"agora")+"\n"+
       "- Tempo disponivel: "+params.horas+"\n"+
-      "- Humor: "+(params.humor.length?params.humor.join(" e "):"normal")+"\n"+
+      "- Humor: "+(params.humor.length?params.humor.join(" e ":"normal")+"\n"+
       "- Ambiente: "+(params.ambiente.length?params.ambiente.join(" e "):"qualquer")+"\n"+
       "- Budget: "+params.budget+"\n"+
       "- Quem vai: "+(params.quem||"Gui e Gabriel")+"\n"+
@@ -2543,7 +2540,7 @@ export default function App() {
       <div style={{ position:"fixed",bottom:90,left:"50%",transform:"translateX(-50%)",zIndex:300,display:"flex",flexDirection:"column",gap:8,width:"calc(100% - 32px)",maxWidth:400 }}>
         {toasts.map(t=><Toast key={t.id} message={t.message} type={t.type} onDone={()=>setToasts(prev=>prev.filter(x=>x.id!==t.id))} onUndo={t.onUndo}/>)}
       </div>
- 
+
       <BottomNav tab={tab} setTab={setTab} onSurpresa={()=>setShowSurpresa(true)} onNearby={handleNearby} onShare={()=>setShowShare(true)} onPlanner={()=>setShowPlanner(true)}/>
     </div>
   );
