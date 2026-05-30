@@ -1886,6 +1886,7 @@ function AIAddModal({ onClose, onSavePlace, onSaveEvent, addToast }) {
   const [mode, setMode] = useState("input"); // input | loading | preview
   const [inputText, setInputText] = useState("");
   const [imageBase64, setImageBase64] = useState(null);
+  const [imageMime, setImageMime] = useState("image/jpeg");
   const [imagePreview, setImagePreview] = useState(null);
   const [result, setResult] = useState(null);
   const [editResult, setEditResult] = useState(null);
@@ -1900,9 +1901,12 @@ function AIAddModal({ onClose, onSavePlace, onSaveEvent, addToast }) {
     if(!file) return;
     const reader = new FileReader();
     reader.onload = ev => {
-      const b64 = ev.target.result.split(",")[1];
-      setImageBase64(b64);
-      setImagePreview(ev.target.result);
+      const dataUrl = ev.target.result;
+      const mime = dataUrl.split(";")[0].split(":")[1]||"image/jpeg";
+      const supported = ["image/jpeg","image/png","image/gif","image/webp"];
+      setImageMime(supported.includes(mime)?mime:"image/jpeg");
+      setImageBase64(dataUrl.split(",")[1]);
+      setImagePreview(dataUrl);
     };
     reader.readAsDataURL(file);
   };
@@ -1947,7 +1951,7 @@ Retorne este JSON (type = "place" ou "event"):
 }`;
 
     const userContent = imageBase64 ? [
-      { type:"image", source:{ type:"base64", media_type:"image/jpeg", data:imageBase64 } },
+      { type:"image", source:{ type:"base64", media_type:imageMime, data:imageBase64 } },
       { type:"text", text:inputText.trim()||"Analise esta imagem e preencha os dados para adicionar ao bucket list de NYC." }
     ] : inputText.trim();
 
