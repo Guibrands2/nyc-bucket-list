@@ -2543,7 +2543,7 @@ export default function App() {
       <div style={{ position:"fixed",bottom:90,left:"50%",transform:"translateX(-50%)",zIndex:300,display:"flex",flexDirection:"column",gap:8,width:"calc(100% - 32px)",maxWidth:400 }}>
         {toasts.map(t=><Toast key={t.id} message={t.message} type={t.type} onDone={()=>setToasts(prev=>prev.filter(x=>x.id!==t.id))} onUndo={t.onUndo}/>)}
       </div>
-
+ 
       <BottomNav tab={tab} setTab={setTab} onSurpresa={()=>setShowSurpresa(true)} onNearby={handleNearby} onShare={()=>setShowShare(true)} onPlanner={()=>setShowPlanner(true)}/>
     </div>
   );
