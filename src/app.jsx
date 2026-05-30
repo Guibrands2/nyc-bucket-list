@@ -2189,8 +2189,6 @@ export default function App() {
   const [showAddEvent, setShowAddEvent] = useState(false);
   const [showAIAdd, setShowAIAdd] = useState(false);
   const [showFAB, setShowFAB] = useState(false);
-  const [showFABMenu, setShowFABMenu] = useState(false);
-  const [showFABMenu, setShowFABMenu] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [placeOfDay, setPlaceOfDay] = useState(null);
   const placeOfDayFixed = useRef(false);
@@ -2519,21 +2517,7 @@ export default function App() {
       {selected&&<DetailModal place={selected} entry={entries[selected.id]} places={visiblePlaces} entries={entries} onClose={closeModal} onSave={async data=>{await handleSave(selected.id,data);}} onDelete={()=>handleDelete(selected.id,isEN&&selected.nameEN?selected.nameEN:selected.name)} onSelectNearby={openModal} onEditPlace={handleEditPlace} addToast={addToast} userLat={userLat} userLng={userLng}/>}
       {checkIn&&<CheckInModal place={checkIn} onClose={()=>setCheckIn(null)} onSave={async data=>{await handleSave(checkIn.id,data);}} addToast={addToast}/>}
       {/* FAB Menu overlay */}
-      {showFABMenu&&<div style={{ position:"fixed",inset:0,zIndex:190 }} onClick={()=>setShowFABMenu(false)}/>}
       {/* FAB action buttons */}
-      {showFABMenu&&<div style={{ position:"fixed",bottom:90,right:20,zIndex:200,display:"flex",flexDirection:"column",gap:10,alignItems:"flex-end" }}>
-        <button onClick={()=>{setShowFABMenu(false);setShowAIAdd(true);}} style={{ display:"flex",alignItems:"center",gap:10,background:"#1a1a22",border:"1px solid #2a2a38",borderRadius:20,padding:"10px 16px",color:"#f0eeff",fontSize:13,cursor:"pointer",fontFamily:"inherit",boxShadow:"0 4px 20px #00000080",whiteSpace:"nowrap" }}>
-          <span>✨</span> {isEN?"Add with AI":"Adicionar com IA"}
-        </button>
-        <button onClick={()=>{setShowFABMenu(false);setShowAdd(true);}} style={{ display:"flex",alignItems:"center",gap:10,background:"#1a1a22",border:"1px solid #2a2a38",borderRadius:20,padding:"10px 16px",color:"#f0eeff",fontSize:13,cursor:"pointer",fontFamily:"inherit",boxShadow:"0 4px 20px #00000080",whiteSpace:"nowrap" }}>
-          <span>📝</span> {isEN?"Add manually":"Adicionar manual"}
-        </button>
-        <button onClick={()=>{setShowFABMenu(false);getSurprise();}} style={{ display:"flex",alignItems:"center",gap:10,background:"#1a1a22",border:"1px solid #2a2a38",borderRadius:20,padding:"10px 16px",color:"#f0eeff",fontSize:13,cursor:"pointer",fontFamily:"inherit",boxShadow:"0 4px 20px #00000080",whiteSpace:"nowrap" }}>
-          <span>🎲</span> {isEN?"Surprise me":"Me surpreenda"}
-        </button>
-      </div>}
-      {/* FAB button */}
-      <button onClick={()=>setShowFABMenu(!showFABMenu)} style={{ position:"fixed",bottom:24,right:20,width:54,height:54,background:showFABMenu?"#1a1a22":"#ff3366",border:showFABMenu?"1px solid #2a2a38":"none",borderRadius:"50%",color:"#fff",fontSize:showFABMenu?24:28,cursor:"pointer",boxShadow:"0 4px 20px #ff336660",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",transform:showFABMenu?"rotate(45deg)":"rotate(0)" }}>+</button>
       {showAIAdd&&<AIAddModal onClose={()=>setShowAIAdd(false)} onSavePlace={async place=>{await set(ref(db,"customPlaces/"+place.id),place);}} onSaveEvent={async ev=>{await set(ref(db,"events/"+ev.id),ev);setShowAIAdd(false);}} addToast={addToast}/>}
       {showAdd&&<AddPlaceModal onClose={()=>setShowAdd(false)} onSave={async place=>{await set(ref(db,"customPlaces/"+place.id),place);addToast(T.placeAdded,"success");setShowAdd(false);}} addToast={addToast}/>}
       {showShare&&<ShareModal onClose={()=>setShowShare(false)} addToast={addToast}/>}
@@ -2554,9 +2538,7 @@ export default function App() {
       </div>
 
       {/* FAB */}
-      {showFABMenu&&<div style={{ position:"fixed",inset:0,zIndex:190 }} onClick={()=>setShowFABMenu(false)}/>}
       <div style={{ position:"fixed",bottom:72,right:20,zIndex:200,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:10 }}>
-        {showFABMenu&&<>
           <div style={{ display:"flex",alignItems:"center",gap:10 }}>
             <span style={{ background:"#1a1a22",border:"1px solid #2a2a38",borderRadius:8,padding:"5px 10px",fontSize:12,color:"#f0eeff",whiteSpace:"nowrap" }}>{isEN?"Surprise 🎲":"Sortear 🎲"}</span>
             <button onClick={()=>{getSurprise();setShowFABMenu(false);}} style={{ width:44,height:44,borderRadius:"50%",background:"#1a1a22",border:"1px solid #2a2a38",fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}>🎲</button>
@@ -2570,7 +2552,6 @@ export default function App() {
             <button onClick={()=>{setShowAdd(true);setShowFABMenu(false);}} style={{ width:44,height:44,borderRadius:"50%",background:"#1a1a22",border:"1px solid #ff336650",fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center" }}>📝</button>
           </div>
         </>}
-        <button onClick={()=>setShowFABMenu(!showFABMenu)} style={{ width:56,height:56,borderRadius:"50%",background:showFABMenu?"#1a1a22":"#ff3366",border:showFABMenu?"2px solid #ff3366":"none",color:"#fff",fontSize:28,cursor:"pointer",boxShadow:"0 4px 20px #ff336660",display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",transform:showFABMenu?"rotate(45deg)":"none" }}>+</button>
       </div>
       {/* FAB */}
       {showFAB&&<div style={{ position:"fixed",inset:0,zIndex:190 }} onClick={()=>setShowFAB(false)}/>}
