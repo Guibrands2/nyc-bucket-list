@@ -1163,7 +1163,11 @@ function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveList
   const parseLinked = (text) => {
     const match = text.match(/\[lugares:\s*([^\]]+)\]/i);
     if(!match) return [];
-    return match[1].split(",").map(n=>n.trim()).map(name=>places.find(p=>(isEN&&p.nameEN?p.nameEN:p.name).toLowerCase()===name.toLowerCase())||null).filter(Boolean);
+    return match[1].split(",").map(n=>n.trim()).map(name=>{
+      const normName = normalize(name);
+      return places.find(p=>normalize(isEN&&p.nameEN?p.nameEN:p.name)===normName)||
+             places.find(p=>normalize(isEN&&p.nameEN?p.nameEN:p.name).includes(normName)||normName.includes(normalize(isEN&&p.nameEN?p.nameEN:p.name)))||null;
+    }).filter(Boolean);
   };
 
   const generate = async () => {
@@ -1202,7 +1206,7 @@ function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveList
       "Monte um roteiro detalhado com: lugares na ordem geografica ideal, horarios, como ir de um para outro (metro especifico + caminhada), onde comer, estimativa de gasto total e uma frase de clima do dia.\n"+
       "Responda em "+(isEN?"English":"portugues brasileiro")+".";
     try{
-      const r=await fetch(AI_PROXY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:[{role:"user",content:prompt}]})});
+      const r=await fetch(AI_PROXY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:[{role:"user",content:prompt}],max_tokens:2048})});
       const d=await r.json();
       const text=d.content?.[0]?.text||"Erro.";
       const linked=parseLinked(text);
