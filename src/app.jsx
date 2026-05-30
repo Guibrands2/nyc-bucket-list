@@ -448,6 +448,7 @@ const injectCSS = () => {
     .nearby-banner { position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:#1a1a22; border:1px solid #00e67650; border-radius:20px; padding:10px 16px; display:flex; align-items:center; gap:10px; z-index:140; box-shadow:0 4px 20px #00000060; max-width:340px; cursor:pointer; animation:slideUp 0.3s ease; }
     .cat-bar { position:sticky; top:0; z-index:80; background:#0f0f13; padding:0 0 8px; margin:0 -16px; padding-left:16px; }
     .modal-drag { cursor: grab; }
+    .modal { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-y; }
     @keyframes slideUp { from { transform:translateY(30px); opacity:0; } to { transform:translateY(0); opacity:1; } }
     .slide-up { animation: slideUp 0.22s ease forwards; }
     @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
@@ -1353,8 +1354,8 @@ function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveList
         <div style={{ marginBottom:14 }}>
           <div style={{ fontSize:10,color:"#50506a",letterSpacing:"0.1em",marginBottom:8 }}>{isEN?"WHICH PLACES?":"QUAIS LUGARES?"}</div>
           <div style={{ display:"flex",gap:6 }}>
-            {CHIP(isEN?"Only new 🆕":"Apenas novos 🆕",!params.incluirVisitados,()=>setP("incluirVisitados",false))}
-            {CHIP(isEN?"Include visited ✓":"Incluir ja visitados ✓",params.incluirVisitados,()=>setP("incluirVisitados",true),"#00e676")}
+            {CHIP(isEN?"Only new 🆕":"Apenas novos 🆕",params.incluirVisitados===false,()=>setP("incluirVisitados",params.incluirVisitados===false?null:false))}
+            {CHIP(isEN?"Include visited ✓":"Incluir ja visitados ✓",params.incluirVisitados===true,()=>setP("incluirVisitados",params.incluirVisitados===true?null:true),"#00e676")}
           </div>
         </div>
 
