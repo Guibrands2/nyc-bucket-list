@@ -321,10 +321,12 @@ let _pulling = false;
 function initPullToRefresh() {
   if (window._ptrInit) return;
   window._ptrInit = true;
-  document.addEventListener("touchstart", e => { _pullStartY = e.touches[0].clientY; }, { passive:true });
+  let _startTarget = null;
+  document.addEventListener("touchstart", e => { _pullStartY = e.touches[0].clientY; _startTarget = e.target; }, { passive:true });
   document.addEventListener("touchend", e => {
     const dy = e.changedTouches[0].clientY - _pullStartY;
-    if (dy > 80 && window.scrollY === 0) { window.location.reload(); }
+    const insideScrollable = _startTarget?.closest('[style*="overflow-y: auto"],[style*="overflow-y:auto"],[style*="overflowY"],.modal');
+    if (dy > 80 && window.scrollY === 0 && !insideScrollable) { window.location.reload(); }
   }, { passive:true });
 }
 
