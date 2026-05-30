@@ -1190,7 +1190,7 @@ function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveList
       "- Saindo de: "+startLoc+"\n"+
       "- Hora de saida: "+(params.horaSaida||"agora")+"\n"+
       "- Tempo disponivel: "+params.horas+"\n"+
-      "- Humor: "+(params.humor.length?params.humor.join(" e ":"normal")+"\n"+
+      "- Humor: "+(params.humor.length?params.humor.join(" e "):"normal")+"\n"+
       "- Ambiente: "+(params.ambiente.length?params.ambiente.join(" e "):"qualquer")+"\n"+
       "- Budget: "+params.budget+"\n"+
       "- Quem vai: "+(params.quem||"Gui e Gabriel")+"\n"+
