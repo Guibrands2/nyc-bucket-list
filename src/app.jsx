@@ -2188,7 +2188,6 @@ export default function App() {
   const [showSurpresa, setShowSurpresa] = useState(false);
   const [showAddEvent, setShowAddEvent] = useState(false);
   const [showAIAdd, setShowAIAdd] = useState(false);
-  const [showFAB, setShowFAB] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [placeOfDay, setPlaceOfDay] = useState(null);
   const placeOfDayFixed = useRef(false);
