@@ -542,8 +542,14 @@ function MapTab({ places, entries, onSelect }) {
   const markers = useRef([]);
   const userMarker = useRef(null);
   const [ready, setReady] = useState(false);
+  const [selected, setSelected] = useState(null);
+  const [catFilter, setCatFilter] = useState(null);
+  const [locating, setLocating] = useState(false);
 
-  // Load Leaflet once
+  const MAP_CATS = ["Museus","Comida","Bares","Natureza","Entretenimento","Monumentos"];
+
+  const visiblePlaces = catFilter ? places.filter(p=>p.category===catFilter) : places;
+
   useEffect(() => {
     if (window.L) { setReady(true); return; }
     const link = document.createElement("link");
@@ -556,46 +562,126 @@ function MapTab({ places, entries, onSelect }) {
     document.head.appendChild(script);
   }, []);
 
-  // Init map once Leaflet is ready
   useEffect(() => {
     if (!ready || !mapRef.current || inst.current) return;
-    inst.current = window.L.map(mapRef.current, { center:[40.730,-73.990], zoom:12, zoomControl:true });
-    window.L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { attribution:"© CartoDB" }).addTo(inst.current);
-    // User location dot - separate from markers
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(pos => {
-        if (!inst.current) return;
-        const dot = window.L.circleMarker([pos.coords.latitude, pos.coords.longitude], {
-          radius: 8, fillColor:"#FF2D55", color:"#fff", weight:2, opacity:1, fillOpacity:1
-        }).addTo(inst.current);
-        userMarker.current = dot;
-      }, () => {}, { enableHighAccuracy: false, timeout: 5000 });
-    }
+    inst.current = window.L.map(mapRef.current, {
+      center:[40.730,-73.990], zoom:12, zoomControl:false
+    });
+    window.L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+      attribution:"© CartoDB"
+    }).addTo(inst.current);
+    window.L.control.zoom({ position:"bottomright" }).addTo(inst.current);
+    inst.current.on("click", () => setSelected(null));
   }, [ready]);
 
-  // Update markers when places change
   useEffect(() => {
     if (!inst.current) return;
     markers.current.forEach(m => m.remove());
     markers.current = [];
-    places.forEach(p => {
+    visiblePlaces.forEach(p => {
       if (!p.lat || !p.lng) return;
-      const meta = CAT_META[p.category] || { color:"#FF2D55" };
-      const html = "<div style='width:28px;height:28px;border-radius:50%;background:"+meta.color+"30;border:2px solid "+meta.color+";display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,0.5)'>"+p.emoji+"</div>";
-      const icon = window.L.divIcon({ html, className:"", iconSize:[28,28], iconAnchor:[14,14] });
+      const e = entries[p.id]||{};
+      const meta = CAT_META[p.category]||{color:"#FF2D55"};
+      const isFui = e.status==="fui";
+      const isQuero = e.status==="quero";
+      const size = isQuero ? 36 : isFui ? 26 : 30;
+      const bg = isFui ? "#E8E8EC" : meta.color;
+      const border = isFui ? "#8A8A9A" : meta.color;
+      const opacity = isFui ? "0.5" : "1";
+      const shadow = isQuero ? "0 3px 12px rgba(0,0,0,0.25)" : "0 2px 6px rgba(0,0,0,0.15)";
+      const html = `<div style='width:${size}px;height:${size}px;border-radius:50%;background:${bg};border:2.5px solid ${border};display:flex;align-items:center;justify-content:center;font-size:${isQuero?16:13}px;box-shadow:${shadow};opacity:${opacity};transition:transform 0.15s'>${p.emoji}</div>`;
+      const icon = window.L.divIcon({ html, className:"", iconSize:[size,size], iconAnchor:[size/2,size/2] });
       const m = window.L.marker([p.lat, p.lng], { icon }).addTo(inst.current);
-      m.on("click", () => onSelect(p));
+      m.on("click", e => { e.originalEvent.stopPropagation(); setSelected(p); });
       markers.current.push(m);
     });
-  }, [ready, places]);
+  }, [ready, visiblePlaces, entries]);
 
-  if (!ready) return <div style={{ height:"60vh", display:"flex", alignItems:"center", justifyContent:"center", color:"#8A8A9A" }}>Carregando mapa...</div>;
+  const goNearMe = () => {
+    setLocating(true);
+    navigator.geolocation?.getCurrentPosition(pos => {
+      if (!inst.current) return;
+      inst.current.flyTo([pos.coords.latitude, pos.coords.longitude], 14, { duration:1.2 });
+      if (userMarker.current) userMarker.current.remove();
+      const dot = window.L.circleMarker([pos.coords.latitude, pos.coords.longitude], {
+        radius:8, fillColor:"#FF2D55", color:"#fff", weight:2.5, opacity:1, fillOpacity:1,
+        pane:"markerPane"
+      }).addTo(inst.current);
+      userMarker.current = dot;
+      setLocating(false);
+    }, () => setLocating(false), { enableHighAccuracy:true, timeout:6000 });
+  };
+
+  const selectedEntry = selected ? entries[selected.id]||{} : null;
+  const selectedMeta = selected ? (CAT_META[selected.category]||{color:"#FF2D55"}) : null;
+
+  if (!ready) return (
+    <div style={{ height:"calc(100vh - 140px)", display:"flex", alignItems:"center", justifyContent:"center", color:"#8A8A9A", flexDirection:"column", gap:8 }}>
+      <div className="pulsing" style={{ fontSize:32 }}>🗺</div>
+      <div style={{ fontSize:13 }}>Carregando mapa...</div>
+    </div>
+  );
+
   return (
-    <div style={{ padding:"0 16px 16px" }}>
-      <div style={{ fontSize:11, color:"#8A8A9A", marginBottom:8, letterSpacing:"0.08em" }}>TOQUE EM UM PIN PARA DETALHES</div>
-      <div style={{ borderRadius:14, border:"1px solid #E8E8EC", overflow:"hidden" }}>
-        <div ref={mapRef} style={{ height:"62vh", width:"100%" }}/>
+    <div style={{ position:"relative", height:"calc(100vh - 140px)", display:"flex", flexDirection:"column" }}>
+
+      {/* Category filter bar */}
+      <div style={{ display:"flex", gap:6, padding:"10px 16px 8px", overflowX:"auto", scrollbarWidth:"none", background:"#F8F7F4", borderBottom:"1px solid #E8E8EC", flexShrink:0 }} data-hscroll>
+        <button onClick={()=>setCatFilter(null)} style={{ padding:"6px 14px", borderRadius:20, border:"1px solid "+(catFilter===null?"#1A1A1A":"#E8E8EC"), background:catFilter===null?"#1A1A1A":"#FFFFFF", color:catFilter===null?"#FFFFFF":"#8A8A9A", fontSize:12, fontWeight:catFilter===null?600:400, whiteSpace:"nowrap", cursor:"pointer", flexShrink:0 }}>
+          Todos
+        </button>
+        {MAP_CATS.map(cat => {
+          const meta = CAT_META[cat]||{color:"#FF2D55"};
+          const active = catFilter===cat;
+          return (
+            <button key={cat} onClick={()=>setCatFilter(active?null:cat)} style={{ padding:"6px 14px", borderRadius:20, border:"1px solid "+(active?meta.color+"80":"#E8E8EC"), background:active?meta.color+"15":"#FFFFFF", color:active?meta.color:"#8A8A9A", fontSize:12, fontWeight:active?600:400, whiteSpace:"nowrap", cursor:"pointer", flexShrink:0 }}>
+              {catLabel(cat)}
+            </button>
+          );
+        })}
       </div>
+
+      {/* Map */}
+      <div style={{ flex:1, position:"relative" }}>
+        <div ref={mapRef} style={{ width:"100%", height:"100%" }}/>
+
+        {/* Near me button */}
+        <button onClick={goNearMe} style={{ position:"absolute", top:12, right:12, zIndex:1000, background:"#FFFFFF", border:"1px solid #E8E8EC", borderRadius:20, padding:"8px 14px", fontSize:12, fontWeight:600, color:"#1A1A1A", cursor:"pointer", boxShadow:"0 2px 12px rgba(0,0,0,0.12)", display:"flex", alignItems:"center", gap:6 }}>
+          {locating ? <span className="pulsing">●</span> : "📍"} {isEN?"Near me":"Perto de mim"}
+        </button>
+
+        {/* Legend */}
+        <div style={{ position:"absolute", bottom: selected ? 200 : 12, left:12, zIndex:1000, background:"#FFFFFF", border:"1px solid #E8E8EC", borderRadius:10, padding:"8px 10px", fontSize:10, color:"#8A8A9A", boxShadow:"0 2px 8px rgba(0,0,0,0.08)", transition:"bottom 0.3s ease" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:3 }}><span style={{ width:10, height:10, borderRadius:"50%", background:"#FF2D55", display:"inline-block" }}/>Quero ir</div>
+          <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:3 }}><span style={{ width:10, height:10, borderRadius:"50%", background:"#8A8A9A", display:"inline-block", opacity:0.5 }}/>Já fui</div>
+          <div style={{ display:"flex", alignItems:"center", gap:5 }}><span style={{ width:10, height:10, borderRadius:"50%", background:"#FF2D55", display:"inline-block" }}/>Na lista</div>
+        </div>
+      </div>
+
+      {/* Mini card on tap */}
+      {selected && (
+        <div style={{ position:"absolute", bottom:0, left:0, right:0, zIndex:1000, background:"#FFFFFF", borderTop:"1px solid #E8E8EC", borderRadius:"20px 20px 0 0", padding:"16px 20px 32px", boxShadow:"0 -4px 24px rgba(0,0,0,0.10)" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+            <div style={{ fontSize:32, lineHeight:1, flexShrink:0 }}>{selected.emoji}</div>
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontSize:17, fontWeight:700, color:"#1A1A1A", letterSpacing:"-0.02em", lineHeight:1.2, marginBottom:3 }}>
+                {isEN&&selected.nameEN?selected.nameEN:selected.name}
+                {selectedEntry.status==="fui" && <span style={{ marginLeft:6, fontSize:12, color:"#1A9E4A", fontWeight:600 }}>✓ Visitado</span>}
+                {selectedEntry.status==="quero" && <span style={{ marginLeft:6, fontSize:12, color:"#0055CC", fontWeight:600 }}>♥ Quero ir</span>}
+              </div>
+              <div style={{ fontSize:12, color:"#8A8A9A" }}>
+                <span style={{ color:selectedMeta.color, fontWeight:600 }}>{catLabel(selected.category)}</span>
+                {selected.price&&selected.price!=="gratis"&&<span> · {selected.price}</span>}
+                {selected.time&&<span> · {selected.time}</span>}
+              </div>
+              {selectedEntry.stars>0 && <div style={{ fontSize:13, color:"#B8860B", marginTop:3 }}>{"★".repeat(selectedEntry.stars)}</div>}
+            </div>
+            <button onClick={()=>onSelect(selected)} style={{ padding:"10px 16px", background:"#FF2D55", border:"none", borderRadius:20, color:"#fff", fontSize:12, fontWeight:700, cursor:"pointer", flexShrink:0 }}>
+              {isEN?"Open":"Abrir"} →
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
