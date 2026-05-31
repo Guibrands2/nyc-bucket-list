@@ -990,36 +990,37 @@ function DetailModal({ place, entry, places, entries, onClose, onSave, onDelete,
   return <>
     <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:300,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={onClose}>
       <div className="modal" onTouchStart={drag.onTouchStart} onTouchEnd={drag.onTouchEnd} style={{ background:"#FFFFFF",borderTop:"1px solid #E8E8EC",borderRadius:"20px 20px 0 0",padding:"20px 16px 48px",maxWidth:560,width:"100%",maxHeight:"94vh",overflowY:"auto" }} onClick={ev=>ev.stopPropagation()}>
-        <div style={{ width:44,height:4,background:"#E8E8EC",borderRadius:2,margin:"0 auto 16px",cursor:"grab" }}/>
-        <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14 }}>
-          <div style={{ flex:1 }}>
-            <div style={{ display:"flex",alignItems:"center",gap:10,marginBottom:6 }}>
-              <span style={{ fontSize:28 }}>{place.emoji}</span>
-              <div>
-                <div style={{ display:"flex",alignItems:"center",gap:6 }}>
-                  <div style={{ fontSize:17,fontWeight:700,color:"#1A1A1A",lineHeight:1.2 }}>{displayName}</div>
-                  <button onClick={()=>setShowEdit(true)} style={{ background:"none",border:"none",color:"#8A8A9A",cursor:"pointer",padding:"2px",display:"flex" }}><Icons.Edit/></button>
-                </div>
-                <div style={{ fontSize:12,color:"#8A8A9A",marginTop:4,display:"flex",gap:4,alignItems:"center",flexWrap:"wrap" }}>
-                  <span style={{ color:meta.color,fontWeight:600 }}>{catLabel(place.category)}</span>
-                  {price&&<><span style={{ color:"#E8E8EC" }}>·</span><span>{PRICE_EMOJI[price]}</span></>}
-                  {place.time&&<><span style={{ color:"#E8E8EC" }}>·</span><span>{place.time}</span></>}
-                  {needsRes&&<><span style={{ color:"#E8E8EC" }}>·</span><span style={{ color:"#B8860B" }}>reservar</span></>}
-                  {hours&&<><span style={{ color:"#E8E8EC" }}>·</span><span>🕐 {hours.split(",")[0]}</span></>}
-                </div>
-              </div>
+        {/* Drag handle */}
+        <div style={{ width:36,height:4,background:"#E8E8EC",borderRadius:2,margin:"0 auto 20px" }}/>
+
+        {/* Header */}
+        <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16 }}>
+          <div style={{ flex:1,minWidth:0,paddingRight:12 }}>
+            <div style={{ fontSize:22,fontWeight:800,color:"#1A1A1A",letterSpacing:"-0.03em",lineHeight:1.2,marginBottom:5 }}>
+              {place.emoji} {displayName}
+              <button onClick={()=>setShowEdit(true)} style={{ background:"none",border:"none",color:"#AEAEB2",cursor:"pointer",padding:"0 0 0 6px",fontSize:14,verticalAlign:"middle" }}>✏️</button>
+            </div>
+            <div style={{ fontSize:12,color:"#8A8A9A",display:"flex",gap:6,alignItems:"center",flexWrap:"wrap" }}>
+              <span style={{ color:meta.color,fontWeight:600 }}>{catLabel(place.category)}</span>
+              {price&&price!=="gratis"&&<><span>·</span><span>{price}</span></>}
+              {place.time&&<><span>·</span><span>{place.time}</span></>}
+              {needsRes&&<><span>·</span><span style={{ color:"#B8860B" }}>reservar</span></>}
             </div>
           </div>
-          <div style={{ display:"flex",gap:5,flexWrap:"wrap" }}>
-            <a href={mapsUrl} target="_blank" rel="noreferrer" style={{ background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:8,padding:"0 10px",height:34,color:"#8A8A9A",display:"flex",alignItems:"center",gap:5,textDecoration:"none",fontSize:11,whiteSpace:"nowrap" }}>📍 Maps</a>
-            {cityUrl&&<a href={cityUrl} target="_blank" rel="noreferrer" style={{ background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:8,padding:"0 10px",height:34,color:"#8A8A9A",display:"flex",alignItems:"center",gap:5,textDecoration:"none",fontSize:11,whiteSpace:"nowrap" }}>🗺 Rota</a>}
-            {link&&<a href={link} target="_blank" rel="noreferrer" style={{ background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:8,padding:"0 10px",height:34,color:"#8A8A9A",display:"flex",alignItems:"center",gap:5,textDecoration:"none",fontSize:11,whiteSpace:"nowrap" }}>🔗 Site</a>}
-            {status==="quero"&&(()=>{const gcName=encodeURIComponent(isEN&&place.nameEN?place.nameEN:place.name);const gcLoc=encodeURIComponent("New York, NY");const gcUrl="https://calendar.google.com/calendar/render?action=TEMPLATE&text="+gcName+"&location="+gcLoc+"&details="+encodeURIComponent((isEN&&place.descEN?place.descEN:place.desc)||"");return<a href={gcUrl} target="_blank" rel="noreferrer" style={{ background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:8,padding:"0 10px",height:34,color:"#8A8A9A",display:"flex",alignItems:"center",gap:5,textDecoration:"none",fontSize:11,whiteSpace:"nowrap" }}>📅 {isEN?"Calendar":"Agenda"}</a>;})()} 
-            <button onClick={onClose} style={{ background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:8,width:34,height:34,color:"#8A8A9A",cursor:"pointer",fontSize:18 }}>×</button>
-          </div>
+          <button onClick={onClose} style={{ background:"none",border:"none",color:"#AEAEB2",cursor:"pointer",fontSize:22,lineHeight:1,flexShrink:0 }}>×</button>
         </div>
-        {displayDesc&&<div style={{ fontSize:14,color:"#1A1A1A",lineHeight:1.7,marginBottom:10,padding:"12px 14px",background:"#F8F7F4",borderRadius:10,borderLeft:"3px solid "+meta.color }}>{displayDesc}</div>}
-        {displayRep&&<div style={{ fontSize:13,color:"#8A8A9A",lineHeight:1.6,marginBottom:14,padding:"10px 14px",background:"#F8F7F4",borderRadius:10,borderLeft:"3px solid #E8E8EC",fontStyle:"italic" }}>"{displayRep}"</div>}
+
+        {/* Action links */}
+        <div style={{ display:"flex",gap:8,marginBottom:20,paddingBottom:20,borderBottom:"1px solid #E8E8EC" }}>
+          <a href={mapsUrl} target="_blank" rel="noreferrer" style={{ flex:1,padding:"10px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:10,color:"#1A1A1A",display:"flex",alignItems:"center",justifyContent:"center",gap:5,textDecoration:"none",fontSize:12,fontWeight:500 }}>📍 Maps</a>
+          {cityUrl&&<a href={cityUrl} target="_blank" rel="noreferrer" style={{ flex:1,padding:"10px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:10,color:"#1A1A1A",display:"flex",alignItems:"center",justifyContent:"center",gap:5,textDecoration:"none",fontSize:12,fontWeight:500 }}>🗺 Rota</a>}
+          {link&&<a href={link} target="_blank" rel="noreferrer" style={{ flex:1,padding:"10px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:10,color:"#1A1A1A",display:"flex",alignItems:"center",justifyContent:"center",gap:5,textDecoration:"none",fontSize:12,fontWeight:500 }}>🔗 Site</a>}
+        </div>
+
+        {/* Description */}
+        {displayDesc&&<p style={{ fontSize:14,color:"#1A1A1A",lineHeight:1.75,marginBottom:12 }}>{displayDesc}</p>}
+        {displayRep&&<p style={{ fontSize:13,color:"#8A8A9A",lineHeight:1.6,marginBottom:20,fontStyle:"italic",paddingTop:12,borderTop:"1px solid #E8E8EC" }}>"{displayRep}"</p>}
+        {!displayRep&&displayDesc&&<div style={{ height:1,background:"#E8E8EC",marginBottom:20 }}/>}
         <div style={{ marginBottom:14 }}>
           <div style={{ fontSize:10,color:"#8A8A9A",letterSpacing:"0.12em",marginBottom:8 }}>{T.status}</div>
           <div style={{ display:"flex",gap:8 }}>{Object.entries(STATUS).map(([key,cfg])=><button key={key} onClick={()=>setStatus(key)} style={{ flex:1,padding:"10px 4px",borderRadius:10,background:status===key?cfg.color+"18":"#F8F7F4",border:"1px solid "+(status===key?cfg.color+"60":"#E8E8EC"),color:status===key?cfg.color:"#8A8A9A",fontSize:14,cursor:"pointer",transition:"all 0.15s" }}><div>{status===key?cfg.sel:cfg.icon}</div><div style={{ fontSize:10,marginTop:3 }}>{cfg.label}</div></button>)}</div>
@@ -1068,7 +1069,7 @@ function DetailModal({ place, entry, places, entries, onClose, onSave, onDelete,
         <div style={{ marginBottom:14 }}><div style={{ fontSize:10,color:"#8A8A9A",letterSpacing:"0.12em",marginBottom:8 }}>{T.photos}</div><PhotoGallery photos={photos} onChange={setPhotos}/></div>
         <NearbyInModal place={place} places={places} entries={entries} onSelect={p=>{onClose();setTimeout(()=>onSelectNearby(p),150);}}/>
         <button onClick={handleSave} disabled={saving} style={{ width:"100%",padding:"14px",background:saving?"#E8E8EC":"#FF2D55",border:"none",borderRadius:12,color:saving?"#AEAEB2":"#fff",fontSize:14,fontWeight:700,cursor:saving?"default":"pointer",marginBottom:10,transition:"all 0.2s",display:"flex",alignItems:"center",justifyContent:"center",gap:8 }}>{saving?<><span className="pulsing">●</span> {T.saving2}</>:T.save}</button>
-        {confirmDel?<div style={{ display:"flex",gap:8 }}><button onClick={()=>setConfirmDel(false)} style={{ flex:1,padding:"11px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:10,color:"#8A8A9A",fontSize:13,cursor:"pointer" }}>{T.cancel}</button><button onClick={handleDelete} style={{ flex:1,padding:"11px",background:"#4a0000",border:"1px solid #883333",borderRadius:10,color:"#ff8888",fontSize:13,cursor:"pointer" }}>{T.confirm}</button></div>:<button onClick={()=>setConfirmDel(true)} style={{ width:"100%",padding:"11px",background:"none",border:"1px solid #E8E8EC",borderRadius:10,color:"#8A8A9A",fontSize:13,cursor:"pointer" }}>{T.remove}</button>}
+        {confirmDel?<div style={{ display:"flex",gap:8 }}><button onClick={()=>setConfirmDel(false)} style={{ flex:1,padding:"11px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:10,color:"#8A8A9A",fontSize:13,cursor:"pointer" }}>{T.cancel}</button><button onClick={handleDelete} style={{ flex:1,padding:"11px",background:"#FFF0F2",border:"1px solid #FF2D5550",borderRadius:10,color:"#FF2D55",fontSize:13,fontWeight:600,cursor:"pointer" }}>{T.confirm}</button></div>:<button onClick={()=>setConfirmDel(true)} style={{ width:"100%",padding:"11px",background:"none",border:"1px solid #E8E8EC",borderRadius:10,color:"#AEAEB2",fontSize:13,cursor:"pointer" }}>{T.remove}</button>}
       </div>
     </div>
     {showEdit&&<EditNameModal place={place} onClose={()=>setShowEdit(false)} onSave={updated=>{onEditPlace(updated);setShowEdit(false);}}/>}
