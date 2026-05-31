@@ -454,6 +454,11 @@ const injectCSS = () => {
     .leaflet-container { touch-action: none !important; }
     .leaflet-container, .leaflet-pane { z-index: 1 !important; }
     .leaflet-top, .leaflet-bottom { z-index: 2 !important; }
+    .leaflet-container * { box-sizing: content-box !important; }
+    .leaflet-container img { display: block; }
+    .leaflet-tile { margin: 0 !important; padding: 0 !important; }
+    .leaflet-zoom-animated { will-change: transform; }
+    .leaflet-zoom-anim .leaflet-zoom-animated { transition: transform 0.25s cubic-bezier(0,0,0.25,1); }
   `;
   document.head.appendChild(s);
 };
@@ -655,7 +660,7 @@ function MapTab({ places, entries, onSelect }) {
 
       {/* Map */}
       <div ref={wrapRef} style={{ position:"relative" }}>
-        <div ref={mapRef} style={{ width:"100%", height:"calc(100svh - 115px)", minHeight:400 }}/>
+        <div ref={mapRef} style={{ width:"100%", height:"calc(100vh - 115px)", minHeight:400 }}/>
 
         {/* Near me button */}
         <button onClick={goNearMe} style={{ position:"absolute", top:12, right:12, zIndex:1000, background:"#FFFFFF", border:"1px solid #E8E8EC", borderRadius:20, padding:"8px 14px", fontSize:12, fontWeight:600, color:"#1A1A1A", cursor:"pointer", boxShadow:"0 2px 12px rgba(0,0,0,0.12)", display:"flex", alignItems:"center", gap:6 }}>
