@@ -374,7 +374,7 @@ function useDragToDismiss(onDismiss) {
   return { onTouchStart, onTouchEnd };
 }
 
-const TAB_KEYS = ["list","map","timeline","curadoria","stats","eventos"];
+const TAB_KEYS = ["list","map","planner","eventos"];
 
 function useSwipeTabs(tab, setTab) {
   const startX = useRef(0);
@@ -1125,7 +1125,197 @@ function ShareModal({ places, entries, onClose, addToast }) {
   </div></div>;
 }
 
+function PlannerTab({ places, entries, addToast, userLat, userLng }) {
+  const MAX_INTERACTIONS = 8;
+  const [msgs, setMsgs] = useState([{role:"assistant",content:T.chatGreeting,linkedPlaces:[]}]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [selected, setSelected] = useState([]);
+  const [showPlan, setShowPlan] = useState(false);
+  const [planResult, setPlanResult] = useState("");
+  const [planLoading, setPlanLoading] = useState(false);
+  const [startLoc, setStartLoc] = useState("Jersey City, NJ");
+  const [locLoading, setLocLoading] = useState(false);
+  const bottomRef = useRef(null);
+  const userMsgCount = msgs.filter(m=>m.role==="user").length;
 
+  useEffect(()=>{ bottomRef.current?.scrollIntoView({behavior:"smooth"}); },[msgs]);
+
+  useEffect(()=>{
+    if(userLat&&userLng){
+      fetch("https://nominatim.openstreetmap.org/reverse?lat="+userLat+"&lon="+userLng+"&format=json")
+        .then(r=>r.json()).then(d=>{
+          setStartLoc((d.address.neighbourhood||d.address.suburb||d.address.city||"minha loc")+", "+(d.address.state||"NY"));
+        }).catch(()=>{});
+    }
+  },[userLat,userLng]);
+
+  const buildCatalog = () => {
+    const notVisited = places.filter(p=>(entries[p.id]||{}).status!=="fui");
+    const wanted = notVisited.filter(p=>(entries[p.id]||{}).status==="quero");
+    const others = notVisited.filter(p=>(entries[p.id]||{}).status!=="quero");
+    return [...wanted,...others].slice(0,55).map(p=>{
+      const name=isEN&&p.nameEN?p.nameEN:p.name;
+      const isWanted=(entries[p.id]||{}).status==="quero";
+      return name+" | "+catLabel(p.category)+" | "+p.price+(isWanted?" ♥":"");
+    }).join("\n");
+  };
+
+  const parseLinked = (text) => {
+    const match = text.match(/\[lugares:\s*([^\]]+)\]/i);
+    if(!match) return [];
+    return match[1].split(",").map(n=>n.trim()).map(name=>{
+      const norm=normalize(name);
+      return places.find(p=>normalize(isEN&&p.nameEN?p.nameEN:p.name)===norm)||
+             places.find(p=>normalize(isEN&&p.nameEN?p.nameEN:p.name).includes(norm)||norm.includes(normalize(isEN&&p.nameEN?p.nameEN:p.name)))||null;
+    }).filter(Boolean);
+  };
+
+  const detectLoc = () => {
+    setLocLoading(true);
+    navigator.geolocation.getCurrentPosition(async pos=>{
+      try{
+        const r=await fetch("https://nominatim.openstreetmap.org/reverse?lat="+pos.coords.latitude+"&lon="+pos.coords.longitude+"&format=json");
+        const d=await r.json();
+        setStartLoc((d.address.neighbourhood||d.address.suburb||d.address.city||"minha loc")+", "+(d.address.state||"NY"));
+      }catch{setStartLoc(pos.coords.latitude.toFixed(4)+","+pos.coords.longitude.toFixed(4));}
+      setLocLoading(false);
+    },()=>setLocLoading(false));
+  };
+
+  const send = async () => {
+    if(!input.trim()||loading||userMsgCount>=MAX_INTERACTIONS) return;
+    const userMsg=input.trim(); setInput("");
+    const newMsgs=[...msgs,{role:"user",content:userMsg,linkedPlaces:[]}];
+    setMsgs(newMsgs); setLoading(true);
+    const selNames=selected.map(id=>{const p=places.find(x=>x.id===id);return p?(isEN&&p.nameEN?p.nameEN:p.name):"";}).filter(Boolean).join(", ");
+    const ctx="Voce e assistente pessoal de Gui e Gabriel para o NYC Bucket List.\n"+
+      "REGRAS: 1. SOMENTE lugares da LISTA. 2. Nome EXATO. 3. Prefira metro+caminhada. 4. No final: [lugares: Nome1, Nome2]\n"+
+      "Saindo de: "+startLoc+".\n"+(selNames?"Ja selecionados: "+selNames+".\n":"")+
+      "LISTA (♥ = wishlist):\n"+buildCatalog();
+    try{
+      const r=await fetch(AI_PROXY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:[{role:"user",content:ctx+"\n\nPergunta: "+userMsg}],max_tokens:1024})});
+      const d=await r.json();
+      const text=d.content?.[0]?.text||"Erro.";
+      const linked=parseLinked(text);
+      const display=text.replace(/\[lugares:[^\]]+\]/gi,"").trim();
+      setMsgs([...newMsgs,{role:"assistant",content:display,linkedPlaces:linked}]);
+    }catch{setMsgs([...newMsgs,{role:"assistant",content:isEN?"Connection error.":"Erro ao conectar.",linkedPlaces:[]}]);}
+    setLoading(false);
+  };
+
+  const genPlan = async () => {
+    setShowPlan(true); setPlanLoading(true);
+    const chosen=places.filter(p=>selected.includes(p.id));
+    const lang=isEN?"English":"portugues brasileiro";
+    const prompt="Saindo de "+startLoc+", quero visitar em NYC: "+
+      chosen.map(p=>(isEN&&p.nameEN?p.nameEN:p.name)+" ("+catLabel(p.category)+", "+p.time+", "+p.price+")").join("; ")+
+      ". Monte um roteiro com horarios, metro especifico, onde comer e estimativa de gasto. Responda em "+lang+".";
+    try{
+      const r=await fetch(AI_PROXY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:[{role:"user",content:prompt}],max_tokens:2048})});
+      const d=await r.json();
+      setPlanResult(d.content?.[0]?.text||"Erro.");
+    }catch{setPlanResult(isEN?"Connection error.":"Erro ao conectar.");}
+    setPlanLoading(false);
+  };
+
+  const toggleSel = id => setSelected(prev=>prev.includes(id)?prev.filter(x=>x!==id):prev.length<8?[...prev,id]:prev);
+
+  if(showPlan) return (
+    <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:300,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={()=>setShowPlan(false)}>
+      <div className="modal" style={{ background:"#1a1a22",borderTop:"1px solid #2a2a38",borderRadius:"20px 20px 0 0",padding:"20px 16px 40px",maxWidth:560,width:"100%",height:"88vh",display:"flex",flexDirection:"column" }} onClick={e=>e.stopPropagation()}>
+        <div style={{ width:36,height:3,background:"#2a2a38",borderRadius:2,margin:"0 auto 14px" }}/>
+        <div style={{ fontSize:15,fontWeight:700,color:"#f0eeff",marginBottom:2 }}>{T.routeTitle}</div>
+        <div style={{ fontSize:12,color:"#9090b0",marginBottom:12 }}>{T.departingFrom} {startLoc}</div>
+        {planLoading?<div style={{ textAlign:"center",padding:"40px 0" }}><div className="pulsing" style={{ fontSize:36,marginBottom:12 }}>🤖</div><div style={{ fontSize:13,color:"#9090b0" }}>{T.generating}</div></div>:
+        <><div style={{ flex:1,overflowY:"auto",background:"#0f0f13",borderRadius:12,padding:"14px",fontSize:13,color:"#f0eeff",lineHeight:1.7,whiteSpace:"pre-wrap",marginBottom:14 }}>{planResult}</div>
+        <div style={{ display:"flex",gap:8 }}><button onClick={()=>{navigator.clipboard.writeText(planResult);addToast(T.routeCopied,"success");}} style={{ flex:1,padding:"12px",background:"#ff3366",border:"none",borderRadius:10,color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer" }}>{T.copyRoute}</button><button onClick={()=>setShowPlan(false)} style={{ flex:1,padding:"12px",background:"#0f0f13",border:"1px solid #2a2a38",borderRadius:10,color:"#9090b0",fontSize:13,cursor:"pointer" }}>{T.newRoute}</button></div></>}
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:90,background:"#0f0f13",display:"flex",flexDirection:"column",paddingBottom:"calc(60px + env(safe-area-inset-bottom))" }}>
+      {/* Header */}
+      <div style={{ padding:"16px 16px 12px",borderBottom:"1px solid #1a1a22",flexShrink:0,paddingTop:"max(16px, env(safe-area-inset-top))" }}>
+        <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",maxWidth:600,margin:"0 auto" }}>
+          <div>
+            <div style={{ fontSize:18,fontWeight:800,letterSpacing:"-0.02em",background:"linear-gradient(90deg,#ff3366,#ff6b35)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent" }}>🤖 {isEN?"Planner":"Planejar"}</div>
+            <div style={{ fontSize:11,color:"#9090b0",marginTop:1 }}>{T.chatSub}</div>
+          </div>
+          <button onClick={detectLoc} style={{ display:"flex",alignItems:"center",gap:5,padding:"6px 12px",background:"#1a1a22",border:"1px solid #2a2a38",borderRadius:20,color:"#9090b0",fontSize:11,cursor:"pointer",maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>
+            {locLoading?"...":"📍 "+startLoc.split(",")[0]}
+          </button>
+        </div>
+        {selected.length>0&&(
+          <div style={{ marginTop:10,maxWidth:600,margin:"10px auto 0" }}>
+            <div style={{ display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",alignItems:"center" }} data-hscroll>
+              {selected.map(id=>{const p=places.find(x=>x.id===id);if(!p)return null;return(
+                <button key={id} onClick={()=>toggleSel(id)} style={{ display:"flex",alignItems:"center",gap:4,padding:"4px 10px",background:"#00e67618",border:"1px solid #00e67640",borderRadius:20,color:"#00e676",fontSize:11,whiteSpace:"nowrap",cursor:"pointer",fontFamily:"inherit",flexShrink:0 }}>
+                  {p.emoji} {isEN&&p.nameEN?p.nameEN:p.name} ×
+                </button>
+              );})}
+              <button onClick={genPlan} style={{ display:"flex",alignItems:"center",gap:5,padding:"6px 14px",background:"#ff3366",border:"none",borderRadius:20,color:"#fff",fontSize:12,fontWeight:700,whiteSpace:"nowrap",cursor:"pointer",fontFamily:"inherit",flexShrink:0 }}>
+                🗓️ {T.genRoute}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Messages */}
+      <div style={{ flex:1,overflowY:"auto",padding:"12px 16px",maxWidth:600,width:"100%",margin:"0 auto",boxSizing:"border-box" }}>
+        {msgs.map((m,i)=>(
+          <div key={i} style={{ marginBottom:14,display:"flex",flexDirection:"column",alignItems:m.role==="user"?"flex-end":"flex-start" }}>
+            <div style={{ display:"flex",alignItems:"flex-end",gap:8,justifyContent:m.role==="user"?"flex-end":"flex-start" }}>
+              {m.role==="assistant"&&<div style={{ width:30,height:30,borderRadius:"50%",background:"#ff336620",border:"1px solid #ff336640",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0 }}>🤖</div>}
+              <div style={{ maxWidth:"82%",padding:"11px 15px",borderRadius:m.role==="user"?"18px 18px 4px 18px":"4px 18px 18px 18px",background:m.role==="user"?"#ff3366":"#1a1a22",border:m.role==="user"?"none":"1px solid #2a2a38",color:"#f0eeff",fontSize:14,lineHeight:1.6,whiteSpace:"pre-wrap" }}>
+                {m.content}
+              </div>
+            </div>
+            {m.linkedPlaces&&m.linkedPlaces.length>0&&(
+              <div style={{ marginLeft:38,marginTop:8,display:"flex",flexWrap:"wrap",gap:6 }}>
+                {m.linkedPlaces.map(p=>{const meta=CAT_META[p.category]||{color:"#ff3366"};const sel=selected.includes(p.id);return(
+                  <button key={p.id} onClick={()=>toggleSel(p.id)} style={{ display:"flex",alignItems:"center",gap:5,padding:"6px 12px",background:sel?meta.color+"30":meta.color+"15",border:"1px solid "+(sel?meta.color+"90":meta.color+"40"),borderRadius:20,color:meta.color,fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:sel?600:400,transition:"all 0.15s" }}>
+                    {p.emoji} {isEN&&p.nameEN?p.nameEN:p.name} {sel?"✓":"+"}
+                  </button>
+                );})}
+              </div>
+            )}
+          </div>
+        ))}
+        {loading&&(
+          <div style={{ display:"flex",alignItems:"flex-end",gap:8,marginBottom:12 }}>
+            <div style={{ width:30,height:30,borderRadius:"50%",background:"#ff336620",border:"1px solid #ff336640",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15 }}>🤖</div>
+            <div className="pulsing" style={{ padding:"11px 15px",background:"#1a1a22",border:"1px solid #2a2a38",borderRadius:"4px 18px 18px 18px",color:"#9090b0",fontSize:14 }}>{T.typing}</div>
+          </div>
+        )}
+        <div ref={bottomRef}/>
+      </div>
+
+      {/* Input */}
+      <div style={{ padding:"10px 16px",borderTop:"1px solid #1a1a22",background:"#0f0f13",flexShrink:0,maxWidth:600,width:"100%",margin:"0 auto",boxSizing:"border-box" }}>
+        {userMsgCount>=MAX_INTERACTIONS?(
+          <div style={{ textAlign:"center",padding:"8px 0",color:"#50506a",fontSize:12 }}>
+            {isEN?"Conversation limit reached":"Limite da conversa atingido"} ·
+            <button onClick={()=>{setMsgs([{role:"assistant",content:T.chatGreeting,linkedPlaces:[]}]);setSelected([]);}} style={{ background:"none",border:"none",color:"#ff3366",fontSize:12,cursor:"pointer",marginLeft:4 }}>
+              {isEN?"Restart":"Reiniciar"}
+            </button>
+          </div>
+        ):(
+          <div style={{ display:"flex",gap:8,alignItems:"flex-end" }}>
+            <textarea value={input} onChange={e=>setInput(e.target.value)}
+              onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
+              placeholder={T.askNYC} rows={1}
+              style={{ flex:1,background:"#1a1a22",border:"1px solid "+(input?"#ff336650":"#2a2a38"),borderRadius:22,padding:"11px 16px",color:"#f0eeff",fontSize:14,resize:"none",maxHeight:120,overflowY:"auto",lineHeight:1.5,fontFamily:"inherit",transition:"border-color 0.2s" }}/>
+            <button onClick={send} disabled={!input.trim()||loading}
+              style={{ width:44,height:44,background:input.trim()&&!loading?"#ff3366":"#2a2a38",border:"none",borderRadius:"50%",color:"#fff",fontSize:20,cursor:input.trim()&&!loading?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"background 0.15s" }}>↑</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 
 
@@ -1554,7 +1744,7 @@ function EventsTab({ events, onAdd, onSave, onDelete, addToast }) {
 
 
 // ─── BOTTOM NAV ───────────────────────────────────────────────────────────────
-function BottomNav({ tab, setTab, onSurpresa, onNearby, onShare, onPlanner, unreadEvents }) {
+function BottomNav({ tab, setTab, onSurpresa, onNearby, onShare, unreadEvents }) {
   const [showMais, setShowMais] = useState(false);
 
   const NavItem = ({ id, icon, label, onClick }) => (
@@ -1568,6 +1758,7 @@ function BottomNav({ tab, setTab, onSurpresa, onNearby, onShare, onPlanner, unre
   const ListIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>;
   const MapIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>;
   const EventIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
+  const PlanIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>;
   const CurIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>;
 
   return (
@@ -1580,6 +1771,7 @@ function BottomNav({ tab, setTab, onSurpresa, onNearby, onShare, onPlanner, unre
             {[
               ["timeline","📖",isEN?"Timeline":"Linha do Tempo"],
               ["stats","📊","Stats"],
+              ["curadoria","🔖","Saves"],
             ].map(([id,emoji,label])=>(
               <button key={id} onClick={()=>{setTab(id);setShowMais(false);}} style={{ width:"100%",display:"flex",alignItems:"center",gap:14,padding:"14px 12px",background:tab===id?"#ff336610":"none",border:"none",borderRadius:12,color:tab===id?"#ff3366":"#f0eeff",fontSize:14,cursor:"pointer",fontFamily:"inherit",marginBottom:4,textAlign:"left" }}>
                 <span style={{ fontSize:22 }}>{emoji}</span>{label}
@@ -1587,9 +1779,8 @@ function BottomNav({ tab, setTab, onSurpresa, onNearby, onShare, onPlanner, unre
             ))}
             <div style={{ height:1,background:"#2a2a38",margin:"8px 0" }}/>
             {[
-              [onSurpresa,"🎲",isEN?"Surprise me":"Me surpreenda"],
+              [onSurpresa,"🗓️",isEN?"Surprise day (AI)":"Dia Surpresa (IA)"],
               [onNearby,"📍",isEN?"Nearby":"Lugares proximos"],
-              [onPlanner,"🤖",isEN?"AI Planner":"Guia & Planejador"],
               [onShare,"↗",isEN?"Share":"Compartilhar"],
             ].map(([fn,emoji,label])=>(
               <button key={label} onClick={()=>{fn();setShowMais(false);}} style={{ width:"100%",display:"flex",alignItems:"center",gap:14,padding:"14px 12px",background:"none",border:"none",borderRadius:12,color:"#f0eeff",fontSize:14,cursor:"pointer",fontFamily:"inherit",marginBottom:4,textAlign:"left" }}>
@@ -1602,11 +1793,11 @@ function BottomNav({ tab, setTab, onSurpresa, onNearby, onShare, onPlanner, unre
       <nav className="bottom-nav">
         <NavItem id="list" icon={<ListIcon/>} label={isEN?"List":"Lista"}/>
         <NavItem id="map" icon={<MapIcon/>} label={isEN?"Map":"Mapa"}/>
+        <NavItem id="planner" icon={<PlanIcon/>} label={isEN?"Planner":"Planejar"}/>
         <NavItem id="eventos" icon={<EventIcon/>} label={isEN?"Events":"Eventos"}/>
-        <NavItem id="curadoria" icon={<CurIcon/>} label="Saves"/>
-        <button className={"nav-item"+(["timeline","stats"].includes(tab)?" active":"")} onClick={()=>setShowMais(true)}>
+        <button className={"nav-item"+(["timeline","stats","curadoria"].includes(tab)?" active":"")} onClick={()=>setShowMais(true)}>
           <MaisIcon/>
-          <span style={{ fontSize:9, fontWeight:["timeline","stats"].includes(tab)?700:400 }}>Mais</span>
+          <span style={{ fontSize:9, fontWeight:["timeline","stats","curadoria"].includes(tab)?700:400 }}>Mais</span>
         </button>
       </nav>
     </>
@@ -2529,6 +2720,7 @@ export default function App() {
         {tab==="timeline"&&<TimelineTab places={visiblePlaces} entries={entries} onSelect={openModal}/>}
         {tab==="curadoria"&&<CuradoriaTab places={visiblePlaces} lists={lists} onSaveLists={saveLists} onSelectPlace={openModal}/>}
         {tab==="eventos"&&<EventsTab events={events} onAdd={()=>setShowAddEvent(true)} onSave={async ev=>{await set(ref(db,"events/"+ev.id),ev);}} onDelete={async id=>{await remove(ref(db,"events/"+id));setEvents(prev=>prev.filter(e=>e.id!==id));}} addToast={addToast}/>}
+        {tab==="planner"&&<PlannerTab places={visiblePlaces} entries={entries} addToast={addToast} userLat={userLat} userLng={userLng}/>}
       </div>
 
       {/* Modals */}
@@ -2561,11 +2753,11 @@ export default function App() {
         {showFAB&&<>
           <button onClick={()=>{setShowFAB(false);setShowAIAdd(true);}} style={{ display:"flex",alignItems:"center",gap:8,padding:"10px 16px",background:"#1a1a22",border:"1px solid #2a2a38",borderRadius:20,color:"#f0eeff",fontSize:13,cursor:"pointer",boxShadow:"0 4px 16px #00000060",whiteSpace:"nowrap" }}>✨ {isEN?"Add with AI":"Adicionar com IA"}</button>
           <button onClick={()=>{setShowFAB(false);setShowAdd(true);}} style={{ display:"flex",alignItems:"center",gap:8,padding:"10px 16px",background:"#1a1a22",border:"1px solid #2a2a38",borderRadius:20,color:"#f0eeff",fontSize:13,cursor:"pointer",boxShadow:"0 4px 16px #00000060",whiteSpace:"nowrap" }}>📝 {isEN?"Add manually":"Adicionar manual"}</button>
-          <button onClick={()=>{setShowFAB(false);getSurprise();}} style={{ display:"flex",alignItems:"center",gap:8,padding:"10px 16px",background:"#1a1a22",border:"1px solid #2a2a38",borderRadius:20,color:"#f0eeff",fontSize:13,cursor:"pointer",boxShadow:"0 4px 16px #00000060",whiteSpace:"nowrap" }}>🎲 {isEN?"Surprise me":"Me surpreenda"}</button>
+          <button onClick={()=>{setShowFAB(false);getSurprise();}} style={{ display:"flex",alignItems:"center",gap:8,padding:"10px 16px",background:"#1a1a22",border:"1px solid #2a2a38",borderRadius:20,color:"#f0eeff",fontSize:13,cursor:"pointer",boxShadow:"0 4px 16px #00000060",whiteSpace:"nowrap" }}>🎲 {isEN?"Roll a place":"Sortear lugar"}</button>
         </>}
         <button onClick={()=>setShowFAB(!showFAB)} style={{ width:54,height:54,background:"#ff3366",border:"none",borderRadius:"50%",color:"#fff",fontSize:showFAB?20:26,cursor:"pointer",boxShadow:"0 4px 20px #ff336660",display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",transform:showFAB?"rotate(45deg)":"none" }}>+</button>
       </div>
-      <BottomNav tab={tab} setTab={setTab} onSurpresa={()=>setShowSurpresa(true)} onNearby={handleNearby} onShare={()=>setShowShare(true)} onPlanner={()=>setShowPlanner(true)}/>
+      <BottomNav tab={tab} setTab={setTab} onSurpresa={()=>setShowSurpresa(true)} onNearby={handleNearby} onShare={()=>setShowShare(true)}/>
     </div>
   );
 }
