@@ -582,7 +582,8 @@ function MapTab({ places, entries, onSelect }) {
   useEffect(() => {
     if (!ready || !mapRef.current || inst.current) return;
     inst.current = window.L.map(mapRef.current, {
-      center:[40.730,-73.990], zoom:12, zoomControl:false
+      center:[40.730,-73.990], zoom:12, zoomControl:false,
+      zoomAnimation:false, fadeAnimation:false, markerZoomAnimation:false
     });
     window.L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
       attribution:"© CartoDB"
