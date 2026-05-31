@@ -2394,6 +2394,8 @@ Retorne este JSON (type = "place" ou "event"):
   "link": "URL oficial ou vazio",
   "rep": "dica em portugues (max 80 chars) ou vazio",
   "repEN": "tip in English (max 80 chars) or empty",
+  "lat": 40.7580,
+  "lng": -73.9855,
   "eventDate": "YYYY-MM-DD se for evento com data especifica, senao vazio",
   "eventTime": "HH:MM se for evento, senao vazio",
   "location": "endereco ou nome do local se for evento",
@@ -2470,7 +2472,7 @@ Retorne este JSON (type = "place" ou "event"):
         link:r.link||"",
         rep:r.rep||"",
         repEN:r.repEN||"",
-        lat:null, lng:null
+        lat:r.lat||null, lng:r.lng||null
       };
       await onSavePlace(place, placeStatus);
       addToast(isEN?"Place added!":"Lugar adicionado!","success");
