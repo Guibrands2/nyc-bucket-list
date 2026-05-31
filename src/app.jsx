@@ -1253,10 +1253,27 @@ function PlannerTab({ places, entries, addToast, userLat, userLng, onAddNewPlace
   const [startLoc, setStartLoc] = useState("Jersey City, NJ");
   const [locLoading, setLocLoading] = useState(false);
   const bottomRef = useRef(null);
+  const containerRef = useRef(null);
   const userMsgCount = msgs.filter(m=>m.role==="user").length;
 
   useEffect(()=>{ bottomRef.current?.scrollIntoView({behavior:"smooth"}); },[msgs]);
   useEffect(()=>{ try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(msgs.slice(-20))); }catch{} },[msgs]);
+
+  // Adjust height when keyboard opens/closes on iOS
+  useEffect(()=>{
+    const vp = window.visualViewport;
+    if(!vp) return;
+    const update = ()=>{
+      if(containerRef.current){
+        containerRef.current.style.height = vp.height + "px";
+        containerRef.current.style.top = vp.offsetTop + "px";
+      }
+    };
+    update();
+    vp.addEventListener("resize", update);
+    vp.addEventListener("scroll", update);
+    return ()=>{ vp.removeEventListener("resize", update); vp.removeEventListener("scroll", update); };
+  }, []);
 
   useEffect(()=>{
     if(userLat&&userLng){
@@ -1364,7 +1381,7 @@ function PlannerTab({ places, entries, addToast, userLat, userLng, onAddNewPlace
   );
 
   return (
-    <div style={{ position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:101,background:"#F8F7F4",display:"flex",flexDirection:"column",paddingBottom:"calc(60px + env(safe-area-inset-bottom))" }}>
+    <div ref={containerRef} style={{ position:"fixed",top:0,left:0,right:0,height:"100dvh",zIndex:101,background:"#F8F7F4",display:"flex",flexDirection:"column",paddingBottom:"calc(60px + env(safe-area-inset-bottom))" }}>
       {/* Header */}
       <div style={{ padding:"16px 16px 12px",borderBottom:"1px solid #FFFFFF",flexShrink:0,paddingTop:"max(16px, env(safe-area-inset-top))" }}>
         <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",maxWidth:600,margin:"0 auto" }}>
