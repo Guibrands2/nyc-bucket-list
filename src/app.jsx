@@ -673,12 +673,12 @@ function MapTab({ places, entries, onSelect }) {
       </div>
 
       {/* Near me button — fixed over map */}
-      <button onClick={goNearMe} style={{ position:"fixed", bottom:selected?192:88, right:16, zIndex:500, background:"#FFFFFF", border:"1px solid #E8E8EC", borderRadius:20, padding:"8px 14px", fontSize:12, fontWeight:600, color:"#1A1A1A", cursor:"pointer", boxShadow:"0 2px 12px rgba(0,0,0,0.15)", display:"flex", alignItems:"center", gap:6, transition:"bottom 0.25s ease" }}>
+      <button onClick={goNearMe} style={{ position:"fixed", bottom:selected?248:88, right:16, zIndex:500, background:"#FFFFFF", border:"1px solid #E8E8EC", borderRadius:20, padding:"8px 14px", fontSize:12, fontWeight:600, color:"#1A1A1A", cursor:"pointer", boxShadow:"0 2px 12px rgba(0,0,0,0.15)", display:"flex", alignItems:"center", gap:6, transition:"bottom 0.25s ease" }}>
         {locating ? <span className="pulsing">●</span> : "📍"} {isEN?"Near me":"Perto de mim"}
       </button>
 
       {/* Legend */}
-      <div style={{ position:"fixed", bottom:selected?192:88, left:16, zIndex:500, background:"rgba(255,255,255,0.92)", border:"1px solid #E8E8EC", borderRadius:10, padding:"8px 10px", fontSize:10, color:"#8A8A9A", boxShadow:"0 2px 8px rgba(0,0,0,0.08)", backdropFilter:"blur(4px)", transition:"bottom 0.25s ease" }}>
+      <div style={{ position:"fixed", bottom:selected?248:88, left:16, zIndex:500, background:"rgba(255,255,255,0.92)", border:"1px solid #E8E8EC", borderRadius:10, padding:"8px 10px", fontSize:10, color:"#8A8A9A", boxShadow:"0 2px 8px rgba(0,0,0,0.08)", backdropFilter:"blur(4px)", transition:"bottom 0.25s ease" }}>
         <div style={{ display:"flex", alignItems:"center", gap:7, marginBottom:5 }}>
           <span style={{ width:14, height:14, borderRadius:"50%", background:"#1A1A1A", display:"inline-block", flexShrink:0 }}/>
           <span style={{ color:"#1A1A1A", fontWeight:600 }}>{isEN?"Want to go":"Quero ir"}</span>
