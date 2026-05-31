@@ -322,10 +322,19 @@ function initPullToRefresh() {
   if (window._ptrInit) return;
   window._ptrInit = true;
   let _startTarget = null;
-  document.addEventListener("touchstart", e => { _pullStartY = e.touches[0].clientY; _startTarget = e.target; }, { passive:true });
+  let _multiTouch = false;
+  document.addEventListener("touchstart", e => {
+    _multiTouch = e.touches.length > 1;
+    _pullStartY = e.touches[0].clientY;
+    _startTarget = e.target;
+  }, { passive:true });
+  document.addEventListener("touchmove", e => {
+    if (e.touches.length > 1) _multiTouch = true;
+  }, { passive:true });
   document.addEventListener("touchend", e => {
+    if (_multiTouch) { _multiTouch = false; return; }
     const dy = e.changedTouches[0].clientY - _pullStartY;
-    const insideScrollable = _startTarget?.closest('[style*="overflow-y: auto"],[style*="overflow-y:auto"],[style*="overflowY"],.modal');
+    const insideScrollable = _startTarget?.closest('[style*="overflow-y: auto"],[style*="overflow-y:auto"],[style*="overflowY"],.modal,.leaflet-container');
     if (dy > 80 && window.scrollY === 0 && !insideScrollable) { window.location.reload(); }
   }, { passive:true });
 }
