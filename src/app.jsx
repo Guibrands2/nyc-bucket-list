@@ -2013,15 +2013,15 @@ const PlaceCard = memo(function PlaceCard({ place, entry, onSelect, onCheckIn, i
   };
 
   return (
-    <div style={{ position:"relative", marginBottom:10, overflow:"hidden", borderRadius:14 }}>
-      {/* Swipe hint left - ♥ */}
-      <div style={{ position:"absolute",left:0,top:0,bottom:0,width:60,background:"#0A84FF20",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"14px 0 0 14px",opacity:swipeDx>20?Math.min(1,(swipeDx-20)/40):0,transition:swiping?"none":"opacity 0.2s" }}>
-        <span style={{ fontSize:22 }}>♥</span>
+    <div style={{ position:"relative", overflow:"hidden" }}>
+      {/* Swipe indicators */}
+      <div style={{ position:"absolute",left:0,top:0,bottom:0,width:56,display:"flex",alignItems:"center",justifyContent:"center",opacity:swipeDx>20?Math.min(1,(swipeDx-20)/40):0,transition:swiping?"none":"opacity 0.15s" }}>
+        <span style={{ fontSize:18,color:"#0A84FF" }}>♥</span>
       </div>
-      {/* Swipe hint right - check-in */}
-      <div style={{ position:"absolute",right:0,top:0,bottom:0,width:60,background:"#34C75920",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"0 14px 14px 0",opacity:swipeDx<-20?Math.min(1,(-swipeDx-20)/40):0,transition:swiping?"none":"opacity 0.2s" }}>
-        <span style={{ fontSize:22 }}>✓</span>
+      <div style={{ position:"absolute",right:0,top:0,bottom:0,width:56,display:"flex",alignItems:"center",justifyContent:"center",opacity:swipeDx<-20?Math.min(1,(-swipeDx-20)/40):0,transition:swiping?"none":"opacity 0.15s" }}>
+        <span style={{ fontSize:18,color:"#34C759" }}>✓</span>
       </div>
+
       <div
         ref={cardRef}
         className="card swipe-card"
@@ -2030,41 +2030,39 @@ const PlaceCard = memo(function PlaceCard({ place, entry, onSelect, onCheckIn, i
         onTouchEnd={onTouchEnd}
         onClick={()=>{ if(Math.abs(swipeDx)<5) onSelect(place); }}
         style={{
-          background: isBeen ? meta.color+"0a" : "#111111",
-          border: "1px solid "+(isBeen?meta.color+"50":isWant?"#0A84FF30":"#1c1c1e"),
-          borderLeft: "3px solid "+(isBeen?meta.color:isWant?"#0A84FF":"#1c1c1e"),
-          borderRadius:14, padding:"14px 14px 14px 13px", cursor:"pointer", display:"flex", gap:14,
+          display:"flex", alignItems:"center", gap:14,
+          padding:"14px 0",
+          borderBottom:"1px solid #1c1c1e",
+          cursor:"pointer",
           transform: swipeDx ? `translateX(${swipeDx}px)` : "none",
-          transition: swiping ? "none" : "transform 0.2s ease"
+          transition: swiping ? "none" : "transform 0.2s ease",
+          opacity: isBeen ? 0.55 : 1,
         }}
       >
-        <div style={{ position:"relative", flexShrink:0 }}>
-          {fp ? <img src={fp} alt="" style={{ width:62,height:62,borderRadius:10,objectFit:"cover" }}/>
-              : <div style={{ width:62,height:62,borderRadius:10,background:meta.color+(isBeen?"25":"15"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:26 }}>{place.emoji}</div>}
-          {isBeen&&<div style={{ position:"absolute",bottom:-4,right:-4,width:18,height:18,borderRadius:"50%",background:meta.color,border:"2px solid #111111",display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,color:"#fff",fontWeight:700 }}>✓</div>}
-          {isWant&&!isBeen&&<div style={{ position:"absolute",bottom:-4,right:-4,width:18,height:18,borderRadius:"50%",background:"#0A84FF",border:"2px solid #111111",display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,color:"#fff" }}>♥</div>}
-        </div>
+        {/* Emoji */}
+        <div style={{ fontSize:28, width:36, textAlign:"center", flexShrink:0, lineHeight:1 }}>{place.emoji}</div>
+
+        {/* Text */}
         <div style={{ flex:1, minWidth:0 }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:6, marginBottom:4 }}>
-            <div style={{ fontSize:14,fontWeight:600,color:"#F0EFF4",lineHeight:1.25,flex:1 }}>{displayName}</div>
-            <div style={{ display:"flex",gap:3,flexShrink:0,alignItems:"center" }}>
-              {needsRes&&<span style={{ fontSize:10 }}>📋</span>}
-              {entry?.thumb==="up"&&<span style={{ fontSize:11 }}>👍</span>}
-              {entry?.stars>0&&<span style={{ fontSize:10,color:"#FFD60A" }}>{"★".repeat(entry.stars)}</span>}
-              {pc>0&&<span style={{ fontSize:10,color:"#3A3A3C" }}>📷</span>}
-            </div>
+          <div style={{ fontSize:16, fontWeight:700, color:"#F0EFF4", letterSpacing:"-0.02em", lineHeight:1.2, marginBottom:3 }}>
+            {displayName}
+            {isBeen && entry?.stars>0 && <span style={{ fontSize:11,color:"#FFD60A",marginLeft:6,letterSpacing:0 }}>{"★".repeat(entry.stars)}</span>}
           </div>
-          <div style={{ display:"flex",gap:5,alignItems:"center",flexWrap:"wrap" }}>
-            <span style={{ fontSize:10,color:meta.color,background:meta.color+"18",borderRadius:6,padding:"2px 7px",fontWeight:500 }}>{catLabel(place.category)}</span>
-            {displayPrice&&<span style={{ fontSize:10,color:"#6E6E73" }}>{PRICE_EMOJI[displayPrice]}</span>}
-            {place.time&&<span style={{ fontSize:10,color:"#3A3A3C" }}>· {place.time}</span>}
-            {isPet&&<span style={{ fontSize:10 }}>🐾</span>}
+          <div style={{ fontSize:11, color:"#6E6E73", fontWeight:500, letterSpacing:"0.01em" }}>
+            {catLabel(place.category)}
+            {displayPrice && displayPrice!=="gratis" && <span style={{ color:"#3A3A3C" }}> · {displayPrice}</span>}
+            {isBeen && entry?.date && <span style={{ color:"#3A3A3C" }}> · {new Date(entry.date+"T12:00:00").toLocaleDateString(isEN?"en-US":"pt-BR",{month:"short",year:"numeric"})}</span>}
+            {isWant && !isBeen && <span style={{ color:"#0A84FF" }}> · saved</span>}
+            {entry?.note && <span style={{ color:"#3A3A3C",fontStyle:"italic" }}> · "{entry.note.slice(0,30)}{entry.note.length>30?"…":""}"</span>}
           </div>
-          {entry?.note&&<div style={{ fontSize:11,color:"#6E6E73",marginTop:5,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontStyle:"italic" }}>"{entry.note}"</div>}
-          {isBeen&&entry?.date&&<div style={{ fontSize:10,color:meta.color+"aa",marginTop:3 }}>Visitado {new Date(entry.date+"T12:00:00").toLocaleDateString(isEN?"en-US":"pt-BR",{month:"short",day:"numeric",year:"numeric"})}</div>}
+        </div>
+
+        {/* Right indicator */}
+        <div style={{ flexShrink:0, display:"flex", alignItems:"center", gap:6 }}>
+          {fp && <div style={{ width:36,height:36,borderRadius:8,overflow:"hidden",flexShrink:0 }}><img src={fp} alt="" style={{ width:"100%",height:"100%",objectFit:"cover" }}/></div>}
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3A3A3C" strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
       </div>
-      {!isBeen&&swipeDx===0&&<button onClick={ev=>{ev.stopPropagation();onCheckIn(place);}} style={{ position:"absolute",bottom:14,right:12,background:"#34C75915",border:"1px solid #34C75940",borderRadius:20,padding:"4px 10px",color:"#34C759",fontSize:10,cursor:"pointer",fontFamily:"inherit",fontWeight:600 }}>✓ check-in</button>}
     </div>
   );
 }, (prev, next) => prev.place===next.place && prev.entry===next.entry && prev.isEN===next.isEN);
@@ -2631,7 +2629,7 @@ export default function App() {
         </div>
 
         {/* List Tab */}
-        {tab==="list"&&<div style={{ padding:"10px 16px 140px" }}>
+        {tab==="list"&&<div style={{ padding:"4px 20px 140px" }}>
           {/* Quick moods */}
           <div style={{ display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",paddingBottom:8 }}>
             {MOODS.map(m=><button key={m.id} className={"mood-chip"+(activeMood===m.id?" active":"")} onClick={()=>setActiveMood(activeMood===m.id?null:m.id)}>{m.label}</button>)}
