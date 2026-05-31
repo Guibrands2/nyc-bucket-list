@@ -344,25 +344,20 @@ function SeasonalBanner({ places, entries, onSelect }) {
   if(!seasonal.length) return null;
   const pick = seasonal[Math.floor(Math.random()*Math.min(seasonal.length,3))];
   if(!pick) return null;
-  const SEASON_COLORS = { primavera:["#1a1a08","#4a5e00","#a3e635"], verao:["#0a1a1a","#005566","#06b6d4"], outono:["#1a0e00","#5e3200","#f97316"], inverno:["#0a0a1a","#001555","#60a5fa"] };
-  const [bg,border,text] = SEASON_COLORS[currentSeason]||["#FFFFFF","#E8E8EC","#1A1A1A"];
-  const SEASON_LABEL = { primavera:isEN?"Spring":"Primavera", verao:isEN?"Summer":"Verao", outono:isEN?"Fall":"Outono", inverno:isEN?"Winter":"Inverno" };
+  const SEASON_COLORS = { primavera:"#1A9E4A", verao:"#0055CC", outono:"#B8860B", inverno:"#8A8A9A" };
+  const accent = SEASON_COLORS[currentSeason]||"#FF2D55";
+  const SEASON_LABEL = { primavera:isEN?"Spring":"Primavera", verao:isEN?"Summer":"Verão", outono:isEN?"Fall":"Outono", inverno:isEN?"Winter":"Inverno" };
   return (
-    <div onClick={()=>onSelect(pick)} style={{ background:"linear-gradient(135deg,"+bg+",#F8F7F4)",border:"1px solid "+border,borderRadius:14,padding:"12px 16px",marginBottom:10,cursor:"pointer",position:"relative",overflow:"hidden" }}>
-      <div style={{ position:"absolute",top:0,left:0,right:0,height:2,background:text }}/>
-      <div style={{ fontSize:10,color:text,letterSpacing:"0.15em",marginBottom:6,opacity:0.8 }}>
-        {SEASON_EMOJI[currentSeason]} {isEN?"PERFECT FOR THIS SEASON":"PERFEITO PARA ESSA EPOCA"} · {SEASON_LABEL[currentSeason].toUpperCase()}
-      </div>
-      <div style={{ display:"flex",gap:12,alignItems:"center" }}>
-        <div style={{ fontSize:28 }}>{pick.emoji}</div>
-        <div>
-          <div style={{ fontSize:14,fontWeight:700,color:"#1A1A1A" }}>{isEN&&pick.nameEN?pick.nameEN:pick.name}</div>
-          <div style={{ fontSize:11,color:"#8A8A9A",marginTop:2 }}>{catLabel(pick.category)} · {PRICE_EMOJI[pick.price]||"?"} · {pick.time}</div>
+    <div onClick={()=>onSelect(pick)} style={{ background:"#FFFFFF",border:"1px solid #E8E8EC",borderLeft:"3px solid "+accent,borderRadius:14,padding:"16px 18px",marginBottom:16,cursor:"pointer",display:"flex",alignItems:"center",gap:14 }}>
+      <div style={{ fontSize:34,lineHeight:1,flexShrink:0 }}>{pick.emoji}</div>
+      <div style={{ flex:1,minWidth:0 }}>
+        <div style={{ fontSize:10,color:accent,letterSpacing:"0.12em",fontWeight:700,marginBottom:4 }}>
+          {SEASON_EMOJI[currentSeason]} {SEASON_LABEL[currentSeason].toUpperCase()}
         </div>
-        <div style={{ marginLeft:"auto",fontSize:11,color:text,background:text+"20",borderRadius:20,padding:"4px 10px",whiteSpace:"nowrap" }}>
-          {seasonal.length} {isEN?"this season":"nessa epoca"}
-        </div>
+        <div style={{ fontSize:17,fontWeight:700,color:"#1A1A1A",letterSpacing:"-0.02em",lineHeight:1.2,marginBottom:3 }}>{isEN&&pick.nameEN?pick.nameEN:pick.name}</div>
+        <div style={{ fontSize:11,color:"#8A8A9A" }}>{catLabel(pick.category)}{pick.price&&pick.price!=="gratis"?" · "+pick.price:""}</div>
       </div>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#AEAEB2" strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
   );
 }
