@@ -1304,16 +1304,28 @@ function PlannerTab({ places, entries, addToast, userLat, userLng }) {
     setMsgs(newMsgs); setLoading(true);
     const selNames=selected.map(id=>{const p=places.find(x=>x.id===id);return p?(isEN&&p.nameEN?p.nameEN:p.name):"";}).filter(Boolean).join(", ");
     const ctx="Voce e assistente pessoal de Gui e Gabriel para o NYC Bucket List.\n"+
-      "REGRAS: 1. SOMENTE lugares da LISTA. 2. Nome EXATO. 3. Prefira metro+caminhada. 4. No final: [lugares: Nome1, Nome2]\n"+
+      "REGRAS:\n"+
+      "1. Prefira sugerir lugares da LISTA abaixo — use o nome exato.\n"+
+      "2. Se nao houver lugar adequado na lista, use web search para descobrir novos lugares em NYC.\n"+
+      "3. Para lugares novos (fora da lista), indique claramente: [NOVO: Nome do Lugar | categoria | preco estimado | descricao curta]\n"+
+      "4. No final, liste lugares da lista citados: [lugares: Nome1, Nome2]\n"+
+      "5. Prefira metro + caminhada.\n"+
       "Saindo de: "+startLoc+".\n"+(selNames?"Ja selecionados: "+selNames+".\n":"")+
-      "LISTA (♥ = wishlist):\n"+buildCatalog();
+      "LISTA DELES (♥ = wishlist):\n"+buildCatalog();
     try{
-      const r=await fetch(AI_PROXY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:[{role:"user",content:ctx+"\n\nPergunta: "+userMsg}],max_tokens:1024})});
+      const r=await fetch(AI_PROXY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+        messages:[{role:"user",content:ctx+"\n\nPergunta: "+userMsg}],
+        max_tokens:2048,
+        web_search:true
+      })});
       const d=await r.json();
-      const text=d.content?.[0]?.text||"Erro.";
+      const text=d._text||d.content?.[0]?.text||"Erro.";
       const linked=parseLinked(text);
+      // Parse new place suggestions [NOVO: ...]
+      const newPlaceMatches=[...text.matchAll(/\[NOVO:\s*([^|]+)\|([^|]+)\|([^|]+)\|([^\]]+)\]/gi)];
+      const newSuggestions=newPlaceMatches.map(m=>({name:m[1].trim(),category:m[2].trim(),price:m[3].trim(),desc:m[4].trim()}));
       const display=text.replace(/\[lugares:[^\]]+\]/gi,"").trim();
-      setMsgs([...newMsgs,{role:"assistant",content:display,linkedPlaces:linked}]);
+      setMsgs([...newMsgs,{role:"assistant",content:display,linkedPlaces:linked,newSuggestions}]);
     }catch{setMsgs([...newMsgs,{role:"assistant",content:isEN?"Connection error.":"Erro ao conectar.",linkedPlaces:[]}]);}
     setLoading(false);
   };
@@ -1394,6 +1406,21 @@ function PlannerTab({ places, entries, addToast, userLat, userLng }) {
                     {p.emoji} {isEN&&p.nameEN?p.nameEN:p.name} {sel?"✓":"+"}
                   </button>
                 );})}
+              </div>
+            )}
+            {m.newSuggestions&&m.newSuggestions.length>0&&(
+              <div style={{ marginLeft:38,marginTop:8,display:"flex",flexDirection:"column",gap:6 }}>
+                {m.newSuggestions.map((s,i)=>(
+                  <div key={i} style={{ display:"flex",alignItems:"center",gap:8,padding:"8px 12px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:12,borderLeft:"3px solid #FF2D55" }}>
+                    <div style={{ flex:1,minWidth:0 }}>
+                      <div style={{ fontSize:13,fontWeight:600,color:"#1A1A1A" }}>🌐 {s.name}</div>
+                      <div style={{ fontSize:11,color:"#8A8A9A",marginTop:1 }}>{s.category} · {s.price}</div>
+                    </div>
+                    <button onClick={()=>addToast(isEN?"Opening add form...":"Abrindo formulário...","info")} style={{ padding:"5px 10px",background:"#FF2D55",border:"none",borderRadius:20,color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer",flexShrink:0,whiteSpace:"nowrap" }}>
+                      + {isEN?"Add":"Adicionar"}
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
           </div>
