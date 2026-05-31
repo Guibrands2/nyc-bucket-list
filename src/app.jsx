@@ -539,6 +539,7 @@ function WeatherWidget() {
 
 function MapTab({ places, entries, onSelect }) {
   const mapRef = useRef(null);
+  const wrapRef = useRef(null);
   const inst = useRef(null);
   const markers = useRef([]);
   const userMarker = useRef(null);
@@ -550,6 +551,22 @@ function MapTab({ places, entries, onSelect }) {
   const MAP_CATS = ["Museus","Comida","Bares","Natureza","Entretenimento","Monumentos"];
 
   const visiblePlaces = catFilter ? places.filter(p=>p.category===catFilter) : places;
+
+  // Resize map to fill exact pixel height — avoids all vh/flex calculation issues
+  useEffect(() => {
+    const size = () => {
+      if (!wrapRef.current) return;
+      const nav = document.querySelector(".bottom-nav");
+      const navH = nav ? nav.offsetHeight : 60;
+      const rect = wrapRef.current.getBoundingClientRect();
+      const h = window.innerHeight - rect.top - navH;
+      wrapRef.current.style.height = h + "px";
+      inst.current?.invalidateSize();
+    };
+    size();
+    window.addEventListener("resize", size);
+    return () => window.removeEventListener("resize", size);
+  }, [ready]);
 
   useEffect(() => {
     if (window.L) { setReady(true); return; }
@@ -622,14 +639,14 @@ function MapTab({ places, entries, onSelect }) {
   const selectedMeta = selected ? (CAT_META[selected.category]||{color:"#FF2D55"}) : null;
 
   if (!ready) return (
-    <div style={{ position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:101,background:"#F8F7F4",display:"flex",alignItems:"center",justifyContent:"center",color:"#8A8A9A",flexDirection:"column",gap:8 }}>
+    <div style={{ display:"flex",alignItems:"center",justifyContent:"center",color:"#8A8A9A",flexDirection:"column",gap:8,padding:"60px 0" }}>
       <div className="pulsing" style={{ fontSize:32 }}>🗺</div>
       <div style={{ fontSize:13 }}>Carregando mapa...</div>
     </div>
   );
 
   return (
-    <div style={{ position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:101,display:"flex",flexDirection:"column" }}>
+    <div style={{ display:"flex",flexDirection:"column" }}>
 
       {/* Category filter bar */}
       <div style={{ display:"flex", gap:6, padding:"10px 16px 8px", overflowX:"auto", scrollbarWidth:"none", background:"#F8F7F4", borderBottom:"1px solid #E8E8EC", flexShrink:0 }} data-hscroll>
@@ -648,8 +665,8 @@ function MapTab({ places, entries, onSelect }) {
       </div>
 
       {/* Map */}
-      <div style={{ flex:1, position:"relative", overflow:"hidden" }}>
-        <div ref={mapRef} style={{ position:"absolute", top:0, left:0, right:0, bottom:0 }}/>
+      <div ref={wrapRef} style={{ position:"relative", overflow:"hidden" }}>
+        <div ref={mapRef} style={{ width:"100%", height:"100%" }}/>
 
         {/* Near me button */}
         <button onClick={goNearMe} style={{ position:"absolute", top:12, right:12, zIndex:1000, background:"#FFFFFF", border:"1px solid #E8E8EC", borderRadius:20, padding:"8px 14px", fontSize:12, fontWeight:600, color:"#1A1A1A", cursor:"pointer", boxShadow:"0 2px 12px rgba(0,0,0,0.12)", display:"flex", alignItems:"center", gap:6 }}>
