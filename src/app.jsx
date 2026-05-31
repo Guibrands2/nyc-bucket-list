@@ -611,12 +611,12 @@ function MapTab({ places, entries, onSelect }) {
       const meta = CAT_META[p.category]||{color:"#FF2D55"};
       const isFui = e.status==="fui";
       const isQuero = e.status==="quero";
-      const size = isQuero ? 36 : isFui ? 26 : 30;
-      const bg = isFui ? "#E8E8EC" : meta.color;
-      const border = isFui ? "#8A8A9A" : meta.color;
-      const opacity = isFui ? "0.5" : "1";
-      const shadow = isQuero ? "0 3px 12px rgba(0,0,0,0.25)" : "0 2px 6px rgba(0,0,0,0.15)";
-      const html = `<div style='width:${size}px;height:${size}px;border-radius:50%;background:${bg};border:2.5px solid ${border};display:flex;align-items:center;justify-content:center;font-size:${isQuero?16:13}px;box-shadow:${shadow};opacity:${opacity};transition:transform 0.15s'>${p.emoji}</div>`;
+      const size = isQuero ? 16 : isFui ? 10 : 12;
+      const color = isFui ? "#AEAEB2" : meta.color;
+      const opacity = isFui ? "0.45" : "1";
+      const border = isQuero ? "2.5px solid "+color : "1.5px solid "+color+"99";
+      const bg = isQuero ? color : color+"55";
+      const html = `<div style='width:${size}px;height:${size}px;border-radius:50%;background:${bg};border:${border};opacity:${opacity};box-shadow:${isQuero?"0 1px 6px "+color+"60":"none"}'></div>`;
       const icon = window.L.divIcon({ html, className:"", iconSize:[size,size], iconAnchor:[size/2,size/2] });
       const m = window.L.marker([p.lat, p.lng], { icon }).addTo(inst.current);
       m.on("click", e => { e.originalEvent.stopPropagation(); setSelected(p); });
@@ -674,19 +674,9 @@ function MapTab({ places, entries, onSelect }) {
       </div>
 
       {/* Near me button — fixed over map */}
-      <button onClick={goNearMe} style={{ position:"fixed", bottom:selected?210:80, right:16, zIndex:500, background:"#FFFFFF", border:"1px solid #E8E8EC", borderRadius:20, padding:"8px 14px", fontSize:12, fontWeight:600, color:"#1A1A1A", cursor:"pointer", boxShadow:"0 2px 12px rgba(0,0,0,0.15)", display:"flex", alignItems:"center", gap:6, transition:"bottom 0.25s ease" }}>
+      <button onClick={goNearMe} style={{ position:"fixed", bottom:selected?192:88, right:16, zIndex:500, background:"#FFFFFF", border:"1px solid #E8E8EC", borderRadius:20, padding:"8px 14px", fontSize:12, fontWeight:600, color:"#1A1A1A", cursor:"pointer", boxShadow:"0 2px 12px rgba(0,0,0,0.15)", display:"flex", alignItems:"center", gap:6, transition:"bottom 0.25s ease" }}>
         {locating ? <span className="pulsing">●</span> : "📍"} {isEN?"Near me":"Perto de mim"}
       </button>
-
-      {/* Legend — fixed bottom left */}
-      <div style={{ position:"fixed", bottom:selected?210:80, left:16, zIndex:500, background:"#FFFFFF", border:"1px solid #E8E8EC", borderRadius:10, padding:"8px 10px", fontSize:10, color:"#8A8A9A", boxShadow:"0 2px 8px rgba(0,0,0,0.08)", transition:"bottom 0.25s ease" }}>
-        <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:3 }}>
-          <span style={{ width:12, height:12, borderRadius:"50%", background:"#FF2D55", display:"inline-block", flexShrink:0 }}/>{isEN?"Want to go":"Quero ir"}
-        </div>
-        <div style={{ display:"flex", alignItems:"center", gap:5 }}>
-          <span style={{ width:12, height:12, borderRadius:"50%", background:"#8A8A9A", display:"inline-block", opacity:0.4, flexShrink:0 }}/>{isEN?"Been there":"Já fui"}
-        </div>
-      </div>
 
       {/* Mini card on tap — fixed at bottom */}
       {selected && (
@@ -696,8 +686,8 @@ function MapTab({ places, entries, onSelect }) {
             <div style={{ flex:1, minWidth:0 }}>
               <div style={{ fontSize:17, fontWeight:700, color:"#1A1A1A", letterSpacing:"-0.02em", lineHeight:1.2, marginBottom:3 }}>
                 {isEN&&selected.nameEN?selected.nameEN:selected.name}
-                {selectedEntry.status==="fui" && <span style={{ marginLeft:6, fontSize:12, color:"#1A9E4A", fontWeight:600 }}>✓ Visitado</span>}
-                {selectedEntry.status==="quero" && <span style={{ marginLeft:6, fontSize:12, color:"#0055CC", fontWeight:600 }}>♥ Quero ir</span>}
+                {selectedEntry.status==="fui" && <span style={{ marginLeft:8, fontSize:11, color:"#1A9E4A", fontWeight:600, background:"#1A9E4A15", borderRadius:20, padding:"2px 8px" }}>✓ Visitado</span>}
+                {selectedEntry.status==="quero" && <span style={{ marginLeft:8, fontSize:11, color:"#0055CC", fontWeight:600, background:"#0055CC12", borderRadius:20, padding:"2px 8px" }}>♥ Quero ir</span>}
               </div>
               <div style={{ fontSize:12, color:"#8A8A9A" }}>
                 <span style={{ color:selectedMeta.color, fontWeight:600 }}>{catLabel(selected.category)}</span>
