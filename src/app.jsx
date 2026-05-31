@@ -1235,7 +1235,7 @@ function PlannerTab({ places, entries, addToast, userLat, userLng }) {
   );
 
   return (
-    <div style={{ position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:90,background:"#0f0f13",display:"flex",flexDirection:"column",paddingBottom:"calc(60px + env(safe-area-inset-bottom))" }}>
+    <div style={{ position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:101,background:"#0f0f13",display:"flex",flexDirection:"column",paddingBottom:"calc(60px + env(safe-area-inset-bottom))" }}>
       {/* Header */}
       <div style={{ padding:"16px 16px 12px",borderBottom:"1px solid #1a1a22",flexShrink:0,paddingTop:"max(16px, env(safe-area-inset-top))" }}>
         <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",maxWidth:600,margin:"0 auto" }}>
