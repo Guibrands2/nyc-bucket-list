@@ -421,7 +421,7 @@ const injectCSS = () => {
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: #F8F7F4; font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
     ::-webkit-scrollbar { width: 0; height: 0; }
-    input, textarea, select, button { font-family: inherit; }
+    input, textarea, select, button { font-family: inherit; font-size: 16px; }
     input:focus, textarea:focus { outline: none; }
     .card { transition: opacity 0.12s ease; }
     .card:active { opacity: 0.75; }
@@ -1448,7 +1448,7 @@ function PlannerTab({ places, entries, addToast, userLat, userLng }) {
             <textarea value={input} onChange={e=>setInput(e.target.value)}
               onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}}
               placeholder={T.askNYC} rows={1}
-              style={{ flex:1,background:"#FFFFFF",border:"1px solid "+(input?"#FF2D5550":"#E8E8EC"),borderRadius:22,padding:"11px 16px",color:"#1A1A1A",fontSize:14,resize:"none",maxHeight:120,overflowY:"auto",lineHeight:1.5,fontFamily:"inherit",transition:"border-color 0.2s" }}/>
+              style={{ flex:1,background:"#FFFFFF",border:"1px solid "+(input?"#FF2D5550":"#E8E8EC"),borderRadius:22,padding:"11px 16px",color:"#1A1A1A",fontSize:16,resize:"none",maxHeight:120,overflowY:"auto",lineHeight:1.5,fontFamily:"inherit",transition:"border-color 0.2s" }}/>
             <button onClick={send} disabled={!input.trim()||loading}
               style={{ width:44,height:44,background:input.trim()&&!loading?"#FF2D55":"#E8E8EC",border:"none",borderRadius:"50%",color:"#fff",fontSize:20,cursor:input.trim()&&!loading?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"background 0.15s" }}>↑</button>
           </div>
