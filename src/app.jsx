@@ -451,6 +451,7 @@ const injectCSS = () => {
     @keyframes slideIn { from { transform:translateY(100%); } to { transform:translateY(0); } }
     .modal { animation: slideIn 0.28s ease forwards; }
     @keyframes toastIn { from { opacity:0; transform:translateX(60px); } to { opacity:1; transform:translateX(0); } }
+    .leaflet-container { touch-action: none !important; }
     .leaflet-container, .leaflet-pane { z-index: 1 !important; }
     .leaflet-top, .leaflet-bottom { z-index: 2 !important; }
   `;
@@ -563,6 +564,11 @@ function MapTab({ places, entries, onSelect }) {
   }, []);
 
   useEffect(() => {
+    if (!inst.current) return;
+    setTimeout(() => inst.current?.invalidateSize(), 100);
+  }, [ready]);
+
+  useEffect(() => {
     if (!ready || !mapRef.current || inst.current) return;
     inst.current = window.L.map(mapRef.current, {
       center:[40.730,-73.990], zoom:12, zoomControl:false
@@ -642,8 +648,8 @@ function MapTab({ places, entries, onSelect }) {
       </div>
 
       {/* Map */}
-      <div style={{ flex:1, position:"relative" }}>
-        <div ref={mapRef} style={{ width:"100%", height:"100%" }}/>
+      <div style={{ flex:1, position:"relative", overflow:"hidden" }}>
+        <div ref={mapRef} style={{ position:"absolute", top:0, left:0, right:0, bottom:0 }}/>
 
         {/* Near me button */}
         <button onClick={goNearMe} style={{ position:"absolute", top:12, right:12, zIndex:1000, background:"#FFFFFF", border:"1px solid #E8E8EC", borderRadius:20, padding:"8px 14px", fontSize:12, fontWeight:600, color:"#1A1A1A", cursor:"pointer", boxShadow:"0 2px 12px rgba(0,0,0,0.12)", display:"flex", alignItems:"center", gap:6 }}>
