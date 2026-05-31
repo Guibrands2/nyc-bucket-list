@@ -1005,14 +1005,12 @@ function DetailModal({ place, entry, places, entries, onClose, onSave, onDelete,
                   <div style={{ fontSize:17,fontWeight:700,color:"#1A1A1A",lineHeight:1.2 }}>{displayName}</div>
                   <button onClick={()=>setShowEdit(true)} style={{ background:"none",border:"none",color:"#8A8A9A",cursor:"pointer",padding:"2px",display:"flex" }}><Icons.Edit/></button>
                 </div>
-                <div style={{ display:"flex",gap:5,marginTop:4,flexWrap:"wrap" }}>
-                  <span style={{ fontSize:11,color:meta.color,background:meta.color+"20",borderRadius:6,padding:"2px 8px" }}>{catLabel(place.category)}</span>
-                  {price&&<span style={{ fontSize:11,color:"#8A8A9A",background:"#F8F7F4",borderRadius:6,padding:"2px 8px" }}>{PRICE_EMOJI[price]}</span>}
-                  {place.time&&<span style={{ fontSize:11,color:"#8A8A9A",background:"#F8F7F4",borderRadius:6,padding:"2px 8px" }}>⏱ {place.time}</span>}
-                  {petFriendly&&<span style={{ fontSize:11,color:"#4ade80",background:"#4ade8020",borderRadius:6,padding:"2px 8px" }}>🐾</span>}
-                  {publicBathroom&&<span style={{ fontSize:11,color:"#60a5fa",background:"#60a5fa20",borderRadius:6,padding:"2px 8px" }}>🚻</span>}
-                  {needsRes&&<span style={{ fontSize:11,color:"#f59e0b",background:"#f59e0b20",borderRadius:6,padding:"2px 8px" }}>📋 {isEN?"Reserve":"Reservar"}</span>}
-                  {hours&&<span style={{ fontSize:11,color:"#8A8A9A",background:"#F8F7F4",borderRadius:6,padding:"2px 8px" }}>🕐 {hours.split(",")[0]}</span>}
+                <div style={{ fontSize:12,color:"#8A8A9A",marginTop:4,display:"flex",gap:4,alignItems:"center",flexWrap:"wrap" }}>
+                  <span style={{ color:meta.color,fontWeight:600 }}>{catLabel(place.category)}</span>
+                  {price&&<><span style={{ color:"#E8E8EC" }}>·</span><span>{PRICE_EMOJI[price]}</span></>}
+                  {place.time&&<><span style={{ color:"#E8E8EC" }}>·</span><span>{place.time}</span></>}
+                  {needsRes&&<><span style={{ color:"#E8E8EC" }}>·</span><span style={{ color:"#B8860B" }}>reservar</span></>}
+                  {hours&&<><span style={{ color:"#E8E8EC" }}>·</span><span>🕐 {hours.split(",")[0]}</span></>}
                 </div>
               </div>
             </div>
@@ -1025,8 +1023,8 @@ function DetailModal({ place, entry, places, entries, onClose, onSave, onDelete,
             <button onClick={onClose} style={{ background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:8,width:34,height:34,color:"#8A8A9A",cursor:"pointer",fontSize:18 }}>×</button>
           </div>
         </div>
-        <div style={{ fontSize:13,color:"#8A8A9A",lineHeight:1.6,marginBottom:10,padding:"10px 12px",background:"#F8F7F4",borderRadius:10,borderLeft:"2px solid "+meta.color }}>{displayDesc}</div>
-        {displayRep&&<div style={{ fontSize:12,color:"#B8860B",lineHeight:1.5,marginBottom:14,padding:"8px 12px",background:"#B8860B10",borderRadius:10,borderLeft:"2px solid #B8860B" }}>⭐ {displayRep}</div>}
+        {displayDesc&&<div style={{ fontSize:14,color:"#1A1A1A",lineHeight:1.7,marginBottom:10,padding:"12px 14px",background:"#F8F7F4",borderRadius:10,borderLeft:"3px solid "+meta.color }}>{displayDesc}</div>}
+        {displayRep&&<div style={{ fontSize:13,color:"#8A8A9A",lineHeight:1.6,marginBottom:14,padding:"10px 14px",background:"#F8F7F4",borderRadius:10,borderLeft:"3px solid #E8E8EC",fontStyle:"italic" }}>"{displayRep}"</div>}
         <div style={{ marginBottom:14 }}>
           <div style={{ fontSize:10,color:"#8A8A9A",letterSpacing:"0.12em",marginBottom:8 }}>{T.status}</div>
           <div style={{ display:"flex",gap:8 }}>{Object.entries(STATUS).map(([key,cfg])=><button key={key} onClick={()=>setStatus(key)} style={{ flex:1,padding:"10px 4px",borderRadius:10,background:status===key?cfg.color+"18":"#F8F7F4",border:"1px solid "+(status===key?cfg.color+"60":"#E8E8EC"),color:status===key?cfg.color:"#8A8A9A",fontSize:14,cursor:"pointer",transition:"all 0.15s" }}><div>{status===key?cfg.sel:cfg.icon}</div><div style={{ fontSize:10,marginTop:3 }}>{cfg.label}</div></button>)}</div>
@@ -2016,10 +2014,10 @@ const PlaceCard = memo(function PlaceCard({ place, entry, onSelect, onCheckIn, i
   return (
     <div style={{ position:"relative", overflow:"hidden" }}>
       {/* Swipe indicators */}
-      <div style={{ position:"absolute",left:0,top:0,bottom:0,width:56,display:"flex",alignItems:"center",justifyContent:"center",opacity:swipeDx>20?Math.min(1,(swipeDx-20)/40):0,transition:swiping?"none":"opacity 0.15s" }}>
+      <div style={{ position:"absolute",left:0,top:0,bottom:0,width:56,display:"flex",alignItems:"center",justifyContent:"center",opacity:swipeDx>20?Math.min(1,(swipeDx-20)/40):0,transition:swiping?"none":"opacity 0.15s",pointerEvents:"none" }}>
         <span style={{ fontSize:18,color:"#0055CC" }}>♥</span>
       </div>
-      <div style={{ position:"absolute",right:0,top:0,bottom:0,width:56,display:"flex",alignItems:"center",justifyContent:"center",opacity:swipeDx<-20?Math.min(1,(-swipeDx-20)/40):0,transition:swiping?"none":"opacity 0.15s" }}>
+      <div style={{ position:"absolute",right:0,top:0,bottom:0,width:56,display:"flex",alignItems:"center",justifyContent:"center",opacity:swipeDx<-20?Math.min(1,(-swipeDx-20)/40):0,transition:swiping?"none":"opacity 0.15s",pointerEvents:"none" }}>
         <span style={{ fontSize:18,color:"#1A9E4A" }}>✓</span>
       </div>
 
@@ -2673,17 +2671,14 @@ export default function App() {
           <WeatherWidget/>
           {!search&&activeFilter==="todos"&&activeCategory==="Todos"&&!filterRegion&&<SeasonalBanner places={visiblePlaces} entries={entries} onSelect={openModal}/>}
           {placeOfDay&&!search&&activeFilter==="todos"&&activeCategory==="Todos"&&!filterRegion&&(
-            <div onClick={()=>openModal(placeOfDay)} style={{ background:"linear-gradient(135deg,#1a0008,#0a001a,#001a08)",border:"1px solid #E8E8EC",borderRadius:14,padding:"14px 16px",marginBottom:10,cursor:"pointer",position:"relative",overflow:"hidden" }}>
-              <div style={{ position:"absolute",top:0,left:0,right:0,height:2,background:"linear-gradient(90deg,#FF2D55,#B8860B)" }}/>
-              <div style={{ fontSize:10,color:"#8A8A9A",letterSpacing:"0.15em",marginBottom:8 }}>{T.placeOfDay} 🎲</div>
-              <div style={{ display:"flex",gap:12,alignItems:"center" }}>
-                <div style={{ fontSize:32 }}>{placeOfDay.emoji}</div>
-                <div>
-                  <div style={{ fontSize:15,fontWeight:700,color:"#1A1A1A" }}>{isEN&&placeOfDay.nameEN?placeOfDay.nameEN:placeOfDay.name}</div>
-                  <div style={{ fontSize:12,color:"#8A8A9A",marginTop:2 }}>{catLabel(placeOfDay.category)} · {PRICE_EMOJI[placeOfDay.price]||"?"} · {placeOfDay.time||"?"}</div>
-                  {placeOfDay.bestTime&&<div style={{ fontSize:11,color:"#B8860B",marginTop:4 }}>⏰ {placeOfDay.bestTime}</div>}
-                </div>
+            <div onClick={()=>openModal(placeOfDay)} style={{ background:"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:14,padding:"16px 18px",marginBottom:16,cursor:"pointer",display:"flex",alignItems:"center",gap:14,borderLeft:"3px solid #FF2D55" }}>
+              <div style={{ fontSize:34,lineHeight:1,flexShrink:0 }}>{placeOfDay.emoji}</div>
+              <div style={{ flex:1,minWidth:0 }}>
+                <div style={{ fontSize:10,color:"#FF2D55",letterSpacing:"0.12em",fontWeight:700,marginBottom:4 }}>{T.placeOfDay}</div>
+                <div style={{ fontSize:17,fontWeight:700,color:"#1A1A1A",letterSpacing:"-0.02em",lineHeight:1.2,marginBottom:3 }}>{isEN&&placeOfDay.nameEN?placeOfDay.nameEN:placeOfDay.name}</div>
+                <div style={{ fontSize:11,color:"#8A8A9A" }}>{catLabel(placeOfDay.category)}{placeOfDay.price&&placeOfDay.price!=="gratis"?" · "+placeOfDay.price:""}</div>
               </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#AEAEB2" strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
           )}
 
