@@ -1263,16 +1263,24 @@ function PlannerTab({ places, entries, addToast, userLat, userLng, onAddNewPlace
   useEffect(()=>{
     const vp = window.visualViewport;
     if(!vp) return;
+    const nav = document.querySelector(".bottom-nav");
     const update = ()=>{
+      const keyboardOpen = vp.height < window.innerHeight * 0.75;
       if(containerRef.current){
         containerRef.current.style.height = vp.height + "px";
         containerRef.current.style.top = vp.offsetTop + "px";
+        containerRef.current.style.paddingBottom = keyboardOpen ? "8px" : "calc(60px + env(safe-area-inset-bottom))";
       }
+      if(nav) nav.style.transform = keyboardOpen ? "translateY(100%)" : "";
     };
     update();
     vp.addEventListener("resize", update);
     vp.addEventListener("scroll", update);
-    return ()=>{ vp.removeEventListener("resize", update); vp.removeEventListener("scroll", update); };
+    return ()=>{
+      vp.removeEventListener("resize", update);
+      vp.removeEventListener("scroll", update);
+      if(nav) nav.style.transform = "";
+    };
   }, []);
 
   useEffect(()=>{
