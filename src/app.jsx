@@ -2746,11 +2746,9 @@ export default function App() {
         const kw=KEYWORD_MAP.find(k=>k.words.some(w=>normalize(w)===word||normalize(w).includes(word)));
         return kw?kw.test(p,e):false;
       });
-    }).sort((a,b)=>{
-      const ea=entries[a.id]||{}, eb=entries[b.id]||{};
-      const rank=s=>s==="quero"?0:s==="fui"?2:1;
-      return rank(ea.status)-rank(eb.status);
-    });
+    }).sort((a,b)=>
+      normalize(isEN&&a.nameEN?a.nameEN:a.name).localeCompare(normalize(isEN&&b.nameEN?b.nameEN:b.name))
+    );
   },[visiblePlaces,search,entries]);
 
   const visitedCount = useMemo(()=>visiblePlaces.filter(p=>(entries[p.id]||{}).status==="fui").length,[visiblePlaces,entries]);
