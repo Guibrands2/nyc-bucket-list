@@ -669,25 +669,28 @@ function MapTab({ places, entries, onSelect }) {
       </div>
 
       {/* Map */}
-      <div ref={wrapRef} style={{ position:"relative" }}>
-        <div ref={mapRef} style={{ width:"100%", height:"calc(100vh - 115px)", minHeight:400 }}/>
+      <div ref={wrapRef}>
+        <div ref={mapRef} style={{ width:"100%", height:"calc(100vh - 200px)", minHeight:400 }}/>
+      </div>
 
-        {/* Near me button */}
-        <button onClick={goNearMe} style={{ position:"absolute", top:12, right:12, zIndex:1000, background:"#FFFFFF", border:"1px solid #E8E8EC", borderRadius:20, padding:"8px 14px", fontSize:12, fontWeight:600, color:"#1A1A1A", cursor:"pointer", boxShadow:"0 2px 12px rgba(0,0,0,0.12)", display:"flex", alignItems:"center", gap:6 }}>
-          {locating ? <span className="pulsing">●</span> : "📍"} {isEN?"Near me":"Perto de mim"}
-        </button>
+      {/* Near me button — fixed over map */}
+      <button onClick={goNearMe} style={{ position:"fixed", bottom:selected?210:80, right:16, zIndex:500, background:"#FFFFFF", border:"1px solid #E8E8EC", borderRadius:20, padding:"8px 14px", fontSize:12, fontWeight:600, color:"#1A1A1A", cursor:"pointer", boxShadow:"0 2px 12px rgba(0,0,0,0.15)", display:"flex", alignItems:"center", gap:6, transition:"bottom 0.25s ease" }}>
+        {locating ? <span className="pulsing">●</span> : "📍"} {isEN?"Near me":"Perto de mim"}
+      </button>
 
-        {/* Legend */}
-        <div style={{ position:"absolute", bottom: selected ? 200 : 12, left:12, zIndex:1000, background:"#FFFFFF", border:"1px solid #E8E8EC", borderRadius:10, padding:"8px 10px", fontSize:10, color:"#8A8A9A", boxShadow:"0 2px 8px rgba(0,0,0,0.08)", transition:"bottom 0.3s ease" }}>
-          <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:3 }}><span style={{ width:10, height:10, borderRadius:"50%", background:"#FF2D55", display:"inline-block" }}/>Quero ir</div>
-          <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:3 }}><span style={{ width:10, height:10, borderRadius:"50%", background:"#8A8A9A", display:"inline-block", opacity:0.5 }}/>Já fui</div>
-          <div style={{ display:"flex", alignItems:"center", gap:5 }}><span style={{ width:10, height:10, borderRadius:"50%", background:"#FF2D55", display:"inline-block" }}/>Na lista</div>
+      {/* Legend — fixed bottom left */}
+      <div style={{ position:"fixed", bottom:selected?210:80, left:16, zIndex:500, background:"#FFFFFF", border:"1px solid #E8E8EC", borderRadius:10, padding:"8px 10px", fontSize:10, color:"#8A8A9A", boxShadow:"0 2px 8px rgba(0,0,0,0.08)", transition:"bottom 0.25s ease" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:3 }}>
+          <span style={{ width:12, height:12, borderRadius:"50%", background:"#FF2D55", display:"inline-block", flexShrink:0 }}/>{isEN?"Want to go":"Quero ir"}
+        </div>
+        <div style={{ display:"flex", alignItems:"center", gap:5 }}>
+          <span style={{ width:12, height:12, borderRadius:"50%", background:"#8A8A9A", display:"inline-block", opacity:0.4, flexShrink:0 }}/>{isEN?"Been there":"Já fui"}
         </div>
       </div>
 
-      {/* Mini card on tap */}
+      {/* Mini card on tap — fixed at bottom */}
       {selected && (
-        <div style={{ position:"absolute", bottom:0, left:0, right:0, zIndex:1000, background:"#FFFFFF", borderTop:"1px solid #E8E8EC", borderRadius:"20px 20px 0 0", padding:"16px 20px 32px", boxShadow:"0 -4px 24px rgba(0,0,0,0.10)" }}>
+        <div style={{ position:"fixed", bottom:60, left:0, right:0, zIndex:500, background:"#FFFFFF", borderTop:"1px solid #E8E8EC", borderRadius:"20px 20px 0 0", padding:"16px 20px 24px", boxShadow:"0 -4px 24px rgba(0,0,0,0.10)", maxWidth:600, margin:"0 auto" }}>
           <div style={{ display:"flex", alignItems:"center", gap:14 }}>
             <div style={{ fontSize:32, lineHeight:1, flexShrink:0 }}>{selected.emoji}</div>
             <div style={{ flex:1, minWidth:0 }}>
