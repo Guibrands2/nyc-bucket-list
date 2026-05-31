@@ -1241,7 +1241,9 @@ function ShareModal({ places, entries, onClose, addToast }) {
 
 function PlannerTab({ places, entries, addToast, userLat, userLng, onAddNewPlace }) {
   const MAX_INTERACTIONS = 8;
-  const [msgs, setMsgs] = useState([{role:"assistant",content:T.chatGreeting,linkedPlaces:[]}]);
+  const STORAGE_KEY = "nyc_planner_msgs";
+  const savedMsgs = useMemo(()=>{ try{ const s=localStorage.getItem(STORAGE_KEY); return s?JSON.parse(s):null; }catch{return null;} },[]);
+  const [msgs, setMsgs] = useState(savedMsgs||[{role:"assistant",content:T.chatGreeting,linkedPlaces:[]}]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState([]);
@@ -1254,6 +1256,7 @@ function PlannerTab({ places, entries, addToast, userLat, userLng, onAddNewPlace
   const userMsgCount = msgs.filter(m=>m.role==="user").length;
 
   useEffect(()=>{ bottomRef.current?.scrollIntoView({behavior:"smooth"}); },[msgs]);
+  useEffect(()=>{ try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(msgs.slice(-20))); }catch{} },[msgs]);
 
   useEffect(()=>{
     if(userLat&&userLng){
@@ -1451,7 +1454,7 @@ function PlannerTab({ places, entries, addToast, userLat, userLng, onAddNewPlace
         {userMsgCount>=MAX_INTERACTIONS?(
           <div style={{ textAlign:"center",padding:"8px 0",color:"#8A8A9A",fontSize:12 }}>
             {isEN?"Conversation limit reached":"Limite da conversa atingido"} ·
-            <button onClick={()=>{setMsgs([{role:"assistant",content:T.chatGreeting,linkedPlaces:[]}]);setSelected([]);}} style={{ background:"none",border:"none",color:"#FF2D55",fontSize:12,cursor:"pointer",marginLeft:4 }}>
+            <button onClick={()=>{const m=[{role:"assistant",content:T.chatGreeting,linkedPlaces:[]}];setMsgs(m);setSelected([]);try{localStorage.removeItem(STORAGE_KEY);}catch{}}} style={{ background:"none",border:"none",color:"#FF2D55",fontSize:12,cursor:"pointer",marginLeft:4 }}>
               {isEN?"Restart":"Reiniciar"}
             </button>
           </div>
@@ -2538,24 +2541,11 @@ export default function App() {
   const [checkIn, setCheckIn] = useState(null);
   const [tab, setTab] = useState("list");
   useSwipeTabs(tab, setTab);
-  const [activeFilter, setActiveFilter] = useState("todos");
-  const [activeCategory, setActiveCategory] = useState("Todos");
-  const [filterVibes, setFilterVibes] = useState([]);
-  const [filterPrices, setFilterPrices] = useState([]);
-  const [filterSeasons, setFilterSeasons] = useState([]);
-  const [filterStars, setFilterStars] = useState(0);
-  const [filterThumb, setFilterThumb] = useState(null);
-  const [filterPet, setFilterPet] = useState(false);
-  const [filterBathroom, setFilterBathroom] = useState(false);
-  const [filterRegion, setFilterRegion] = useState(null);
-  const [sortBy, setSortBy] = useState("default");
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const searchDebounce = useRef(null);
-  const [showFilters, setShowFilters] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [showShare, setShowShare] = useState(false);
-  const [showPlanner, setShowPlanner] = useState(false);
   const [showNearby, setShowNearby] = useState(false);
   const [showSurpresa, setShowSurpresa] = useState(false);
   const [showAddEvent, setShowAddEvent] = useState(false);
@@ -2570,7 +2560,6 @@ export default function App() {
   const [userLat, setUserLat] = useState(null);
   const [userLng, setUserLng] = useState(null);
   const [quickAction, setQuickAction] = useState(null);
-  const [activeMood, setActiveMood] = useState(null);
   const [nearbyAlert, setNearbyAlert] = useState(null);
   const scrollPosRef = useRef(0);
   const currentWeather = window._nycWeather||null;
@@ -2705,11 +2694,8 @@ export default function App() {
     {id:"free",label:"🆓 Sem grana",filter:p=>p.price==="gratis"},
     {id:"dog",label:"🐾 Com o dog",filter:p=>p.petFriendly},
   ];
-  const activeMoodFilter = activeMood?MOODS.find(m=>m.id===activeMood):null;
-  const moodFilteredPlaces = useMemo(()=>activeMoodFilter?visiblePlaces.filter(activeMoodFilter.filter):visiblePlaces,[visiblePlaces,activeMood]);
 
   const hasAnyFilter = activeFilter!=="todos"||activeCategory!=="Todos"||search||filterVibes.length||filterPrices.length||filterSeasons.length||filterStars>0||filterThumb||filterPet||filterBathroom||filterRegion||activeMood;
-  const clearFilters = ()=>{setActiveFilter("todos");setActiveCategory("Todos");setSearch("");setSearchInput("");setFilterVibes([]);setFilterPrices([]);setFilterSeasons([]);setFilterStars(0);setFilterThumb(null);setFilterPet(false);setFilterBathroom(false);setFilterRegion(null);setActiveMood(null);};
 
   const filteredPlaces = useMemo(()=>{
     const KEYWORD_MAP = [
@@ -2754,8 +2740,6 @@ export default function App() {
   const visitedCount = useMemo(()=>visiblePlaces.filter(p=>(entries[p.id]||{}).status==="fui").length,[visiblePlaces,entries]);
   const total = visiblePlaces.length;
   const pct = total>0?Math.round((visitedCount/total)*100):0;
-  const activeFiltersCount = [activeCategory!=="Todos",activeFilter!=="todos",filterVibes.length>0,filterPrices.length>0,filterSeasons.length>0,filterStars>0,filterThumb,filterPet,filterBathroom,filterRegion].filter(Boolean).length;
-  const TABS=isEN?["List","Map","Timeline","Curadoria","Stats","Events"]:["Lista","Mapa","Linha do Tempo","Curadoria","Stats","Eventos"];
 
   if(loading)return(
     <div style={{ minHeight:"100vh",background:"#F8F7F4",color:"#1A1A1A",fontFamily:"'Inter',system-ui,sans-serif" }}>
@@ -2780,8 +2764,8 @@ export default function App() {
   return (
     <div style={{ minHeight:"100vh",background:"#F8F7F4",color:"#1A1A1A",fontFamily:"'Inter',system-ui,sans-serif",paddingBottom:80 }}>
       <div style={{ maxWidth:600,margin:"0 auto" }}>
-        {/* Header */}
-        <div style={{ padding:"14px 16px 8px",position:"sticky",top:0,background:"#F8F7F4",zIndex:100,borderBottom:"1px solid #E8E8EC" }}>
+        {/* Header — hidden on full-screen tabs */}
+        <div style={{ padding:"14px 16px 8px",position:"sticky",top:0,background:"#F8F7F4",zIndex:100,borderBottom:"1px solid #E8E8EC",display:["map","planner"].includes(tab)?"none":"block" }}>
           <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10 }}>
             <div onClick={()=>window.location.reload()} style={{ cursor:"pointer" }}>
               <div style={{ fontSize:10,color:"#8A8A9A",letterSpacing:"0.12em",fontWeight:600 }}>{T.byGuiGab} {syncing&&<span className="pulsing" style={{ color:"#FF2D55" }}>·</span>}</div>
@@ -2869,7 +2853,6 @@ export default function App() {
       {showAIAdd&&<AIAddModal onClose={()=>{setShowAIAdd(false);setAiAddPrefill(null);}} onSavePlace={async place=>{await set(ref(db,"customPlaces/"+place.id),place);setShowAIAdd(false);setAiAddPrefill(null);}} onSaveEvent={async ev=>{await set(ref(db,"events/"+ev.id),ev);setShowAIAdd(false);setAiAddPrefill(null);}} addToast={addToast} prefill={aiAddPrefill}/>}
       {showAdd&&<AddPlaceModal onClose={()=>setShowAdd(false)} onSave={async place=>{await set(ref(db,"customPlaces/"+place.id),place);addToast(T.placeAdded,"success");setShowAdd(false);}} addToast={addToast}/>}
       {showShare&&<ShareModal onClose={()=>setShowShare(false)} addToast={addToast}/>}
-      {showPlanner&&<PlannerChatModal places={visiblePlaces} entries={entries} onClose={()=>setShowPlanner(false)} addToast={addToast} userLat={userLat} userLng={userLng}/>}
       {showNearby&&userLat&&<NearbyDrawer userLat={userLat} userLng={userLng} places={visiblePlaces} entries={entries} onSelect={openModal} onClose={()=>setShowNearby(false)}/>}
       {showSurpresa&&<SurpresaModal places={visiblePlaces} entries={entries} weather={currentWeather} onClose={()=>setShowSurpresa(false)} addToast={addToast} onSaveLists={saveLists} lists={lists}/>}
       {showAddEvent&&<AddEventModal onClose={()=>setShowAddEvent(false)} onSave={async ev=>{await set(ref(db,"events/"+ev.id),ev);addToast(isEN?"Event added!":"Evento adicionado!","success");setShowAddEvent(false);}} addToast={addToast}/>}
