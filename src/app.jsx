@@ -864,9 +864,10 @@ function CuradoriaTab({ places, lists, onSaveLists, onSelectPlace, onSendToPlann
 
     return (
       <div style={{ padding:"0 16px 80px" }}>
-        <button onClick={()=>setView("create")} style={{ width:"100%",padding:"13px",background:"#FF2D5515",border:"1px dashed #FF2D5550",borderRadius:12,color:"#FF2D55",fontSize:14,cursor:"pointer",marginBottom:14,fontFamily:"inherit" }}>{T.createCuradoria}</button>
+        <button onClick={()=>setView("create")} style={{ width:"100%",padding:"13px",background:"#FF2D5515",border:"1px dashed #FF2D5550",borderRadius:12,color:"#FF2D55",fontSize:14,cursor:"pointer",marginBottom:10,fontFamily:"inherit" }}>{T.createCuradoria}</button>
+        {normLists.length>2&&<input value={search} onChange={e=>setSearch(e.target.value)} placeholder={isEN?"Search lists...":"Buscar listas..."} style={{ width:"100%",background:"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:10,padding:"9px 14px",color:"#1A1A1A",fontSize:13,marginBottom:10,boxSizing:"border-box" }}/>}
         {!normLists.length&&<div style={{ textAlign:"center",padding:"40px 0",color:"#8A8A9A" }}><div style={{ fontSize:32,marginBottom:8 }}>📋</div><div style={{ fontSize:13 }}>{T.curadoriaEmpty}</div><div style={{ fontSize:12,marginTop:4,color:"#8A8A9A" }}>{T.curadoriaEx}</div></div>}
-        {normLists.map(list=>{const lp=list.placeIds.map(pid=>places.find(p=>p.id===pid)).filter(Boolean);return<div key={list.id} onClick={()=>{setEditId(list.id);setView("edit");}} style={{ background:"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:14,marginBottom:10,padding:"14px",cursor:"pointer" }} className="card"><div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:lp.length?8:0 }}><div><div style={{ fontSize:15,fontWeight:600,color:"#1A1A1A" }}>{list.emoji} {list.name}</div>{list.desc&&<div style={{ fontSize:12,color:"#8A8A9A",marginTop:2 }}>{list.desc}</div>}<div style={{ fontSize:11,color:"#8A8A9A",marginTop:4 }}>{list.placeIds.length} {T.places} · {T.tapToEdit}</div></div><button onClick={e=>{e.stopPropagation();share(list);}} style={{ padding:"5px 10px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:8,color:"#8A8A9A",fontSize:12,cursor:"pointer" }}>↗</button></div>{lp.length>0&&<div style={{ display:"flex",flexWrap:"wrap",gap:4 }}>{lp.slice(0,4).map(p=><span key={p.id} style={{ fontSize:11,color:"#8A8A9A",background:"#F8F7F4",borderRadius:20,padding:"3px 8px" }}>{p.emoji} {isEN&&p.nameEN?p.nameEN:p.name}</span>)}{lp.length>4&&<span style={{ fontSize:11,color:"#8A8A9A",padding:"3px 8px" }}>+{lp.length-4}</span>}</div>}</div>;})}
+        {normLists.filter(l=>!search||normalize(l.name).includes(normalize(search))).map(list=>{const lp=list.placeIds.map(pid=>places.find(p=>p.id===pid)).filter(Boolean);return<div key={list.id} onClick={()=>{setEditId(list.id);setView("edit");}} style={{ background:"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:14,marginBottom:10,padding:"14px",cursor:"pointer" }} className="card"><div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:lp.length?8:0 }}><div><div style={{ fontSize:15,fontWeight:600,color:"#1A1A1A" }}>{list.emoji} {list.name}</div>{list.desc&&<div style={{ fontSize:12,color:"#8A8A9A",marginTop:2 }}>{list.desc}</div>}<div style={{ fontSize:11,color:"#8A8A9A",marginTop:4 }}>{list.placeIds.length} {T.places} · {T.tapToEdit}</div></div><button onClick={e=>{e.stopPropagation();share(list);}} style={{ padding:"5px 10px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:8,color:"#8A8A9A",fontSize:12,cursor:"pointer" }}>↗</button></div>{lp.length>0&&<div style={{ display:"flex",flexWrap:"wrap",gap:4 }}>{lp.slice(0,4).map(p=><span key={p.id} style={{ fontSize:11,color:"#8A8A9A",background:"#F8F7F4",borderRadius:20,padding:"3px 8px" }}>{p.emoji} {isEN&&p.nameEN?p.nameEN:p.name}</span>)}{lp.length>4&&<span style={{ fontSize:11,color:"#8A8A9A",padding:"3px 8px" }}>+{lp.length-4}</span>}</div>}</div>;})}
       </div>
     );
   } catch(err) {
@@ -1305,7 +1306,7 @@ function ShareModal({ places, entries, onClose, addToast }) {
   </div></div>;
 }
 
-function PlannerTab({ places, entries, addToast, userLat, userLng, onAddNewPlace, seedMsg, onSeedConsumed }) {
+function PlannerTab({ places, entries, addToast, userLat, userLng, onAddNewPlace, seedMsg, onSeedConsumed, onSaveToCuradoria }) {
   const MAX_INTERACTIONS = 8;
   const STORAGE_KEY = "nyc_planner_msgs";
   const savedMsgs = useMemo(()=>{ try{ const s=localStorage.getItem(STORAGE_KEY); return s?JSON.parse(s):null; }catch{return null;} },[]);
@@ -1313,6 +1314,8 @@ function PlannerTab({ places, entries, addToast, userLat, userLng, onAddNewPlace
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState([]);
+  const [savingMsgIdx, setSavingMsgIdx] = useState(null);
+  const [saveListName, setSaveListName] = useState("");
   const [showPlan, setShowPlan] = useState(false);
   const [planResult, setPlanResult] = useState("");
   const [planLoading, setPlanLoading] = useState(false);
@@ -1490,12 +1493,22 @@ function PlannerTab({ places, entries, addToast, userLat, userLng, onAddNewPlace
               </div>
             </div>
             {m.linkedPlaces&&m.linkedPlaces.length>0&&(
-              <div style={{ marginLeft:38,marginTop:8,display:"flex",flexWrap:"wrap",gap:6 }}>
-                {m.linkedPlaces.map(p=>{const meta=CAT_META[p.category]||{color:"#FF2D55"};const sel=selected.includes(p.id);return(
-                  <button key={p.id} onClick={()=>toggleSel(p.id)} style={{ display:"flex",alignItems:"center",gap:5,padding:"6px 12px",background:sel?meta.color+"30":meta.color+"15",border:"1px solid "+(sel?meta.color+"90":meta.color+"40"),borderRadius:20,color:meta.color,fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:sel?600:400,transition:"all 0.15s" }}>
-                    {p.emoji} {isEN&&p.nameEN?p.nameEN:p.name} {sel?"✓":"+"}
-                  </button>
-                );})}
+              <div style={{ marginLeft:38,marginTop:8 }}>
+                <div style={{ display:"flex",flexWrap:"wrap",gap:6,marginBottom:6 }}>
+                  {m.linkedPlaces.map(p=>{const meta=CAT_META[p.category]||{color:"#FF2D55"};const sel=selected.includes(p.id);return(
+                    <button key={p.id} onClick={()=>toggleSel(p.id)} style={{ display:"flex",alignItems:"center",gap:5,padding:"6px 12px",background:sel?meta.color+"30":meta.color+"15",border:"1px solid "+(sel?meta.color+"90":meta.color+"40"),borderRadius:20,color:meta.color,fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:sel?600:400,transition:"all 0.15s" }}>
+                      {p.emoji} {isEN&&p.nameEN?p.nameEN:p.name} {sel?"✓":"+"}
+                    </button>
+                  );})}
+                </div>
+                {onSaveToCuradoria&&(savingMsgIdx===i
+                  ? <div style={{ display:"flex",gap:6 }}>
+                      <input autoFocus value={saveListName} onChange={e=>setSaveListName(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&saveListName.trim()){onSaveToCuradoria(saveListName.trim(),m.linkedPlaces);setSavingMsgIdx(null);setSaveListName("");addToast(isEN?"Saved!":"Salvo!","success");}if(e.key==="Escape"){setSavingMsgIdx(null);setSaveListName("");}}} placeholder={isEN?"List name...":"Nome da lista..."} style={{ flex:1,background:"#F8F7F4",border:"1px solid #0055CC60",borderRadius:8,padding:"7px 10px",color:"#1A1A1A",fontSize:12 }}/>
+                      <button onClick={()=>{if(saveListName.trim()){onSaveToCuradoria(saveListName.trim(),m.linkedPlaces);setSavingMsgIdx(null);setSaveListName("");addToast(isEN?"Saved!":"Salvo!","success");}}} style={{ padding:"7px 12px",background:"#0055CC",border:"none",borderRadius:8,color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer" }}>✓</button>
+                      <button onClick={()=>{setSavingMsgIdx(null);setSaveListName("");}} style={{ padding:"7px 10px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:8,color:"#8A8A9A",fontSize:12,cursor:"pointer" }}>×</button>
+                    </div>
+                  : <button onClick={()=>{setSavingMsgIdx(mi);setSaveListName("");}} style={{ padding:"5px 10px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:8,color:"#8A8A9A",fontSize:11,cursor:"pointer" }}>💾 {isEN?"Save as list":"Salvar como lista"}</button>
+                )}
               </div>
             )}
             {m.newSuggestions&&m.newSuggestions.length>0&&(
@@ -1688,11 +1701,15 @@ function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveList
     setLoading(false); setStep("result");
   };
 
+  const [saveName, setSaveName] = useState("");
+  const [showSaveInput, setShowSaveInput] = useState(false);
+
   const saveAsCuradoria = () => {
-    if(!linkedPlaces.length) return;
-    const nova = {id:"l"+Date.now(),name:isEN?"Surprise Day":"Dia Surpresa",emoji:"🎲",desc:new Date().toLocaleDateString(isEN?"en-US":"pt-BR"),placeIds:linkedPlaces.map(p=>p.id)};
+    if(!linkedPlaces.length||!saveName.trim()) return;
+    const nova = {id:"l"+Date.now(),name:saveName.trim(),emoji:"🎲",desc:new Date().toLocaleDateString(isEN?"en-US":"pt-BR"),placeIds:linkedPlaces.map(p=>p.id)};
     onSaveLists([...lists,nova]);
-    addToast(isEN?"Saved as curadoria!":"Salvo como curadoria!","success");
+    setSaveName(""); setShowSaveInput(false);
+    addToast(isEN?"Saved!":"Salvo!","success");
   };
 
   const CHIP = (label, active, onClick, color="#FF2D55") => (
@@ -1763,7 +1780,13 @@ function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveList
           </button>}
           <div style={{ display:"flex",gap:8 }}>
             <button onClick={()=>{navigator.clipboard.writeText(result);addToast(isEN?"Copied!":"Copiado!","success");}} style={{ flex:1,padding:"11px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:10,color:"#1A1A1A",fontSize:13,fontWeight:600,cursor:"pointer" }}>{isEN?"Copy":"Copiar"}</button>
-            <button onClick={saveAsCuradoria} disabled={!linkedPlaces.length} style={{ flex:1,padding:"11px",background:linkedPlaces.length?"#F8F7F4":"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:10,color:linkedPlaces.length?"#8A8A9A":"#E8E8EC",fontSize:13,cursor:linkedPlaces.length?"pointer":"default" }}>💾 {isEN?"Save":"Salvar"}</button>
+            {showSaveInput
+              ? <div style={{ display:"flex",gap:6,flex:2 }}>
+                  <input autoFocus value={saveName} onChange={e=>setSaveName(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")saveAsCuradoria();if(e.key==="Escape")setShowSaveInput(false);}} placeholder={isEN?"List name...":"Nome da lista..."} style={{ flex:1,background:"#F8F7F4",border:"1px solid #0055CC60",borderRadius:8,padding:"8px 10px",color:"#1A1A1A",fontSize:12 }}/>
+                  <button onClick={saveAsCuradoria} disabled={!saveName.trim()} style={{ padding:"8px 12px",background:saveName.trim()?"#0055CC":"#E8E8EC",border:"none",borderRadius:8,color:"#fff",fontSize:12,fontWeight:700,cursor:saveName.trim()?"pointer":"default" }}>✓</button>
+                </div>
+              : <button onClick={()=>setShowSaveInput(true)} disabled={!linkedPlaces.length} style={{ flex:1,padding:"11px",background:linkedPlaces.length?"#F8F7F4":"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:10,color:linkedPlaces.length?"#8A8A9A":"#E8E8EC",fontSize:13,cursor:linkedPlaces.length?"pointer":"default" }}>💾 {isEN?"Save":"Salvar"}</button>
+            }
             <button onClick={()=>{setStep("form");setResult("");setLinkedPlaces([]);setSelectedIds([]);}} style={{ padding:"11px 14px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:10,color:"#8A8A9A",fontSize:13,cursor:"pointer" }}>🎲</button>
           </div>
         </div>
@@ -2989,7 +3012,7 @@ export default function App() {
 
         {/* Always mounted tabs — hidden with CSS to preserve state */}
         <div style={{display:tab==="map"?"block":"none"}}><MapTab places={filteredPlaces} entries={entries} onSelect={openModal} visible={tab==="map"} detailOpen={!!selected}/></div>
-        <div style={{display:tab==="planner"?"block":"none"}}><PlannerTab places={visiblePlaces} entries={entries} addToast={addToast} userLat={userLat} userLng={userLng} onAddNewPlace={name=>{setAiAddPrefill(name);setShowAIAdd(true);}} seedMsg={plannerSeed} onSeedConsumed={()=>setPlannerSeed(null)}/></div>
+        <div style={{display:tab==="planner"?"block":"none"}}><PlannerTab places={visiblePlaces} entries={entries} addToast={addToast} userLat={userLat} userLng={userLng} onAddNewPlace={name=>{setAiAddPrefill(name);setShowAIAdd(true);}} seedMsg={plannerSeed} onSeedConsumed={()=>setPlannerSeed(null)} onSaveToCuradoria={(name,linkedPlaces)=>{const nova={id:"l"+Date.now(),name,emoji:"💬",desc:new Date().toLocaleDateString(isEN?"en-US":"pt-BR"),placeIds:linkedPlaces.map(p=>p.id)};saveLists([...lists,nova]);}}/></div>
         <div style={{display:tab==="memories"?"block":"none",padding:"0 16px 120px"}}>
           <div style={{ padding:"20px 0 16px" }}>
             <div style={{ fontSize:24,fontWeight:800,letterSpacing:"-0.03em",color:"#1A1A1A",marginBottom:4 }}>{isEN?"Memories":"Memórias"}</div>
