@@ -2829,16 +2829,16 @@ export default function App() {
         {toasts.map(t=><Toast key={t.id} message={t.message} type={t.type} onDone={()=>setToasts(prev=>prev.filter(x=>x.id!==t.id))} onUndo={t.onUndo}/>)}
       </div>
 
-      {/* FAB */}
-      {showFAB&&<div style={{ position:"fixed",inset:0,zIndex:190 }} onClick={()=>setShowFAB(false)}/>}
-      <div style={{ position:"fixed",bottom:74,right:20,zIndex:200,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:8 }}>
+      {/* FAB — only on Explorar tab */}
+      {tab==="list"&&showFAB&&<div style={{ position:"fixed",inset:0,zIndex:190 }} onClick={()=>setShowFAB(false)}/>}
+      {tab==="list"&&<div style={{ position:"fixed",bottom:74,right:20,zIndex:200,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:8 }}>
         {showFAB&&<>
           <button onClick={()=>{setShowFAB(false);setShowAIAdd(true);}} style={{ display:"flex",alignItems:"center",gap:8,padding:"10px 16px",background:"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:20,color:"#1A1A1A",fontSize:13,cursor:"pointer",boxShadow:"0 4px 16px #00000060",whiteSpace:"nowrap" }}>✨ {isEN?"Add with AI":"Adicionar com IA"}</button>
           <button onClick={()=>{setShowFAB(false);setShowAdd(true);}} style={{ display:"flex",alignItems:"center",gap:8,padding:"10px 16px",background:"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:20,color:"#1A1A1A",fontSize:13,cursor:"pointer",boxShadow:"0 4px 16px #00000060",whiteSpace:"nowrap" }}>📝 {isEN?"Add manually":"Adicionar manual"}</button>
           <button onClick={()=>{setShowFAB(false);getSurprise();}} style={{ display:"flex",alignItems:"center",gap:8,padding:"10px 16px",background:"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:20,color:"#1A1A1A",fontSize:13,cursor:"pointer",boxShadow:"0 4px 16px #00000060",whiteSpace:"nowrap" }}>🎲 {isEN?"Roll a place":"Sortear lugar"}</button>
         </>}
         <button onClick={()=>setShowFAB(!showFAB)} style={{ width:54,height:54,background:"#FF2D55",border:"none",borderRadius:"50%",color:"#fff",fontSize:showFAB?20:26,cursor:"pointer",boxShadow:"0 4px 20px #FF2D5560",display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",transform:showFAB?"rotate(45deg)":"none" }}>+</button>
-      </div>
+      </div>}
       <BottomNav tab={tab} setTab={setTab} onSurpresa={()=>setShowSurpresa(true)} onNearby={handleNearby} onShare={()=>setShowShare(true)}/>
     </div>
   );
