@@ -323,9 +323,11 @@ function initPullToRefresh() {
   window._ptrInit = true;
   let _startTarget = null;
   let _multiTouch = false;
+  let _pullStartX = 0;
   document.addEventListener("touchstart", e => {
     _multiTouch = e.touches.length > 1;
     _pullStartY = e.touches[0].clientY;
+    _pullStartX = e.touches[0].clientX;
     _startTarget = e.target;
   }, { passive:true });
   document.addEventListener("touchmove", e => {
@@ -334,8 +336,10 @@ function initPullToRefresh() {
   document.addEventListener("touchend", e => {
     if (_multiTouch) { _multiTouch = false; return; }
     const dy = e.changedTouches[0].clientY - _pullStartY;
-    const insideScrollable = _startTarget?.closest('[style*="overflow-y: auto"],[style*="overflow-y:auto"],[style*="overflowY"],.modal,.leaflet-container');
-    if (dy > 80 && window.scrollY === 0 && !insideScrollable) { window.location.reload(); }
+    const dx = Math.abs(e.changedTouches[0].clientX - _pullStartX);
+    const insideScrollable = _startTarget?.closest('[style*="overflow-y: auto"],[style*="overflow-y:auto"],[style*="overflowY"],.modal,.leaflet-container,[data-hscroll]');
+    // Only trigger if gesture is primarily vertical (dy > 2x horizontal displacement)
+    if (dy > 80 && dx < dy / 2 && window.scrollY === 0 && !insideScrollable) { window.location.reload(); }
   }, { passive:true });
 }
 
