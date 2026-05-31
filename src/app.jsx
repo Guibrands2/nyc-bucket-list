@@ -27,7 +27,7 @@ const T = {
   visited: isEN ? "visited" : "visitados",
   onList: isEN ? "on list" : "na lista",
   tabs: isEN ? ["List","Map","Timeline","Curadoria"] : ["Lista","Mapa","Linha do Tempo","Curadoria"],
-  search: isEN ? "Search places, categories..." : "Buscar lugares, categorias...",
+  search: isEN ? "Search: museum, free, brooklyn, date..." : "Buscar: museu, gratis, brooklyn, date...",
   all: isEN ? "All" : "Todos",
   want: isEN ? "♥ Want" : "♥ Quero",
   been: isEN ? "✓ Been" : "✓ Fui",
@@ -2538,37 +2538,47 @@ export default function App() {
   const hasAnyFilter = activeFilter!=="todos"||activeCategory!=="Todos"||search||filterVibes.length||filterPrices.length||filterSeasons.length||filterStars>0||filterThumb||filterPet||filterBathroom||filterRegion||activeMood;
   const clearFilters = ()=>{setActiveFilter("todos");setActiveCategory("Todos");setSearch("");setSearchInput("");setFilterVibes([]);setFilterPrices([]);setFilterSeasons([]);setFilterStars(0);setFilterThumb(null);setFilterPet(false);setFilterBathroom(false);setFilterRegion(null);setActiveMood(null);};
 
-  const filteredPlaces = useMemo(()=>moodFilteredPlaces.filter(p=>{
-    const e=entries[p.id]||{};
-    if(activeFilter==="quero"&&e.status!=="quero")return false;
-    if(activeFilter==="fui"&&e.status!=="fui")return false;
-    if(activeCategory!=="Todos"&&p.category!==activeCategory)return false;
-    if(filterRegion){
-      const r=REGIONS[filterRegion];
-      if(!r)return false;
-      if(p.lat&&p.lng){if(p.lat<r.minLat||p.lat>r.maxLat||p.lng<r.minLng||p.lng>r.maxLng)return false;}
-      else return false;
-    }
-    if(search){
+  const filteredPlaces = useMemo(()=>{
+    const KEYWORD_MAP = [
+      { words:["free","gratis","gratuito","grátis"],  test:p=>p.price==="gratis" },
+      { words:["cheap","barato","$"],                 test:p=>p.price==="$" },
+      { words:["dog","cachorro","pet"],               test:p=>p.petFriendly },
+      { words:["outdoor","park","parque","natureza"],  test:p=>["Natureza","Praias","Bairros"].includes(p.category) },
+      { words:["bar","drink","beber","bebida"],        test:p=>p.category==="Bares" },
+      { words:["museum","museu"],                     test:p=>p.category==="Museus" },
+      { words:["food","comida","comer","restaurant"],  test:p=>["Comida","Mercados & Delis"].includes(p.category) },
+      { words:["beach","praia"],                      test:p=>p.category==="Praias" },
+      { words:["date","romantico","romantic","casal"], test:p=>p.category!=="Dispensaries" },
+      { words:["brooklyn"],                           test:p=>p.lat&&p.lat<40.74&&p.lng&&p.lng>-74.05 },
+      { words:["manhattan"],                          test:p=>p.lat&&p.lat>40.70&&p.lat<40.88&&p.lng&&p.lng>-74.02&&p.lng<-73.91 },
+      { words:["queens"],                             test:p=>p.lat&&p.lng&&p.lng>-73.96&&p.lat>40.68&&p.lat<40.80 },
+      { words:["summer","verao","verão"],             test:p=>(p.season==="verao"||p.season==="sempre") },
+      { words:["winter","inverno"],                   test:p=>(p.season==="inverno"||p.season==="sempre") },
+      { words:["quero","want","wishlist","❤️","♥"],  test:(p,e)=>e.status==="quero" },
+      { words:["fui","been","visited"],               test:(p,e)=>e.status==="fui" },
+    ];
+    return visiblePlaces.filter(p=>{
+      const e=entries[p.id]||{};
+      if(!search) return true;
       const q=normalize(search);
-      const nm=normalize(isEN&&p.nameEN?p.nameEN:p.name);
-      const nm2=normalize(p.name);
-      const nm3=normalize(p.nameEN||"");
-      if(!nm.includes(q)&&!nm2.includes(q)&&!nm3.includes(q))return false;
-    }
-    if(filterVibes.length&&(!e.vibes||!filterVibes.some(v=>e.vibes.includes(v))))return false;
-    if(filterPrices.length){const dp=e.price||p.price;if(!filterPrices.includes(dp))return false;}
-    if(filterSeasons.length){const ds=e.season||p.season;if(!filterSeasons.includes(ds))return false;}
-    if(filterStars>0&&(e.stars||0)<filterStars)return false;
-    if(filterThumb&&e.thumb!==filterThumb)return false;
-    if(filterPet&&!p.petFriendly)return false;
-    if(filterBathroom&&!p.publicBathroom)return false;
-    return true;
-  }).sort((a,b)=>{
-    if(sortBy==="az")return(isEN&&a.nameEN?a.nameEN:a.name).localeCompare(isEN&&b.nameEN?b.nameEN:b.name);
-    if(sortBy==="cat")return a.category.localeCompare(b.category);
-    return 0;
-  }),[moodFilteredPlaces,search,activeCategory,activeFilter,filterVibes,filterPrices,filterSeasons,filterStars,filterThumb,filterPet,filterBathroom,filterRegion,sortBy,entries,activeMood]);
+      const words=q.split(/\s+/).filter(Boolean);
+      return words.every(word=>{
+        const name=normalize(isEN&&p.nameEN?p.nameEN:p.name);
+        const namePT=normalize(p.name);
+        const nameEN=normalize(p.nameEN||"");
+        const cat=normalize(catLabel(p.category));
+        const catPT=normalize(p.category);
+        const desc=normalize(isEN&&p.descEN?p.descEN:p.desc||"");
+        if(name.includes(word)||namePT.includes(word)||nameEN.includes(word)||cat.includes(word)||catPT.includes(word)||desc.includes(word)) return true;
+        const kw=KEYWORD_MAP.find(k=>k.words.some(w=>normalize(w)===word||normalize(w).includes(word)));
+        return kw?kw.test(p,e):false;
+      });
+    }).sort((a,b)=>{
+      const ea=entries[a.id]||{}, eb=entries[b.id]||{};
+      const rank=s=>s==="quero"?0:s==="fui"?2:1;
+      return rank(ea.status)-rank(eb.status);
+    });
+  },[visiblePlaces,search,entries]);
 
   const visitedCount = useMemo(()=>visiblePlaces.filter(p=>(entries[p.id]||{}).status==="fui").length,[visiblePlaces,entries]);
   const total = visiblePlaces.length;
@@ -2625,48 +2635,9 @@ export default function App() {
 
         {/* List Tab */}
         {tab==="list"&&<div style={{ padding:"4px 20px 140px" }}>
-          {/* Quick moods */}
-          <div style={{ display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",paddingBottom:8 }}>
-            {MOODS.map(m=><button key={m.id} className={"mood-chip"+(activeMood===m.id?" active":"")} onClick={()=>setActiveMood(activeMood===m.id?null:m.id)}>{m.label}</button>)}
-          </div>
-          {/* Category chips */}
-          <div data-hscroll style={{ display:"flex",gap:6,overflowX:"auto",scrollbarWidth:"none",paddingBottom:10 }}>
-            {["Todos",...CATEGORIES].map(cat=>{const meta=CAT_META[cat],active=activeCategory===cat;return<button key={cat} onClick={()=>{if(cat==="Todos"){setActiveCategory("Todos");setSortBy("default");}else{setActiveCategory(activeCategory===cat?"Todos":cat);if(activeCategory!==cat)setSortBy("az");}}} className="btn" style={{ padding:"6px 14px",borderRadius:22,background:active?(meta?meta.color:"#FF2D55")+"25":"#FFFFFF",border:"2px solid "+(active?(meta?meta.color:"#FF2D55")+"80":"#E8E8EC"),color:active?(meta?meta.color:"#FF2D55"):"#8A8A9A",fontSize:12,whiteSpace:"nowrap",fontWeight:active?600:400,transition:"all 0.15s" }}>{cat==="Todos"?T.all:catLabel(cat)}</button>;})}
-          </div>
-          {/* Filter row */}
-          <div style={{ display:"flex",gap:6,alignItems:"center",marginBottom:10 }}>
-            {[["todos",T.all],["quero","♥ "+T.want.replace("♥ ","")],["fui","✓ "+T.been.replace("✓ ","")]].map(([key,label])=><button key={key} onClick={()=>setActiveFilter(activeFilter===key&&key!=="todos"?"todos":key)} className="btn" style={{ padding:"7px 14px",borderRadius:20,background:activeFilter===key?key==="quero"?"#0055CC":key==="fui"?"#1A9E4A":"#FF2D55":"#FFFFFF",border:"1px solid "+(activeFilter===key?key==="quero"?"#0055CC":key==="fui"?"#1A9E4A":"#FF2D55":"#E8E8EC"),color:activeFilter===key?"#000":"#8A8A9A",fontSize:12,fontWeight:activeFilter===key?600:400,whiteSpace:"nowrap" }}>{label}</button>)}
-            <div style={{ flex:1 }}/>
-            <button onClick={()=>setShowFilters(!showFilters)} className="btn" style={{ padding:"5px 14px",borderRadius:20,background:activeFiltersCount>0?"#B8860B20":"#FFFFFF",border:"1px solid "+(activeFiltersCount>0?"#B8860B":"#E8E8EC"),color:activeFiltersCount>0?"#B8860B":"#8A8A9A",fontSize:12,whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4 }}>{activeFiltersCount>0&&<span style={{ width:6,height:6,borderRadius:"50%",background:"#B8860B",display:"inline-block" }}/>}{activeFiltersCount>0?T.filters+" ("+activeFiltersCount+")":T.filters}</button>
-            {hasAnyFilter&&<button onClick={clearFilters} style={{ background:"none",border:"none",color:"#8A8A9A",fontSize:11,cursor:"pointer",whiteSpace:"nowrap" }}>×{T.clearAll}</button>}
-          </div>
-
-          {/* Filter bottom sheet */}
-          {showFilters&&<div style={{ position:"fixed",inset:0,background:"#000000c0",zIndex:200 }} onClick={()=>setShowFilters(false)}><div onClick={e=>e.stopPropagation()} style={{ position:"absolute",bottom:0,left:0,right:0,background:"#FFFFFF",borderTop:"1px solid #E8E8EC",borderRadius:"20px 20px 0 0",padding:"16px 16px 40px",maxHeight:"80vh",overflowY:"auto",maxWidth:600,margin:"0 auto" }}><div style={{ width:44,height:4,background:"#E8E8EC",borderRadius:2,margin:"0 auto 16px" }}/>
-            <FilterSection label={T.filterVibe} options={VIBES} selected={filterVibes} onToggle={v=>setFilterVibes(prev=>prev.includes(v)?prev.filter(x=>x!==v):[...prev,v])} renderLabel={v=><span>{VIBE_EMOJI[v]} {VIBE_LABELS[v]}</span>}/>
-            <FilterSection label={T.filterPrice} options={PRICES} selected={filterPrices} onToggle={v=>setFilterPrices(prev=>prev.includes(v)?prev.filter(x=>x!==v):[...prev,v])} renderLabel={v=><span>{PRICE_EMOJI[v]}</span>}/>
-            <FilterSection label={T.filterSeason} options={SEASONS} selected={filterSeasons} onToggle={v=>setFilterSeasons(prev=>prev.includes(v)?prev.filter(x=>x!==v):[...prev,v])} renderLabel={v=><span>{SEASON_EMOJI[v]} {SEASON_LABELS[v]}</span>}/>
-            <div style={{ marginBottom:14 }}>
-              <div style={{ fontSize:10,color:"#8A8A9A",letterSpacing:"0.1em",marginBottom:8 }}>{T.filterStars}</div>
-              <div style={{ display:"flex",gap:6 }}>{[1,2,3,4,5].map(n=><button key={n} onClick={()=>setFilterStars(filterStars===n?0:n)} style={{ flex:1,padding:"6px",borderRadius:8,background:filterStars>=n?"#B8860B20":"#F8F7F4",border:"1px solid "+(filterStars>=n?"#B8860B":"#E8E8EC"),color:"#B8860B",fontSize:14,cursor:"pointer" }}>★</button>)}</div>
-            </div>
-            <div style={{ display:"flex",gap:8,marginBottom:14 }}>
-              <button onClick={()=>setFilterPet(!filterPet)} style={{ flex:1,padding:"8px",borderRadius:10,background:filterPet?"#4ade8020":"#F8F7F4",border:"1px solid "+(filterPet?"#4ade80":"#E8E8EC"),color:filterPet?"#4ade80":"#AEAEB2",fontSize:12,cursor:"pointer" }}>🐾 {T.filterPet}</button>
-              <button onClick={()=>setFilterBathroom(!filterBathroom)} style={{ flex:1,padding:"8px",borderRadius:10,background:filterBathroom?"#60a5fa20":"#F8F7F4",border:"1px solid "+(filterBathroom?"#60a5fa":"#E8E8EC"),color:filterBathroom?"#60a5fa":"#AEAEB2",fontSize:12,cursor:"pointer" }}>🚻 {T.filterBathroom}</button>
-            </div>
-            <div style={{ marginBottom:14 }}>
-              <div style={{ fontSize:10,color:"#8A8A9A",letterSpacing:"0.1em",marginBottom:8 }}>{T.filterRegion}</div>
-              <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>{Object.keys(REGIONS).map(r=><button key={r} onClick={()=>setFilterRegion(filterRegion===r?null:r)} style={{ padding:"6px 12px",borderRadius:20,background:filterRegion===r?"#0055CC20":"#F8F7F4",border:"1px solid "+(filterRegion===r?"#0055CC":"#E8E8EC"),color:filterRegion===r?"#0055CC":"#8A8A9A",fontSize:11,cursor:"pointer" }}>{r}</button>)}</div>
-            </div>
-            <div style={{ display:"flex",gap:6,marginBottom:14 }}>
-              {filterRegion&&<div style={{ padding:"6px 12px",background:"#0055CC15",border:"1px solid #0055CC30",borderRadius:20,fontSize:11,color:"#0055CC" }}>📍 {filterRegion}</div>}
-            </div>
-            {activeFiltersCount>0&&<button onClick={clearFilters} style={{ width:"100%",padding:"10px",background:"none",border:"1px solid #E8E8EC",borderRadius:10,color:"#8A8A9A",fontSize:12,cursor:"pointer" }}>{T.clearFilters}</button>}
-          </div></div>}
-
           <WeatherWidget/>
-          {!search&&activeFilter==="todos"&&activeCategory==="Todos"&&!filterRegion&&<SeasonalBanner places={visiblePlaces} entries={entries} onSelect={openModal}/>}
-          {placeOfDay&&!search&&activeFilter==="todos"&&activeCategory==="Todos"&&!filterRegion&&(
+          {!search&&<SeasonalBanner places={visiblePlaces} entries={entries} onSelect={openModal}/>}
+          {placeOfDay&&!search&&(
             <div onClick={()=>openModal(placeOfDay)} style={{ background:"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:14,padding:"16px 18px",marginBottom:16,cursor:"pointer",display:"flex",alignItems:"center",gap:14,borderLeft:"3px solid #FF2D55" }}>
               <div style={{ fontSize:34,lineHeight:1,flexShrink:0 }}>{placeOfDay.emoji}</div>
               <div style={{ flex:1,minWidth:0 }}>
@@ -2678,18 +2649,12 @@ export default function App() {
             </div>
           )}
 
-          {!filteredPlaces.length&&<div style={{ textAlign:"center",padding:"60px 20px",color:"#8A8A9A" }}>
-            <div style={{ fontSize:40,marginBottom:12 }}>🔍</div>
-            <div style={{ fontSize:15,fontWeight:600,color:"#1A1A1A",marginBottom:8 }}>{isEN?"Nothing here":"Nada por aqui"}</div>
-            <div style={{ fontSize:13,color:"#8A8A9A",marginBottom:16,lineHeight:1.5 }}>
-              {activeMood?isEN?"This mood has no matches":"Esse mood nao tem resultados":search?isEN?"No places match your search":"Nenhum lugar encontrado":isEN?"Try removing some filters":"Tente remover alguns filtros"}
+          {!filteredPlaces.length&&<div style={{ textAlign:"center",padding:"60px 20px" }}>
+            <div style={{ fontSize:15,fontWeight:700,color:"#1A1A1A",marginBottom:8 }}>{isEN?"No results for":"Nenhum resultado para"} "{search}"</div>
+            <div style={{ fontSize:12,color:"#8A8A9A",marginBottom:20,lineHeight:1.6 }}>
+              {isEN?"Try: museum · free · brooklyn · date · bar · beach":"Tente: museu · gratis · brooklyn · date · bar · praia"}
             </div>
-            <div style={{ display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap" }}>
-              {activeMood&&<button onClick={()=>setActiveMood(null)} style={{ padding:"8px 16px",background:"#FF2D5520",border:"1px solid #FF2D5540",borderRadius:20,color:"#FF2D55",fontSize:12,cursor:"pointer" }}>Limpar mood</button>}
-              {search&&<button onClick={()=>{setSearch("");setSearchInput("");}} style={{ padding:"8px 16px",background:"#FF2D5520",border:"1px solid #FF2D5540",borderRadius:20,color:"#FF2D55",fontSize:12,cursor:"pointer" }}>Limpar busca</button>}
-              {activeFilter!=="todos"&&<button onClick={()=>setActiveFilter("todos")} style={{ padding:"8px 16px",background:"#FF2D5520",border:"1px solid #FF2D5540",borderRadius:20,color:"#FF2D55",fontSize:12,cursor:"pointer" }}>Mostrar todos</button>}
-              {activeCategory!=="Todos"&&<button onClick={()=>setActiveCategory("Todos")} style={{ padding:"8px 16px",background:"#FF2D5520",border:"1px solid #FF2D5540",borderRadius:20,color:"#FF2D55",fontSize:12,cursor:"pointer" }}>Todas categorias</button>}
-            </div>
+            <button onClick={()=>{setSearch("");setSearchInput("");}} style={{ padding:"10px 20px",background:"#FF2D55",border:"none",borderRadius:20,color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer" }}>{isEN?"Clear search":"Limpar busca"}</button>
           </div>}
           {filteredPlaces.map(place=>(
             <PlaceCard key={place.id} place={place} entry={entries[place.id]} onSelect={openModal} onCheckIn={setCheckIn} isEN={isEN} entries={entries} onToggleWant={handleToggleWant} onQuickAction={setQuickAction}/>
