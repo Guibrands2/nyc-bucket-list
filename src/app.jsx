@@ -2639,8 +2639,7 @@ export default function App() {
       setPlaces && null;
       setEntries(prev=>{const ne={...prev};delete ne[placeId];return ne;});
       try{await remove(ref(db,"customPlaces/"+placeId));await remove(ref(db,"entries/"+placeId));await set(ref(db,"removedIds/"+placeId),true);}
-      catch{addToast(isEN?"Remove failed.":"Erro ao remover.","error");}
-      setRemovedIds(prev=>prev.filter(x=>x!==placeId));
+      catch{addToast(isEN?"Remove failed.":"Erro ao remover.","error");setRemovedIds(prev=>prev.filter(x=>x!==placeId));}
     },5000);
   },[addToast]);
 
