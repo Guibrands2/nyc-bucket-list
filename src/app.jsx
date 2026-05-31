@@ -2630,16 +2630,16 @@ export default function App() {
   };
 
   const handleDelete = useCallback(async(placeId,placeName)=>{
-    setRemovedIds(prev=>[...prev,placeId]); setSelected(null);
+    setSelected(null);
+    await set(ref(db,"removedIds/"+placeId),true);
     let undone=false;
-    const undo=()=>{undone=true;setRemovedIds(prev=>prev.filter(x=>x!==placeId));if(removeTimers.current[placeId])clearTimeout(removeTimers.current[placeId]);};
+    const undo=async()=>{undone=true;if(removeTimers.current[placeId])clearTimeout(removeTimers.current[placeId]);await remove(ref(db,"removedIds/"+placeId));};
     addToast(placeName+" "+T.removedToast,"error",undo);
     removeTimers.current[placeId]=setTimeout(async()=>{
       if(undone)return;
-      setPlaces && null;
       setEntries(prev=>{const ne={...prev};delete ne[placeId];return ne;});
-      try{await remove(ref(db,"customPlaces/"+placeId));await remove(ref(db,"entries/"+placeId));await set(ref(db,"removedIds/"+placeId),true);}
-      catch{addToast(isEN?"Remove failed.":"Erro ao remover.","error");setRemovedIds(prev=>prev.filter(x=>x!==placeId));}
+      try{await remove(ref(db,"customPlaces/"+placeId));await remove(ref(db,"entries/"+placeId));}
+      catch{addToast(isEN?"Remove failed.":"Erro ao remover.","error");}
     },5000);
   },[addToast]);
 
