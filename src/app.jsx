@@ -559,11 +559,16 @@ function MapTab({ places, entries, onSelect, visible, detailOpen }) {
   const [ready, setReady] = useState(false);
   const [selected, setSelected] = useState(null);
   const [catFilter, setCatFilter] = useState(null);
+  const [bathroomFilter, setBathroomFilter] = useState(false);
   const [locating, setLocating] = useState(false);
 
   const MAP_CATS = ["Museus","Comida","Bares","Natureza","Entretenimento","Monumentos"];
 
-  const visiblePlaces = catFilter ? places.filter(p=>p.category===catFilter) : places;
+  const visiblePlaces = places.filter(p=>{
+    if(catFilter && p.category!==catFilter) return false;
+    if(bathroomFilter && !p.publicBathroom) return false;
+    return true;
+  });
 
   useEffect(() => {
     if (!inst.current) return;
@@ -622,7 +627,9 @@ function MapTab({ places, entries, onSelect, visible, detailOpen }) {
       const opacity = isFui ? "0.45" : "1";
       const border = isQuero ? "2.5px solid "+color : "1.5px solid "+color+"99";
       const bg = isQuero ? color : color+"55";
-      const html = `<div style='width:${size}px;height:${size}px;border-radius:50%;background:${bg};border:${border};opacity:${opacity};box-shadow:${isQuero?"0 1px 6px "+color+"60":"none"}'></div>`;
+      const html = bathroomFilter
+        ? `<div style='width:26px;height:26px;border-radius:50%;background:#0055CC;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 8px #0055CC60'>🚻</div>`
+        : `<div style='width:${size}px;height:${size}px;border-radius:50%;background:${bg};border:${border};opacity:${opacity};box-shadow:${isQuero?"0 1px 6px "+color+"60":"none"}'></div>`;
       const icon = window.L.divIcon({ html, className:"", iconSize:[size,size], iconAnchor:[size/2,size/2] });
       const m = window.L.marker([p.lat, p.lng], { icon }).addTo(inst.current);
       m.on("click", e => { e.originalEvent.stopPropagation(); setSelected(p); });
@@ -660,8 +667,11 @@ function MapTab({ places, entries, onSelect, visible, detailOpen }) {
 
       {/* Category filter bar */}
       <div style={{ display:"flex", gap:6, padding:"10px 16px 8px", overflowX:"auto", scrollbarWidth:"none", background:"#F8F7F4", borderBottom:"1px solid #E8E8EC", flexShrink:0 }} data-hscroll>
-        <button onClick={()=>setCatFilter(null)} style={{ padding:"6px 14px", borderRadius:20, border:"1px solid "+(catFilter===null?"#1A1A1A":"#E8E8EC"), background:catFilter===null?"#1A1A1A":"#FFFFFF", color:catFilter===null?"#FFFFFF":"#8A8A9A", fontSize:12, fontWeight:catFilter===null?600:400, whiteSpace:"nowrap", cursor:"pointer", flexShrink:0 }}>
+        <button onClick={()=>{setCatFilter(null);setBathroomFilter(false);}} style={{ padding:"6px 14px", borderRadius:20, border:"1px solid "+(!catFilter&&!bathroomFilter?"#1A1A1A":"#E8E8EC"), background:!catFilter&&!bathroomFilter?"#1A1A1A":"#FFFFFF", color:!catFilter&&!bathroomFilter?"#FFFFFF":"#8A8A9A", fontSize:12, fontWeight:!catFilter&&!bathroomFilter?600:400, whiteSpace:"nowrap", cursor:"pointer", flexShrink:0 }}>
           Todos
+        </button>
+        <button onClick={()=>{setBathroomFilter(b=>!b);setCatFilter(null);}} style={{ padding:"6px 14px", borderRadius:20, border:"1px solid "+(bathroomFilter?"#0055CC80":"#E8E8EC"), background:bathroomFilter?"#0055CC15":"#FFFFFF", color:bathroomFilter?"#0055CC":"#8A8A9A", fontSize:12, fontWeight:bathroomFilter?600:400, whiteSpace:"nowrap", cursor:"pointer", flexShrink:0 }}>
+          🚻 Banheiro
         </button>
         {MAP_CATS.map(cat => {
           const meta = CAT_META[cat]||{color:"#FF2D55"};
