@@ -2173,10 +2173,16 @@ const PlaceCard = memo(function PlaceCard({ place, entry, onSelect, onCheckIn, i
           </div>
         </div>
 
-        {/* Right indicator */}
-        <div style={{ flexShrink:0, display:"flex", alignItems:"center", gap:6 }}>
+        {/* Right side */}
+        <div style={{ flexShrink:0, display:"flex", alignItems:"center", gap:8 }}>
           {fp && <div style={{ width:36,height:36,borderRadius:8,overflow:"hidden",flexShrink:0 }}><img src={fp} alt="" style={{ width:"100%",height:"100%",objectFit:"cover" }}/></div>}
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#AEAEB2" strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          {!isBeen && (
+            <button
+              onClick={ev=>{ ev.stopPropagation(); onCheckIn(place); }}
+              style={{ width:32,height:32,borderRadius:"50%",background:"#1A9E4A15",border:"1px solid #1A9E4A40",color:"#1A9E4A",fontSize:15,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}
+            >✓</button>
+          )}
+          {isBeen && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#AEAEB2" strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>}
         </div>
       </div>
     </div>
