@@ -430,7 +430,7 @@ const injectCSS = () => {
     .hdr-btn:active { opacity: 0.6; }
     .pill-btn:active { opacity: 0.7; transform: scale(0.95); }
     .bottom-nav { position:fixed; bottom:0; left:0; right:0; background:#FFFFFF; border-top:1px solid #E8E8EC; display:flex; z-index:150; padding-bottom:env(safe-area-inset-bottom); }
-    .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:3px; padding:8px 4px 4px; cursor:pointer; border:none; background:none; color:#AEAEB2; transition:color 0.15s; font-family:inherit; }
+    .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:8px 4px 6px; cursor:pointer; border:none; background:none; color:#AEAEB2; transition:color 0.15s; font-family:inherit; }
     .nav-item.active { color:#FF2D55; }
     .nav-item:active { opacity:0.6; }
     .card-want { background:#0055CC08 !important; }
