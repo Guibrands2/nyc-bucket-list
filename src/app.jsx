@@ -550,7 +550,7 @@ function WeatherWidget() {
   return <div style={{ background:w.outdoor?"#F0FBF4":"#FFF0F2",border:"1px solid "+(w.outdoor?"#1A9E4A30":"#FF2D5530"),borderRadius:12,padding:"10px 14px",marginBottom:10,display:"flex",alignItems:"center",justifyContent:"space-between" }}><div style={{ display:"flex",alignItems:"center",gap:10 }}><span style={{ fontSize:24 }}>{w.icon}</span><div><div style={{ fontSize:15,fontWeight:700,color:"#1A1A1A" }}>{w.tempC}°C <span style={{ fontSize:12,color:"#8A8A9A" }}>/ {w.tempF}°F · {w.desc}</span></div><div style={{ fontSize:11,color:"#8A8A9A" }}>Min {w.minC}°C / Max {w.maxC}°C</div></div></div><div style={{ fontSize:11,fontWeight:600,color:w.outdoor?"#1A9E4A":"#FF2D55",background:(w.outdoor?"#1A9E4A":"#FF2D55")+"15",borderRadius:20,padding:"4px 10px" }}>{w.outdoor?T.goodOutdoor:T.indoorDay}</div></div>;
 }
 
-function MapTab({ places, entries, onSelect }) {
+function MapTab({ places, entries, onSelect, visible }) {
   const mapRef = useRef(null);
   const wrapRef = useRef(null);
   const inst = useRef(null);
@@ -569,6 +569,13 @@ function MapTab({ places, entries, onSelect }) {
     if (!inst.current) return;
     setTimeout(() => inst.current?.invalidateSize(), 200);
   }, [ready]);
+
+  // Invalidate size when tab becomes visible
+  useEffect(() => {
+    if (visible && inst.current) {
+      setTimeout(() => inst.current?.invalidateSize(), 50);
+    }
+  }, [visible]);
 
   useEffect(() => {
     if (window.L) { setReady(true); return; }
@@ -2830,7 +2837,7 @@ export default function App() {
         </div>}
 
         {/* Always mounted tabs — hidden with CSS to preserve state */}
-        <div style={{display:tab==="map"?"block":"none"}}><MapTab places={filteredPlaces} entries={entries} onSelect={openModal}/></div>
+        <div style={{display:tab==="map"?"block":"none"}}><MapTab places={filteredPlaces} entries={entries} onSelect={openModal} visible={tab==="map"}/></div>
         <div style={{display:tab==="planner"?"block":"none"}}><PlannerTab places={visiblePlaces} entries={entries} addToast={addToast} userLat={userLat} userLng={userLng} onAddNewPlace={name=>{setAiAddPrefill(name);setShowAIAdd(true);}}/></div>
         <div style={{display:tab==="memories"?"block":"none",padding:"0 16px 120px"}}>
           <div style={{ padding:"20px 0 16px" }}>
