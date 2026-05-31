@@ -361,16 +361,11 @@ function SeasonalBanner({ places, entries, onSelect }) {
   const accent = SEASON_COLORS[currentSeason]||"#FF2D55";
   const SEASON_LABEL = { primavera:isEN?"Spring":"Primavera", verao:isEN?"Summer":"Verão", outono:isEN?"Fall":"Outono", inverno:isEN?"Winter":"Inverno" };
   return (
-    <div onClick={()=>onSelect(pick)} style={{ background:"#FFFFFF",border:"1px solid #E8E8EC",borderLeft:"3px solid "+accent,borderRadius:14,padding:"16px 18px",marginBottom:16,cursor:"pointer",display:"flex",alignItems:"center",gap:14 }}>
-      <div style={{ fontSize:34,lineHeight:1,flexShrink:0 }}>{pick.emoji}</div>
-      <div style={{ flex:1,minWidth:0 }}>
-        <div style={{ fontSize:10,color:accent,letterSpacing:"0.12em",fontWeight:700,marginBottom:4 }}>
-          {SEASON_EMOJI[currentSeason]} {SEASON_LABEL[currentSeason].toUpperCase()}
-        </div>
-        <div style={{ fontSize:17,fontWeight:700,color:"#1A1A1A",letterSpacing:"-0.02em",lineHeight:1.2,marginBottom:3 }}>{isEN&&pick.nameEN?pick.nameEN:pick.name}</div>
-        <div style={{ fontSize:11,color:"#8A8A9A" }}>{catLabel(pick.category)}{pick.price&&pick.price!=="gratis"?" · "+pick.price:""}</div>
-      </div>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#AEAEB2" strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+    <div onClick={()=>onSelect(pick)} style={{ display:"flex",alignItems:"center",gap:10,padding:"10px 14px",background:"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:10,marginBottom:6,cursor:"pointer" }}>
+      <span style={{ fontSize:10,color:accent,fontWeight:700,letterSpacing:"0.1em",flexShrink:0 }}>{SEASON_EMOJI[currentSeason]} {SEASON_LABEL[currentSeason].toUpperCase()}</span>
+      <span style={{ fontSize:13,fontWeight:600,color:"#1A1A1A",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{isEN&&pick.nameEN?pick.nameEN:pick.name}</span>
+      <span style={{ fontSize:11,color:"#8A8A9A",flexShrink:0 }}>{catLabel(pick.category)}</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#AEAEB2" strokeWidth="2" strokeLinecap="round" style={{ flexShrink:0 }}><polyline points="9 18 15 12 9 6"/></svg>
     </div>
   );
 }
@@ -2761,19 +2756,31 @@ export default function App() {
 
         {/* List Tab */}
         {tab==="list"&&<div style={{ padding:"4px 20px 140px" }}>
+
+          {/* Quick actions */}
+          {!search&&<div style={{ display:"flex",gap:8,marginBottom:14,marginTop:4 }}>
+            <button onClick={handleNearby} style={{ display:"flex",alignItems:"center",gap:6,padding:"9px 14px",background:"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:20,color:"#1A1A1A",fontSize:12,fontWeight:600,cursor:"pointer",flex:1,justifyContent:"center" }}>
+              📍 {isEN?"Near me":"Perto de mim"}
+            </button>
+            <button onClick={()=>setShowSurpresa(true)} style={{ display:"flex",alignItems:"center",gap:6,padding:"9px 14px",background:"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:20,color:"#1A1A1A",fontSize:12,fontWeight:600,cursor:"pointer",flex:1,justifyContent:"center" }}>
+              🗓️ {isEN?"Surprise day":"Dia surpresa"}
+            </button>
+          </div>}
+
           <WeatherWidget/>
-          {!search&&<SeasonalBanner places={visiblePlaces} entries={entries} onSelect={openModal}/>}
-          {placeOfDay&&!search&&(
-            <div onClick={()=>openModal(placeOfDay)} style={{ background:"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:14,padding:"16px 18px",marginBottom:16,cursor:"pointer",display:"flex",alignItems:"center",gap:14,borderLeft:"3px solid #FF2D55" }}>
-              <div style={{ fontSize:34,lineHeight:1,flexShrink:0 }}>{placeOfDay.emoji}</div>
-              <div style={{ flex:1,minWidth:0 }}>
-                <div style={{ fontSize:10,color:"#FF2D55",letterSpacing:"0.12em",fontWeight:700,marginBottom:4 }}>{T.placeOfDay}</div>
-                <div style={{ fontSize:17,fontWeight:700,color:"#1A1A1A",letterSpacing:"-0.02em",lineHeight:1.2,marginBottom:3 }}>{isEN&&placeOfDay.nameEN?placeOfDay.nameEN:placeOfDay.name}</div>
-                <div style={{ fontSize:11,color:"#8A8A9A" }}>{catLabel(placeOfDay.category)}{placeOfDay.price&&placeOfDay.price!=="gratis"?" · "+placeOfDay.price:""}</div>
+
+          {/* Compact banners */}
+          {!search&&<>
+            <SeasonalBanner places={visiblePlaces} entries={entries} onSelect={openModal}/>
+            {placeOfDay&&(
+              <div onClick={()=>openModal(placeOfDay)} style={{ display:"flex",alignItems:"center",gap:10,padding:"10px 14px",background:"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:10,marginBottom:10,cursor:"pointer" }}>
+                <span style={{ fontSize:10,color:"#FF2D55",fontWeight:700,letterSpacing:"0.1em",flexShrink:0 }}>🎲 {T.placeOfDay}</span>
+                <span style={{ fontSize:13,fontWeight:600,color:"#1A1A1A",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{isEN&&placeOfDay.nameEN?placeOfDay.nameEN:placeOfDay.name}</span>
+                <span style={{ fontSize:11,color:"#8A8A9A",flexShrink:0 }}>{catLabel(placeOfDay.category)}</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#AEAEB2" strokeWidth="2" strokeLinecap="round" style={{ flexShrink:0 }}><polyline points="9 18 15 12 9 6"/></svg>
               </div>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#AEAEB2" strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-            </div>
-          )}
+            )}
+          </>}
 
           {!filteredPlaces.length&&<div style={{ textAlign:"center",padding:"60px 20px" }}>
             <div style={{ fontSize:15,fontWeight:700,color:"#1A1A1A",marginBottom:8 }}>{isEN?"No results for":"Nenhum resultado para"} "{search}"</div>
