@@ -763,7 +763,7 @@ function TimelineTab({ places, entries, onSelect }) {
   return <div style={{ padding:"0 16px 80px" }}>{visited.map((p,i)=>{const meta=CAT_META[p.category]||{color:"#FF2D55"},month=p.entry.date?p.entry.date.slice(0,7):"sem-data",showMonth=month!==lastMonth;lastMonth=month;const fp=p.entry.photos?p.entry.photos[0]:null;return<div key={p.id} className="fade-up">{showMonth&&<div style={{ display:"flex",alignItems:"center",gap:10,marginTop:i>0?24:0,marginBottom:14 }}><div style={{ height:1,flex:1,background:"#E8E8EC" }}/><div style={{ fontSize:11,color:"#8A8A9A",letterSpacing:"0.12em",whiteSpace:"nowrap" }}>{month!=="sem-data"?new Date(month+"-01T12:00:00").toLocaleDateString(isEN?"en-US":"pt-BR",{month:"long",year:"numeric"}).toUpperCase():"NO DATE"}</div><div style={{ height:1,flex:1,background:"#E8E8EC" }}/></div>}<div onClick={()=>onSelect(p)} style={{ display:"flex",gap:12,marginBottom:10,background:"#FFFFFF",borderRadius:14,padding:"12px",border:"1px solid #E8E8EC",cursor:"pointer" }} className="card"><div style={{ display:"flex",flexDirection:"column",alignItems:"center" }}><div style={{ width:2,flex:1,background:meta.color+"40",minHeight:16 }}/><div style={{ width:10,height:10,borderRadius:"50%",background:meta.color,flexShrink:0 }}/><div style={{ width:2,flex:1,background:meta.color+"15",minHeight:16 }}/></div>{fp?<img src={fp} alt="" style={{ width:58,height:58,borderRadius:10,objectFit:"cover",flexShrink:0 }}/>:<div style={{ width:58,height:58,borderRadius:10,background:meta.color+"20",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,flexShrink:0 }}>{p.emoji}</div>}<div style={{ flex:1,minWidth:0 }}><div style={{ fontSize:14,fontWeight:600,color:"#1A1A1A" }}>{isEN&&p.nameEN?p.nameEN:p.name}</div><div style={{ fontSize:11,color:"#8A8A9A",marginTop:2 }}>{p.entry.date&&new Date(p.entry.date+"T12:00:00").toLocaleDateString(isEN?"en-US":"pt-BR")}{p.entry.who&&" · "+WHO_EMOJI[p.entry.who]+" "+WHO_LABELS[p.entry.who]}</div>{p.entry.stars>0&&<div style={{ fontSize:13,color:"#B8860B",marginTop:3 }}>{"★".repeat(p.entry.stars)}</div>}{p.entry.note&&<div style={{ fontSize:12,color:"#8A8A9A",marginTop:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{p.entry.note}</div>}</div></div></div>;})}</div>;
 }
 
-function CuradoriaTab({ places, lists, onSaveLists, onSelectPlace }) {
+function CuradoriaTab({ places, lists, onSaveLists, onSelectPlace, onSendToPlanner }) {
   const [view, setView] = useState("home");
   const [editId, setEditId] = useState(null);
   const [newName, setNewName] = useState("");
@@ -806,30 +806,61 @@ function CuradoriaTab({ places, lists, onSaveLists, onSelectPlace }) {
       </div>
     );
 
-    if (view==="edit" && editList) return (
-      <div style={{ padding:"0 16px 80px" }}>
-        <button onClick={()=>setView("home")} style={{ background:"none",border:"none",color:"#8A8A9A",fontSize:13,cursor:"pointer",marginBottom:12 }}>{T.myCuradorias}</button>
-        <div style={{ background:"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:14,padding:"14px",marginBottom:14 }}>
-          <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start" }}>
-            <div><div style={{ fontSize:18,fontWeight:700,color:"#1A1A1A" }}>{editList.emoji} {editList.name}</div>{editList.desc&&<div style={{ fontSize:12,color:"#8A8A9A",marginTop:2 }}>{editList.desc}</div>}<div style={{ fontSize:11,color:"#8A8A9A",marginTop:4 }}>{editList.placeIds.length} {T.places}</div></div>
-            <div style={{ display:"flex",gap:6 }}>
-              <button onClick={()=>share(editList)} style={{ padding:"6px 10px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:8,color:"#8A8A9A",fontSize:12,cursor:"pointer" }}>{T.shareBtn}</button>
-              <button onClick={()=>del(editList.id)} style={{ padding:"6px 8px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:8,color:"#8A8A9A",fontSize:12,cursor:"pointer" }}>🗑</button>
-            </div>
+    if (view==="edit" && editList) {
+      const listPlaces = editList.placeIds.map(pid=>places.find(p=>p.id===pid)).filter(Boolean);
+      const sendToPlanner = () => {
+        const text = editList.emoji+" "+editList.name+(editList.desc?"\n"+editList.desc:"")+"\n\n"+
+          listPlaces.map((p,i)=>`${i+1}. ${p.emoji} ${isEN&&p.nameEN?p.nameEN:p.name} — ${catLabel(p.category)}, ${p.price||"?"}, ${p.time||"?"}`).join("\n")+
+          "\n\nMe ajude a montar o melhor roteiro com esses lugares.";
+        onSendToPlanner?.(text);
+      };
+      return (
+        <div style={{ padding:"0 16px 80px" }}>
+          <div style={{ display:"flex",alignItems:"center",gap:8,marginBottom:14 }}>
+            <button onClick={()=>setView("home")} style={{ background:"none",border:"none",color:"#8A8A9A",fontSize:13,cursor:"pointer" }}>{T.myCuradorias}</button>
+            <span style={{ color:"#E8E8EC" }}>›</span>
+            <span style={{ fontSize:13,color:"#1A1A1A",fontWeight:600 }}>{editList.emoji} {editList.name}</span>
           </div>
-          {editList.placeIds.length>0&&<div style={{ marginTop:12,borderTop:"1px solid #E8E8EC",paddingTop:10,display:"flex",flexWrap:"wrap",gap:6 }}>
-            {editList.placeIds.map(pid=>{const p=places.find(x=>x.id===pid);if(!p)return null;return<div key={pid} style={{ display:"flex",alignItems:"center",gap:5,padding:"4px 10px",background:"#FF2D5515",border:"1px solid #FF2D5540",borderRadius:20 }}><span style={{ fontSize:13 }}>{p.emoji}</span><span style={{ fontSize:12,color:"#1A1A1A" }}>{isEN&&p.nameEN?p.nameEN:p.name}</span><button onClick={()=>toggle(editList.id,pid)} style={{ background:"none",border:"none",color:"#FF2D55",cursor:"pointer",fontSize:14 }}>×</button></div>;})}
+
+          {/* Actions bar */}
+          <div style={{ display:"flex",gap:6,marginBottom:16 }}>
+            {onSendToPlanner&&listPlaces.length>0&&<button onClick={sendToPlanner} style={{ flex:1,padding:"9px",background:"#0055CC",border:"none",borderRadius:10,color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer" }}>💬 {isEN?"Plan in AI":"Planejar com IA"}</button>}
+            <button onClick={()=>share(editList)} style={{ padding:"9px 12px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:10,color:"#8A8A9A",fontSize:12,cursor:"pointer" }}>↗ {T.shareBtn}</button>
+            <button onClick={()=>del(editList.id)} style={{ padding:"9px 10px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:10,color:"#FF2D55",fontSize:12,cursor:"pointer" }}>🗑</button>
+          </div>
+
+          {/* Place cards — route view */}
+          {listPlaces.length>0&&<div style={{ marginBottom:16 }}>
+            <div style={{ fontSize:10,color:"#8A8A9A",letterSpacing:"0.1em",marginBottom:8 }}>{listPlaces.length} {isEN?"PLACES IN THIS LIST":"LUGARES NA LISTA"}</div>
+            {listPlaces.map((p,i)=>{
+              const meta=CAT_META[p.category]||{color:"#FF2D55"};
+              return <div key={p.id} style={{ display:"flex",alignItems:"center",gap:12,padding:"12px",background:"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:12,marginBottom:8,cursor:"pointer" }} onClick={()=>onSelectPlace(p)} className="card">
+                <div style={{ width:32,height:32,borderRadius:"50%",background:meta.color+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700,color:meta.color,flexShrink:0 }}>{i+1}</div>
+                <div style={{ fontSize:26,flexShrink:0 }}>{p.emoji}</div>
+                <div style={{ flex:1,minWidth:0 }}>
+                  <div style={{ fontSize:14,fontWeight:600,color:"#1A1A1A",lineHeight:1.2 }}>{isEN&&p.nameEN?p.nameEN:p.name}</div>
+                  <div style={{ fontSize:11,color:"#8A8A9A",marginTop:2 }}>
+                    <span style={{ color:meta.color,fontWeight:600 }}>{catLabel(p.category)}</span>
+                    {p.price&&p.price!=="gratis"&&<span> · {p.price}</span>}
+                    {p.time&&<span> · {p.time}</span>}
+                  </div>
+                </div>
+                <button onClick={e=>{e.stopPropagation();toggle(editList.id,p.id);}} style={{ background:"none",border:"none",color:"#AEAEB2",cursor:"pointer",fontSize:18,flexShrink:0,padding:"4px" }}>×</button>
+              </div>;
+            })}
           </div>}
+
+          {/* Add places section */}
+          <div style={{ fontSize:11,color:"#8A8A9A",letterSpacing:"0.1em",marginBottom:8 }}>{isEN?"ADD PLACES":"ADICIONAR LUGARES"}</div>
+          <div style={{ position:"relative",marginBottom:10 }}>
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder={T.filterPlaces} style={{ width:"100%",background:"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:10,padding:"9px 14px",color:"#1A1A1A",fontSize:13 }}/>
+          </div>
+          <div style={{ maxHeight:"40vh",overflowY:"auto" }}>
+            {filtered.filter(p=>!editList.placeIds.includes(p.id)).map(p=>{const meta=CAT_META[p.category]||{color:"#FF2D55"};return<div key={p.id} onClick={()=>toggle(editList.id,p.id)} style={{ display:"flex",alignItems:"center",gap:12,padding:"10px 12px",background:"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:10,marginBottom:6,cursor:"pointer" }}><span style={{ fontSize:20 }}>{p.emoji}</span><div style={{ flex:1 }}><div style={{ fontSize:13,color:"#1A1A1A" }}>{isEN&&p.nameEN?p.nameEN:p.name}</div><div style={{ fontSize:11,color:meta.color }}>{catLabel(p.category)}</div></div><div style={{ fontSize:18,color:"#E8E8EC" }}>+</div></div>;})}
+          </div>
         </div>
-        <div style={{ fontSize:13,color:"#8A8A9A",marginBottom:8 }}>{T.selectPlaces}</div>
-        <div style={{ position:"relative",marginBottom:10 }}>
-          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder={T.filterPlaces} style={{ width:"100%",background:"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:10,padding:"9px 14px",color:"#1A1A1A",fontSize:13 }}/>
-        </div>
-        <div style={{ maxHeight:"50vh",overflowY:"auto" }}>
-          {filtered.map(p=>{const inList=editList.placeIds.includes(p.id),meta=CAT_META[p.category]||{color:"#FF2D55"};return<div key={p.id} onClick={()=>toggle(editList.id,p.id)} style={{ display:"flex",alignItems:"center",gap:12,padding:"10px 12px",background:inList?"#FF2D5510":"#FFFFFF",border:"1px solid "+(inList?"#FF2D5540":"#E8E8EC"),borderRadius:10,marginBottom:6,cursor:"pointer",transition:"all 0.15s" }}><span style={{ fontSize:20 }}>{p.emoji}</span><div style={{ flex:1 }}><div style={{ fontSize:13,color:"#1A1A1A",fontWeight:inList?600:400 }}>{isEN&&p.nameEN?p.nameEN:p.name}</div><div style={{ fontSize:11,color:"#8A8A9A" }}>{catLabel(p.category)}</div></div><div style={{ width:22,height:22,borderRadius:"50%",background:inList?"#FF2D55":"none",border:"2px solid "+(inList?"#FF2D55":"#E8E8EC"),display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:"#fff",flexShrink:0 }}>{inList?"✓":""}</div></div>;})}
-        </div>
-      </div>
-    );
+      );
+    }
 
     return (
       <div style={{ padding:"0 16px 80px" }}>
@@ -1274,7 +1305,7 @@ function ShareModal({ places, entries, onClose, addToast }) {
   </div></div>;
 }
 
-function PlannerTab({ places, entries, addToast, userLat, userLng, onAddNewPlace }) {
+function PlannerTab({ places, entries, addToast, userLat, userLng, onAddNewPlace, seedMsg, onSeedConsumed }) {
   const MAX_INTERACTIONS = 8;
   const STORAGE_KEY = "nyc_planner_msgs";
   const savedMsgs = useMemo(()=>{ try{ const s=localStorage.getItem(STORAGE_KEY); return s?JSON.parse(s):null; }catch{return null;} },[]);
@@ -1292,6 +1323,11 @@ function PlannerTab({ places, entries, addToast, userLat, userLng, onAddNewPlace
 
   useEffect(()=>{ bottomRef.current?.scrollIntoView({behavior:"smooth"}); },[msgs]);
   useEffect(()=>{ try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(msgs.slice(-20))); }catch{} },[msgs]);
+  useEffect(()=>{
+    if(!seedMsg) return;
+    setMsgs(prev=>[...prev,{role:"assistant",content:"🎲 **Roteiro do Dia Surpresa**\n\n"+seedMsg+"\n\n---\n_Pode me perguntar qualquer coisa sobre este roteiro ou pedir ajustes!_",linkedPlaces:[]}]);
+    onSeedConsumed?.();
+  },[seedMsg]);
 
 
   useEffect(()=>{
@@ -1511,7 +1547,7 @@ function PlannerTab({ places, entries, addToast, userLat, userLng, onAddNewPlace
 
 
 
-function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveLists, lists }) {
+function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveLists, lists, onSendToPlanner }) {
   const [step, setStep] = useState("form");
   const [result, setResult] = useState("");
   const [linkedPlaces, setLinkedPlaces] = useState([]);
@@ -1707,9 +1743,12 @@ function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveList
             </button>}
           </div>}
           <div style={{ flex:1,overflowY:"auto",background:"#F8F7F4",borderRadius:12,padding:"14px",fontSize:13,color:"#1A1A1A",lineHeight:1.7,whiteSpace:"pre-wrap",marginBottom:12 }}>{result}</div>
+          {onSendToPlanner&&<button onClick={()=>onSendToPlanner(result)} style={{ width:"100%",padding:"12px",background:"#0055CC",border:"none",borderRadius:10,color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",marginBottom:8 }}>
+            💬 {isEN?"Continue discussing in Planner":"Continuar discutindo no Planner"}
+          </button>}
           <div style={{ display:"flex",gap:8 }}>
-            <button onClick={()=>{navigator.clipboard.writeText(result);addToast(isEN?"Copied!":"Copiado!","success");}} style={{ flex:1,padding:"11px",background:"#FF2D55",border:"none",borderRadius:10,color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer" }}>{isEN?"Copy":"Copiar"}</button>
-            <button onClick={saveAsCuradoria} disabled={!linkedPlaces.length} style={{ flex:1,padding:"11px",background:linkedPlaces.length?"#F8F7F4":"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:10,color:linkedPlaces.length?"#8A8A9A":"#E8E8EC",fontSize:13,cursor:linkedPlaces.length?"pointer":"default" }}>💾 {isEN?"Save curadoria":"Salvar curadoria"}</button>
+            <button onClick={()=>{navigator.clipboard.writeText(result);addToast(isEN?"Copied!":"Copiado!","success");}} style={{ flex:1,padding:"11px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:10,color:"#1A1A1A",fontSize:13,fontWeight:600,cursor:"pointer" }}>{isEN?"Copy":"Copiar"}</button>
+            <button onClick={saveAsCuradoria} disabled={!linkedPlaces.length} style={{ flex:1,padding:"11px",background:linkedPlaces.length?"#F8F7F4":"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:10,color:linkedPlaces.length?"#8A8A9A":"#E8E8EC",fontSize:13,cursor:linkedPlaces.length?"pointer":"default" }}>💾 {isEN?"Save":"Salvar"}</button>
             <button onClick={()=>{setStep("form");setResult("");setLinkedPlaces([]);setSelectedIds([]);}} style={{ padding:"11px 14px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:10,color:"#8A8A9A",fontSize:13,cursor:"pointer" }}>🎲</button>
           </div>
         </div>
@@ -2653,6 +2692,7 @@ export default function App() {
   const [showShare, setShowShare] = useState(false);
   const [showNearby, setShowNearby] = useState(false);
   const [showSurpresa, setShowSurpresa] = useState(false);
+  const [plannerSeed, setPlannerSeed] = useState(null);
   const [showAddEvent, setShowAddEvent] = useState(false);
   const [showAIAdd, setShowAIAdd] = useState(false);
   const [aiAddPrefill, setAiAddPrefill] = useState(null);
@@ -2934,7 +2974,7 @@ export default function App() {
 
         {/* Always mounted tabs — hidden with CSS to preserve state */}
         <div style={{display:tab==="map"?"block":"none"}}><MapTab places={filteredPlaces} entries={entries} onSelect={openModal} visible={tab==="map"} detailOpen={!!selected}/></div>
-        <div style={{display:tab==="planner"?"block":"none"}}><PlannerTab places={visiblePlaces} entries={entries} addToast={addToast} userLat={userLat} userLng={userLng} onAddNewPlace={name=>{setAiAddPrefill(name);setShowAIAdd(true);}}/></div>
+        <div style={{display:tab==="planner"?"block":"none"}}><PlannerTab places={visiblePlaces} entries={entries} addToast={addToast} userLat={userLat} userLng={userLng} onAddNewPlace={name=>{setAiAddPrefill(name);setShowAIAdd(true);}} seedMsg={plannerSeed} onSeedConsumed={()=>setPlannerSeed(null)}/></div>
         <div style={{display:tab==="memories"?"block":"none",padding:"0 16px 120px"}}>
           <div style={{ padding:"20px 0 16px" }}>
             <div style={{ fontSize:24,fontWeight:800,letterSpacing:"-0.03em",color:"#1A1A1A",marginBottom:4 }}>{isEN?"Memories":"Memórias"}</div>
@@ -2945,7 +2985,7 @@ export default function App() {
           <div style={{ fontSize:10,fontWeight:700,color:"#8A8A9A",letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:16 }}>{isEN?"Timeline":"Linha do Tempo"}</div>
           <TimelineTab places={visiblePlaces} entries={entries} onSelect={openModal}/>
         </div>
-        <div style={{display:tab==="curadoria"?"block":"none"}}><CuradoriaTab places={visiblePlaces} lists={lists} onSaveLists={saveLists} onSelectPlace={openModal}/></div>
+        <div style={{display:tab==="curadoria"?"block":"none"}}><CuradoriaTab places={visiblePlaces} lists={lists} onSaveLists={saveLists} onSelectPlace={openModal} onSendToPlanner={roteiro=>{setPlannerSeed(roteiro);setTab("planner");}}/></div>
         <div style={{display:tab==="eventos"?"block":"none"}}><EventsTab events={events} onAdd={()=>setShowAddEvent(true)} onSave={async ev=>{await set(ref(db,"events/"+ev.id),ev);}} onDelete={async id=>{await remove(ref(db,"events/"+id));setEvents(prev=>prev.filter(e=>e.id!==id));}} addToast={addToast}/></div>
       </div>
 
@@ -2958,7 +2998,7 @@ export default function App() {
       {showAdd&&<AddPlaceModal onClose={()=>setShowAdd(false)} onSave={async place=>{await set(ref(db,"customPlaces/"+place.id),place);addToast(T.placeAdded,"success");setShowAdd(false);}} addToast={addToast}/>}
       {showShare&&<ShareModal onClose={()=>setShowShare(false)} addToast={addToast}/>}
       {showNearby&&userLat&&<NearbyDrawer userLat={userLat} userLng={userLng} places={visiblePlaces} entries={entries} onSelect={openModal} onClose={()=>setShowNearby(false)}/>}
-      {showSurpresa&&<SurpresaModal places={visiblePlaces} entries={entries} weather={currentWeather} onClose={()=>setShowSurpresa(false)} addToast={addToast} onSaveLists={saveLists} lists={lists}/>}
+      {showSurpresa&&<SurpresaModal places={visiblePlaces} entries={entries} weather={currentWeather} onClose={()=>setShowSurpresa(false)} addToast={addToast} onSaveLists={saveLists} lists={lists} onSendToPlanner={roteiro=>{setPlannerSeed(roteiro);setShowSurpresa(false);setTab("planner");}}/>}
       {showAddEvent&&<AddEventModal onClose={()=>setShowAddEvent(false)} onSave={async ev=>{await set(ref(db,"events/"+ev.id),ev);addToast(isEN?"Event added!":"Evento adicionado!","success");setShowAddEvent(false);}} addToast={addToast}/>}
       {quickAction&&<QuickActionSheet place={quickAction} entry={entries[quickAction.id]} onClose={()=>setQuickAction(null)} onToggleWant={handleToggleWant} onCheckIn={p=>{setCheckIn(p);setQuickAction(null);}} onSaveToCuradoria={handleSaveToCuradoria}/>}
       {nearbyAlert&&<div onClick={()=>{openModal(nearbyAlert);setNearbyAlert(null);}} style={{ position:"fixed",bottom:80,left:"50%",transform:"translateX(-50%)",background:"#FFFFFF",border:"1px solid #1A9E4A50",borderRadius:20,padding:"10px 16px",display:"flex",alignItems:"center",gap:10,zIndex:140,boxShadow:"0 4px 20px #00000060",maxWidth:"calc(100% - 32px)",cursor:"pointer" }}>
