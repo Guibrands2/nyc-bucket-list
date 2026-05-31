@@ -429,8 +429,8 @@ const injectCSS = () => {
     .hdr-btn { transition: opacity 0.12s ease; }
     .hdr-btn:active { opacity: 0.6; }
     .pill-btn:active { opacity: 0.7; transform: scale(0.95); }
-    .bottom-nav { position:fixed; bottom:0; left:0; right:0; background:#FFFFFF; border-top:1px solid #E8E8EC; display:flex; z-index:150; padding-bottom:env(safe-area-inset-bottom); }
-    .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:8px 4px 6px; cursor:pointer; border:none; background:none; color:#AEAEB2; transition:color 0.15s; font-family:inherit; }
+    .bottom-nav { position:fixed; bottom:0; left:0; right:0; background:#FFFFFF; border-top:1px solid #E8E8EC; display:flex; align-items:flex-start; z-index:150; padding-bottom:env(safe-area-inset-bottom); }
+    .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; height:54px; cursor:pointer; border:none; background:none; color:#AEAEB2; transition:color 0.15s; font-family:inherit; padding:0 4px; flex-shrink:0; }
     .nav-item.active { color:#FF2D55; }
     .nav-item:active { opacity:0.6; }
     .card-want { background:#0055CC08 !important; }
@@ -2763,7 +2763,7 @@ export default function App() {
   );
 
   return (
-    <div style={{ minHeight:"100vh",background:"#F8F7F4",color:"#1A1A1A",fontFamily:"'Inter',system-ui,sans-serif",paddingBottom:80 }}>
+    <div style={{ minHeight:"100vh",background:"#F8F7F4",color:"#1A1A1A",fontFamily:"'Inter',system-ui,sans-serif",paddingBottom:"calc(54px + env(safe-area-inset-bottom))" }}>
       <div style={{ maxWidth:600,margin:"0 auto" }}>
         {/* Header — hidden on full-screen tabs */}
         <div style={{ padding:"14px 16px 8px",position:"sticky",top:0,background:"#F8F7F4",zIndex:100,borderBottom:"1px solid #E8E8EC",display:["map","planner"].includes(tab)?"none":"block" }}>
