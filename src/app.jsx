@@ -550,7 +550,7 @@ function WeatherWidget() {
   return <div style={{ background:w.outdoor?"#F0FBF4":"#FFF0F2",border:"1px solid "+(w.outdoor?"#1A9E4A30":"#FF2D5530"),borderRadius:12,padding:"10px 14px",marginBottom:10,display:"flex",alignItems:"center",justifyContent:"space-between" }}><div style={{ display:"flex",alignItems:"center",gap:10 }}><span style={{ fontSize:24 }}>{w.icon}</span><div><div style={{ fontSize:15,fontWeight:700,color:"#1A1A1A" }}>{w.tempC}°C <span style={{ fontSize:12,color:"#8A8A9A" }}>/ {w.tempF}°F · {w.desc}</span></div><div style={{ fontSize:11,color:"#8A8A9A" }}>Min {w.minC}°C / Max {w.maxC}°C</div></div></div><div style={{ fontSize:11,fontWeight:600,color:w.outdoor?"#1A9E4A":"#FF2D55",background:(w.outdoor?"#1A9E4A":"#FF2D55")+"15",borderRadius:20,padding:"4px 10px" }}>{w.outdoor?T.goodOutdoor:T.indoorDay}</div></div>;
 }
 
-function MapTab({ places, entries, onSelect, visible }) {
+function MapTab({ places, entries, onSelect, visible, detailOpen }) {
   const mapRef = useRef(null);
   const wrapRef = useRef(null);
   const inst = useRef(null);
@@ -680,12 +680,12 @@ function MapTab({ places, entries, onSelect, visible }) {
       </div>
 
       {/* Near me button — fixed over map */}
-      <button onClick={goNearMe} style={{ position:"fixed", bottom:selected?248:88, right:16, zIndex:500, background:"#FFFFFF", border:"1px solid #E8E8EC", borderRadius:20, padding:"8px 14px", fontSize:12, fontWeight:600, color:"#1A1A1A", cursor:"pointer", boxShadow:"0 2px 12px rgba(0,0,0,0.15)", display:"flex", alignItems:"center", gap:6, transition:"bottom 0.25s ease" }}>
+      {!detailOpen && <button onClick={goNearMe} style={{ position:"fixed", bottom:selected?248:88, right:16, zIndex:500, background:"#FFFFFF", border:"1px solid #E8E8EC", borderRadius:20, padding:"8px 14px", fontSize:12, fontWeight:600, color:"#1A1A1A", cursor:"pointer", boxShadow:"0 2px 12px rgba(0,0,0,0.15)", display:"flex", alignItems:"center", gap:6, transition:"bottom 0.25s ease" }}>
         {locating ? <span className="pulsing">●</span> : "📍"} {isEN?"Near me":"Perto de mim"}
-      </button>
+      </button>}
 
       {/* Legend */}
-      <div style={{ position:"fixed", bottom:selected?248:88, left:16, zIndex:500, background:"rgba(255,255,255,0.92)", border:"1px solid #E8E8EC", borderRadius:10, padding:"8px 10px", fontSize:10, color:"#8A8A9A", boxShadow:"0 2px 8px rgba(0,0,0,0.08)", backdropFilter:"blur(4px)", transition:"bottom 0.25s ease" }}>
+      {!detailOpen && <div style={{ position:"fixed", bottom:selected?248:88, left:16, zIndex:500, background:"rgba(255,255,255,0.92)", border:"1px solid #E8E8EC", borderRadius:10, padding:"8px 10px", fontSize:10, color:"#8A8A9A", boxShadow:"0 2px 8px rgba(0,0,0,0.08)", backdropFilter:"blur(4px)", transition:"bottom 0.25s ease" }}>
         <div style={{ display:"flex", alignItems:"center", gap:7, marginBottom:5 }}>
           <span style={{ width:14, height:14, borderRadius:"50%", background:"#1A1A1A", display:"inline-block", flexShrink:0 }}/>
           <span style={{ color:"#1A1A1A", fontWeight:600 }}>{isEN?"Want to go":"Quero ir"}</span>
@@ -698,10 +698,10 @@ function MapTab({ places, entries, onSelect, visible }) {
           <span style={{ width:9, height:9, borderRadius:"50%", background:"#8A8A9A", display:"inline-block", opacity:0.4, flexShrink:0 }}/>
           <span>{isEN?"Been there":"Já fui"}</span>
         </div>
-      </div>
+      </div>}
 
       {/* Mini card on tap — fixed at bottom */}
-      {selected && (
+      {selected && !detailOpen && (
         <div style={{ position:"fixed", bottom:60, left:0, right:0, zIndex:500, background:"#FFFFFF", borderTop:"1px solid #E8E8EC", borderRadius:"20px 20px 0 0", padding:"16px 20px 24px", boxShadow:"0 -4px 24px rgba(0,0,0,0.10)", maxWidth:600, margin:"0 auto" }}>
           <div style={{ display:"flex", alignItems:"center", gap:14 }}>
             <div style={{ fontSize:32, lineHeight:1, flexShrink:0 }}>{selected.emoji}</div>
@@ -718,7 +718,7 @@ function MapTab({ places, entries, onSelect, visible }) {
               </div>
               {selectedEntry.stars>0 && <div style={{ fontSize:13, color:"#B8860B", marginTop:3 }}>{"★".repeat(selectedEntry.stars)}</div>}
             </div>
-            <button onClick={()=>onSelect(selected)} style={{ padding:"10px 16px", background:"#FF2D55", border:"none", borderRadius:20, color:"#fff", fontSize:12, fontWeight:700, cursor:"pointer", flexShrink:0 }}>
+            <button onClick={()=>{ setSelected(null); onSelect(selected); }} style={{ padding:"10px 16px", background:"#FF2D55", border:"none", borderRadius:20, color:"#fff", fontSize:12, fontWeight:700, cursor:"pointer", flexShrink:0 }}>
               {isEN?"Open":"Abrir"} →
             </button>
           </div>
@@ -1116,7 +1116,7 @@ function DetailModal({ place, entry, places, entries, onClose, onSave, onDelete,
   };
 
   return <>
-    <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:300,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={onClose}>
+    <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:600,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={onClose}>
       <div className="modal" onTouchStart={drag.onTouchStart} onTouchEnd={drag.onTouchEnd} style={{ background:"#FFFFFF",borderTop:"1px solid #E8E8EC",borderRadius:"20px 20px 0 0",padding:"20px 16px 48px",maxWidth:560,width:"100%",maxHeight:"94vh",overflowY:"auto" }} onClick={ev=>ev.stopPropagation()}>
         {/* Drag handle */}
         <div style={{ width:36,height:4,background:"#E8E8EC",borderRadius:2,margin:"0 auto 20px" }}/>
@@ -2837,7 +2837,7 @@ export default function App() {
         </div>}
 
         {/* Always mounted tabs — hidden with CSS to preserve state */}
-        <div style={{display:tab==="map"?"block":"none"}}><MapTab places={filteredPlaces} entries={entries} onSelect={openModal} visible={tab==="map"}/></div>
+        <div style={{display:tab==="map"?"block":"none"}}><MapTab places={filteredPlaces} entries={entries} onSelect={openModal} visible={tab==="map"} detailOpen={!!selected}/></div>
         <div style={{display:tab==="planner"?"block":"none"}}><PlannerTab places={visiblePlaces} entries={entries} addToast={addToast} userLat={userLat} userLng={userLng} onAddNewPlace={name=>{setAiAddPrefill(name);setShowAIAdd(true);}}/></div>
         <div style={{display:tab==="memories"?"block":"none",padding:"0 16px 120px"}}>
           <div style={{ padding:"20px 0 16px" }}>
