@@ -552,20 +552,9 @@ function MapTab({ places, entries, onSelect }) {
 
   const visiblePlaces = catFilter ? places.filter(p=>p.category===catFilter) : places;
 
-  // Resize map to fill exact pixel height — avoids all vh/flex calculation issues
   useEffect(() => {
-    const size = () => {
-      if (!wrapRef.current) return;
-      const nav = document.querySelector(".bottom-nav");
-      const navH = nav ? nav.offsetHeight : 60;
-      const rect = wrapRef.current.getBoundingClientRect();
-      const h = window.innerHeight - rect.top - navH;
-      wrapRef.current.style.height = h + "px";
-      inst.current?.invalidateSize();
-    };
-    size();
-    window.addEventListener("resize", size);
-    return () => window.removeEventListener("resize", size);
+    if (!inst.current) return;
+    setTimeout(() => inst.current?.invalidateSize(), 200);
   }, [ready]);
 
   useEffect(() => {
@@ -665,8 +654,8 @@ function MapTab({ places, entries, onSelect }) {
       </div>
 
       {/* Map */}
-      <div ref={wrapRef} style={{ position:"relative", overflow:"hidden" }}>
-        <div ref={mapRef} style={{ width:"100%", height:"100%" }}/>
+      <div ref={wrapRef} style={{ position:"relative" }}>
+        <div ref={mapRef} style={{ width:"100%", height:"calc(100svh - 115px)", minHeight:400 }}/>
 
         {/* Near me button */}
         <button onClick={goNearMe} style={{ position:"absolute", top:12, right:12, zIndex:1000, background:"#FFFFFF", border:"1px solid #E8E8EC", borderRadius:20, padding:"8px 14px", fontSize:12, fontWeight:600, color:"#1A1A1A", cursor:"pointer", boxShadow:"0 2px 12px rgba(0,0,0,0.12)", display:"flex", alignItems:"center", gap:6 }}>
