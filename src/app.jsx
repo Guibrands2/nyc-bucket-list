@@ -1409,18 +1409,30 @@ function PlannerTab({ places, entries, addToast, userLat, userLng, onAddNewPlace
               </div>
             )}
             {m.newSuggestions&&m.newSuggestions.length>0&&(
-              <div style={{ marginLeft:38,marginTop:8,display:"flex",flexDirection:"column",gap:6 }}>
-                {m.newSuggestions.map((s,i)=>(
-                  <div key={i} style={{ display:"flex",alignItems:"center",gap:8,padding:"8px 12px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:12,borderLeft:"3px solid #FF2D55" }}>
-                    <div style={{ flex:1,minWidth:0 }}>
-                      <div style={{ fontSize:13,fontWeight:600,color:"#1A1A1A" }}>🌐 {s.name}</div>
-                      <div style={{ fontSize:11,color:"#8A8A9A",marginTop:1 }}>{s.category} · {s.price}</div>
+              <div style={{ marginLeft:38,marginTop:8,display:"flex",flexWrap:"wrap",gap:6 }}>
+                {m.newSuggestions.map((s,i)=>{
+                  const added=places.find(p=>normalize(p.name)===normalize(s.name)||normalize(p.nameEN||"")===normalize(s.name));
+                  if(added){
+                    const meta=CAT_META[added.category]||{color:"#FF2D55"};
+                    const sel=selected.includes(added.id);
+                    return(
+                      <button key={i} onClick={()=>toggleSel(added.id)} style={{ display:"flex",alignItems:"center",gap:5,padding:"6px 12px",background:sel?meta.color+"30":meta.color+"15",border:"1px solid "+(sel?meta.color+"90":meta.color+"40"),borderRadius:20,color:meta.color,fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:sel?600:400,transition:"all 0.15s" }}>
+                        {added.emoji} {isEN&&added.nameEN?added.nameEN:added.name} {sel?"✓":"+"}
+                      </button>
+                    );
+                  }
+                  return(
+                    <div key={i} style={{ display:"flex",alignItems:"center",gap:8,padding:"8px 12px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:12,borderLeft:"3px solid #FF2D55",width:"100%" }}>
+                      <div style={{ flex:1,minWidth:0 }}>
+                        <div style={{ fontSize:13,fontWeight:600,color:"#1A1A1A" }}>🌐 {s.name}</div>
+                        <div style={{ fontSize:11,color:"#8A8A9A",marginTop:1 }}>{s.category} · {s.price}</div>
+                      </div>
+                      <button onClick={()=>onAddNewPlace&&onAddNewPlace(s.name)} style={{ padding:"5px 10px",background:"#FF2D55",border:"none",borderRadius:20,color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer",flexShrink:0,whiteSpace:"nowrap" }}>
+                        + {isEN?"Add":"Adicionar"}
+                      </button>
                     </div>
-                    <button onClick={()=>onAddNewPlace&&onAddNewPlace(s.name)} style={{ padding:"5px 10px",background:"#FF2D55",border:"none",borderRadius:20,color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer",flexShrink:0,whiteSpace:"nowrap" }}>
-                      + {isEN?"Add":"Adicionar"}
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
