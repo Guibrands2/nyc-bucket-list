@@ -2249,6 +2249,7 @@ function AIAddModal({ onClose, onSavePlace, onSaveEvent, addToast, prefill }) {
   const [imagePreview, setImagePreview] = useState(null);
   const [result, setResult] = useState(null);
   const [editResult, setEditResult] = useState(null);
+  const [placeStatus, setPlaceStatus] = useState("quero");
   const [saving, setSaving] = useState(false);
   const fileRef = useRef(null);
   const drag = useDragToDismiss(onClose);
@@ -2386,7 +2387,7 @@ Retorne este JSON (type = "place" ou "event"):
         repEN:r.repEN||"",
         lat:null, lng:null
       };
-      await onSavePlace(place);
+      await onSavePlace(place, placeStatus);
       addToast(isEN?"Place added!":"Lugar adicionado!","success");
     }
     setSaving(false);
@@ -2491,6 +2492,15 @@ Retorne este JSON (type = "place" ou "event"):
             </button>
           ))}
         </div>
+
+        {/* Status — apenas para lugares */}
+        {!(editResult.type==="event"||editResult.eventDate) && <div style={{ marginBottom:16 }}>
+          <div style={{ fontSize:10,color:"#8A8A9A",letterSpacing:"0.1em",marginBottom:8 }}>{isEN?"HAVE YOU BEEN?":"JÁ ESTEVE LÁ?"}</div>
+          <div style={{ display:"flex",gap:8 }}>
+            <button onClick={()=>setPlaceStatus("quero")} style={{ flex:1,padding:"10px",borderRadius:10,background:placeStatus==="quero"?"#0055CC15":"#F8F7F4",border:"1px solid "+(placeStatus==="quero"?"#0055CC60":"#E8E8EC"),color:placeStatus==="quero"?"#0055CC":"#AEAEB2",fontSize:13,fontWeight:placeStatus==="quero"?600:400,cursor:"pointer" }}>♡ {isEN?"Want to go":"Quero ir"}</button>
+            <button onClick={()=>setPlaceStatus("fui")} style={{ flex:1,padding:"10px",borderRadius:10,background:placeStatus==="fui"?"#1A9E4A15":"#F8F7F4",border:"1px solid "+(placeStatus==="fui"?"#1A9E4A60":"#E8E8EC"),color:placeStatus==="fui"?"#1A9E4A":"#AEAEB2",fontSize:13,fontWeight:placeStatus==="fui"?600:400,cursor:"pointer" }}>✓ {isEN?"Been there":"Já fui"}</button>
+          </div>
+        </div>}
 
         <button onClick={confirm} disabled={saving} style={{ width:"100%",padding:"14px",background:saving?"#E8E8EC":"#FF2D55",border:"none",borderRadius:12,color:saving?"#AEAEB2":"#fff",fontSize:14,fontWeight:700,cursor:saving?"default":"pointer" }}>
           {saving?"Salvando...":(isEN?"Add to my list ✓":"Adicionar à minha lista ✓")}
@@ -2857,7 +2867,7 @@ export default function App() {
       {checkIn&&<CheckInModal place={checkIn} onClose={()=>setCheckIn(null)} onSave={async data=>{await handleSave(checkIn.id,data);}} addToast={addToast}/>}
       {/* FAB Menu overlay */}
       {/* FAB action buttons */}
-      {showAIAdd&&<AIAddModal onClose={()=>{setShowAIAdd(false);setAiAddPrefill(null);}} onSavePlace={async place=>{await set(ref(db,"customPlaces/"+place.id),place);setShowAIAdd(false);setAiAddPrefill(null);}} onSaveEvent={async ev=>{await set(ref(db,"events/"+ev.id),ev);setShowAIAdd(false);setAiAddPrefill(null);}} addToast={addToast} prefill={aiAddPrefill}/>}
+      {showAIAdd&&<AIAddModal onClose={()=>{setShowAIAdd(false);setAiAddPrefill(null);}} onSavePlace={async (place,status)=>{await set(ref(db,"customPlaces/"+place.id),place);if(status){const today=new Date().toISOString().split("T")[0];await handleSave(place.id,{status,date:today,who:"juntos",note:"",photos:[],stars:0,thumb:null,vibes:[],price:place.price||null,petFriendly:false,publicBathroom:false,season:place.season||"sempre",spent:null,needsReservation:place.needsReservation||false,hours:place.hours||""});}setShowAIAdd(false);setAiAddPrefill(null);}} onSaveEvent={async ev=>{await set(ref(db,"events/"+ev.id),ev);setShowAIAdd(false);setAiAddPrefill(null);}} addToast={addToast} prefill={aiAddPrefill}/>}
       {showAdd&&<AddPlaceModal onClose={()=>setShowAdd(false)} onSave={async place=>{await set(ref(db,"customPlaces/"+place.id),place);addToast(T.placeAdded,"success");setShowAdd(false);}} addToast={addToast}/>}
       {showShare&&<ShareModal onClose={()=>setShowShare(false)} addToast={addToast}/>}
       {showNearby&&userLat&&<NearbyDrawer userLat={userLat} userLng={userLng} places={visiblePlaces} entries={entries} onSelect={openModal} onClose={()=>setShowNearby(false)}/>}
