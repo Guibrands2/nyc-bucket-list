@@ -562,7 +562,7 @@ function MapTab({ places, entries, onSelect, visible, detailOpen }) {
   const [bathroomFilter, setBathroomFilter] = useState(false);
   const [locating, setLocating] = useState(false);
 
-  const MAP_CATS = ["Museus","Comida","Bares","Natureza","Entretenimento","Monumentos"];
+  const MAP_CATS = ["Museus","Comida","Bares","Natureza","Entretenimento","Monumentos","Daytrips"];
 
   const visiblePlaces = places.filter(p=>{
     if(catFilter && p.category!==catFilter) return false;
@@ -611,6 +611,24 @@ function MapTab({ places, entries, onSelect, visible, detailOpen }) {
     window.L.control.zoom({ position:"bottomright" }).addTo(inst.current);
     inst.current.on("click", () => setSelected(null));
   }, [ready]);
+
+  // Fit map to visible markers when filter changes
+  useEffect(() => {
+    if (!inst.current || !ready) return;
+    const withCoords = visiblePlaces.filter(p=>p.lat&&p.lng);
+    if (!withCoords.length) return;
+    if (catFilter === "Daytrips") {
+      const lats = withCoords.map(p=>p.lat);
+      const lngs = withCoords.map(p=>p.lng);
+      const bounds = window.L.latLngBounds(
+        [Math.min(...lats)-0.5, Math.min(...lngs)-0.5],
+        [Math.max(...lats)+0.5, Math.max(...lngs)+0.5]
+      );
+      inst.current.fitBounds(bounds, { padding:[40,40], maxZoom:10 });
+    } else if (!catFilter && !bathroomFilter) {
+      inst.current.flyTo([40.730,-73.990], 12, { duration:0.8 });
+    }
+  }, [catFilter, bathroomFilter]);
 
   useEffect(() => {
     if (!inst.current) return;
