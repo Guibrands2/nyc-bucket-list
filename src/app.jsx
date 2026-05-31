@@ -690,12 +690,12 @@ function MapTab({ places, entries, onSelect, visible, detailOpen }) {
       </div>
 
       {/* Near me button — fixed over map */}
-      {!detailOpen && <button onClick={goNearMe} style={{ position:"fixed", bottom:selected?248:88, right:16, zIndex:500, background:"#FFFFFF", border:"1px solid #E8E8EC", borderRadius:20, padding:"8px 14px", fontSize:12, fontWeight:600, color:"#1A1A1A", cursor:"pointer", boxShadow:"0 2px 12px rgba(0,0,0,0.15)", display:"flex", alignItems:"center", gap:6, transition:"bottom 0.25s ease" }}>
+      {visible && !detailOpen && <button onClick={goNearMe} style={{ position:"fixed", bottom:selected?248:88, right:16, zIndex:500, background:"#FFFFFF", border:"1px solid #E8E8EC", borderRadius:20, padding:"8px 14px", fontSize:12, fontWeight:600, color:"#1A1A1A", cursor:"pointer", boxShadow:"0 2px 12px rgba(0,0,0,0.15)", display:"flex", alignItems:"center", gap:6, transition:"bottom 0.25s ease" }}>
         {locating ? <span className="pulsing">●</span> : "📍"} {isEN?"Near me":"Perto de mim"}
       </button>}
 
       {/* Legend */}
-      {!detailOpen && <div style={{ position:"fixed", bottom:selected?248:88, left:16, zIndex:500, background:"rgba(255,255,255,0.92)", border:"1px solid #E8E8EC", borderRadius:10, padding:"8px 10px", fontSize:10, color:"#8A8A9A", boxShadow:"0 2px 8px rgba(0,0,0,0.08)", backdropFilter:"blur(4px)", transition:"bottom 0.25s ease" }}>
+      {visible && !detailOpen && <div style={{ position:"fixed", bottom:selected?248:88, left:16, zIndex:500, background:"rgba(255,255,255,0.92)", border:"1px solid #E8E8EC", borderRadius:10, padding:"8px 10px", fontSize:10, color:"#8A8A9A", boxShadow:"0 2px 8px rgba(0,0,0,0.08)", backdropFilter:"blur(4px)", transition:"bottom 0.25s ease" }}>
         <div style={{ display:"flex", alignItems:"center", gap:7, marginBottom:5 }}>
           <span style={{ width:14, height:14, borderRadius:"50%", background:"#1A1A1A", display:"inline-block", flexShrink:0 }}/>
           <span style={{ color:"#1A1A1A", fontWeight:600 }}>{isEN?"Want to go":"Quero ir"}</span>
@@ -1497,6 +1497,7 @@ function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveList
   const [step, setStep] = useState("form");
   const [result, setResult] = useState("");
   const [linkedPlaces, setLinkedPlaces] = useState([]);
+  const [selectedIds, setSelectedIds] = useState(new Set());
   const [previewPlace, setPreviewPlace] = useState(null);
   const [loading, setLoading] = useState(false);
   const [startLoc, setStartLoc] = useState("Jersey City, NJ");
@@ -1580,6 +1581,44 @@ function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveList
     setLoading(false); setStep("result");
   };
 
+  const refine = async () => {
+    const mustHave = linkedPlaces.filter(p=>selectedIds.has(p.id));
+    if(!mustHave.length) return;
+    setStep("loading"); setLoading(true);
+    const mustNames = mustHave.map(p=>isEN&&p.nameEN?p.nameEN:p.name).join(", ");
+    const available = places.filter(p=>{
+      const e=entries[p.id]||{};
+      if(e.status==="fui"&&!params.incluirVisitados) return false;
+      if(params.exclusoes.includes(p.category)) return false;
+      return true;
+    });
+    const catalog = available.map(p=>(isEN&&p.nameEN?p.nameEN:p.name)+" | "+catLabel(p.category)+" | "+p.price+" | "+(p.time||"?")).join("\n");
+    const prompt = "Remonte o roteiro para Gui e Gabriel priorizando os seguintes lugares que eles gostaram: "+mustNames+".\n"+
+      "REGRAS:\n"+
+      "1. Os lugares acima sao OBRIGATORIOS no roteiro.\n"+
+      "2. Pode adicionar outros lugares da lista se encaixar bem no tempo disponivel.\n"+
+      "3. Use SOMENTE lugares da LISTA. Nunca invente lugares.\n"+
+      "4. Otimize a LOGISTICA: ordene geograficamente para minimizar deslocamento.\n"+
+      "5. Detalhe como ir de um lugar ao outro (metro especifico + saida + tempo a pe).\n"+
+      "6. No final: [lugares: Nome1, Nome2, Nome3]\n\n"+
+      "PARAMETROS ORIGINAIS:\n"+
+      "- Saindo de: "+startLoc+"\n"+
+      "- Hora de saida: "+(params.horaSaida||"agora")+"\n"+
+      "- Tempo disponivel: "+params.horas+"\n"+
+      "- Budget: "+params.budget+"\n"+
+      "\nLISTA DISPONIVEL:\n"+catalog+"\n\n"+
+      "Responda em "+(isEN?"English":"portugues brasileiro")+".";
+    try{
+      const r=await fetch(AI_PROXY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:[{role:"user",content:prompt}],max_tokens:2048})});
+      const d=await r.json();
+      const text=d.content?.[0]?.text||"Erro.";
+      const linked=parseLinked(text);
+      const display=text.replace(/\[lugares:[^\]]+\]/gi,"").trim();
+      setResult(display); setLinkedPlaces(linked); setSelectedIds(new Set());
+    }catch{setResult(isEN?"Connection error.":"Erro ao conectar.");}
+    setLoading(false); setStep("result");
+  };
+
   const saveAsCuradoria = () => {
     if(!linkedPlaces.length) return;
     const nova = {id:"l"+Date.now(),name:isEN?"Surprise Day":"Dia Surpresa",emoji:"🎲",desc:new Date().toLocaleDateString(isEN?"en-US":"pt-BR"),placeIds:linkedPlaces.map(p=>p.id)};
@@ -1626,16 +1665,24 @@ function SurpresaModal({ places, entries, weather, onClose, addToast, onSaveList
             <button onClick={onClose} style={{ background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:8,width:32,height:32,color:"#8A8A9A",cursor:"pointer",fontSize:16 }}>×</button>
           </div>
           <div style={{ marginBottom:10 }}>
-            <div style={{ fontSize:10,color:"#8A8A9A",letterSpacing:"0.1em",marginBottom:6 }}>{isEN?"PLACES IN THIS ROUTE":"LUGARES NESTE ROTEIRO"}</div>
+            <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6 }}>
+              <div style={{ fontSize:10,color:"#8A8A9A",letterSpacing:"0.1em" }}>{isEN?"PLACES IN THIS ROUTE — TAP TO SELECT":"LUGARES DO ROTEIRO — TOQUE PARA SELECIONAR"}</div>
+              {selectedIds.size>0&&<div style={{ fontSize:10,color:"#1A9E4A",fontWeight:600 }}>{selectedIds.size} {isEN?"selected":"selecionados"}</div>}
+            </div>
             {linkedPlaces.length>0?<div style={{ display:"flex",flexWrap:"wrap",gap:5 }}>
-              {linkedPlaces.map(p=>{const meta=CAT_META[p.category]||{color:"#FF2D55"};return<button key={p.id} onClick={()=>setPreviewPlace(p)} style={{ display:"flex",alignItems:"center",gap:5,padding:"5px 10px",background:meta.color+"18",border:"1px solid "+meta.color+"40",borderRadius:20,color:meta.color,fontSize:11,cursor:"pointer",fontFamily:"inherit" }}>{p.emoji} {isEN&&p.nameEN?p.nameEN:p.name} ↗</button>;})}  
+              {linkedPlaces.map(p=>{
+                const meta=CAT_META[p.category]||{color:"#FF2D55"};
+                const isSel=selectedIds.has(p.id);
+                return<button key={p.id} onClick={()=>setSelectedIds(prev=>{const n=new Set(prev);isSel?n.delete(p.id):n.add(p.id);return n;})} onLongPress={()=>setPreviewPlace(p)} style={{ display:"flex",alignItems:"center",gap:5,padding:"5px 10px",background:isSel?"#1A9E4A20":meta.color+"18",border:"1px solid "+(isSel?"#1A9E4A":meta.color+"40"),borderRadius:20,color:isSel?"#1A9E4A":meta.color,fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:isSel?700:400 }}>{isSel?"✓ ":""}{p.emoji} {isEN&&p.nameEN?p.nameEN:p.name}</button>;
+              })}
             </div>:<div style={{ fontSize:12,color:"#8A8A9A",fontStyle:"italic" }}>{isEN?"Claude did not specify places":"Claude nao especificou lugares"}</div>}
+            {selectedIds.size>0&&<button onClick={refine} style={{ marginTop:8,width:"100%",padding:"10px",background:"#1A9E4A",border:"none",borderRadius:10,color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer" }}>🔄 {isEN?"Rebuild route with these "+selectedIds.size+" places":"Remontar roteiro com esses "+selectedIds.size+" lugares"}</button>}
           </div>
           <div style={{ flex:1,overflowY:"auto",background:"#F8F7F4",borderRadius:12,padding:"14px",fontSize:13,color:"#1A1A1A",lineHeight:1.7,whiteSpace:"pre-wrap",marginBottom:12 }}>{result}</div>
           <div style={{ display:"flex",gap:8 }}>
             <button onClick={()=>{navigator.clipboard.writeText(result);addToast(isEN?"Copied!":"Copiado!","success");}} style={{ flex:1,padding:"11px",background:"#FF2D55",border:"none",borderRadius:10,color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer" }}>{isEN?"Copy":"Copiar"}</button>
             <button onClick={saveAsCuradoria} disabled={!linkedPlaces.length} style={{ flex:1,padding:"11px",background:linkedPlaces.length?"#F8F7F4":"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:10,color:linkedPlaces.length?"#8A8A9A":"#E8E8EC",fontSize:13,cursor:linkedPlaces.length?"pointer":"default" }}>💾 {isEN?"Save curadoria":"Salvar curadoria"}</button>
-            <button onClick={()=>{setStep("form");setResult("");setLinkedPlaces([]);}} style={{ padding:"11px 14px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:10,color:"#8A8A9A",fontSize:13,cursor:"pointer" }}>🎲</button>
+            <button onClick={()=>{setStep("form");setResult("");setLinkedPlaces([]);setSelectedIds(new Set());}} style={{ padding:"11px 14px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:10,color:"#8A8A9A",fontSize:13,cursor:"pointer" }}>🎲</button>
           </div>
         </div>
       </div>
