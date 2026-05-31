@@ -1325,7 +1325,11 @@ function PlannerTab({ places, entries, addToast, userLat, userLng, onAddNewPlace
   useEffect(()=>{ try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(msgs.slice(-20))); }catch{} },[msgs]);
   useEffect(()=>{
     if(!seedMsg) return;
-    setMsgs(prev=>[...prev,{role:"assistant",content:"🎲 **Roteiro do Dia Surpresa**\n\n"+seedMsg+"\n\n---\n_Pode me perguntar qualquer coisa sobre este roteiro ou pedir ajustes!_",linkedPlaces:[]}]);
+    setMsgs(prev=>[
+      ...prev,
+      {role:"user", content:"[Roteiro gerado pelo Dia Surpresa — use como contexto da conversa]", linkedPlaces:[], _hidden:true},
+      {role:"assistant", content:"🎲 **Roteiro do Dia Surpresa**\n\n"+seedMsg+"\n\n---\n_Pode me perguntar qualquer coisa sobre este roteiro ou pedir ajustes!_", linkedPlaces:[]}
+    ]);
     onSeedConsumed?.();
   },[seedMsg]);
 
@@ -1378,7 +1382,7 @@ function PlannerTab({ places, entries, addToast, userLat, userLng, onAddNewPlace
     const newMsgs=[...msgs,{role:"user",content:userMsg,linkedPlaces:[]}];
     setMsgs(newMsgs); setLoading(true);
     const selNames=selected.map(id=>{const p=places.find(x=>x.id===id);return p?(isEN&&p.nameEN?p.nameEN:p.name):"";}).filter(Boolean).join(", ");
-    const ctx="Voce e assistente pessoal de Gui e Gabriel para o NYC Bucket List.\n"+
+    const systemCtx="Voce e assistente pessoal de Gui e Gabriel para o NYC Bucket List.\n"+
       "REGRAS:\n"+
       "1. Prefira sugerir lugares da LISTA abaixo — use o nome exato.\n"+
       "2. Se nao houver lugar adequado na lista, use web search para descobrir novos lugares em NYC.\n"+
@@ -1387,9 +1391,20 @@ function PlannerTab({ places, entries, addToast, userLat, userLng, onAddNewPlace
       "5. Prefira metro + caminhada.\n"+
       "Saindo de: "+startLoc+".\n"+(selNames?"Ja selecionados: "+selNames+".\n":"")+
       "LISTA DELES (♥ = wishlist):\n"+buildCatalog();
+
+    // Build proper multi-turn history (skip initial greeting at index 0)
+    const history = [];
+    for(let i=1; i<newMsgs.length-1; i++){
+      const m=newMsgs[i];
+      history.push({role:m.role, content:m._hidden?"[contexto transferido do Dia Surpresa]":m.content});
+    }
+    // Ensure history starts with user (API requirement)
+    if(history.length && history[0].role==="assistant") history.unshift({role:"user",content:"Ola!"});
+
     try{
       const r=await fetch(AI_PROXY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
-        messages:[{role:"user",content:ctx+"\n\nPergunta: "+userMsg}],
+        system: systemCtx,
+        messages:[...history,{role:"user",content:userMsg}],
         max_tokens:2048,
         web_search:true
       })});
