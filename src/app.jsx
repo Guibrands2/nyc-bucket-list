@@ -2695,7 +2695,7 @@ export default function App() {
     {id:"dog",label:"🐾 Com o dog",filter:p=>p.petFriendly},
   ];
 
-  const hasAnyFilter = activeFilter!=="todos"||activeCategory!=="Todos"||search||filterVibes.length||filterPrices.length||filterSeasons.length||filterStars>0||filterThumb||filterPet||filterBathroom||filterRegion||activeMood;
+  const hasAnyFilter = !!search;
 
   const filteredPlaces = useMemo(()=>{
     const KEYWORD_MAP = [
