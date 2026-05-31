@@ -2846,13 +2846,10 @@ export default function App() {
           ))}
         </div>}
 
-        {tab==="stats"&&<StatsTab places={visiblePlaces} entries={entries}/>}
-        {tab==="map"&&<MapTab places={filteredPlaces} entries={entries} onSelect={openModal}/>}
-        {tab==="timeline"&&<TimelineTab places={visiblePlaces} entries={entries} onSelect={openModal}/>}
-        {tab==="curadoria"&&<CuradoriaTab places={visiblePlaces} lists={lists} onSaveLists={saveLists} onSelectPlace={openModal}/>}
-        {tab==="eventos"&&<EventsTab events={events} onAdd={()=>setShowAddEvent(true)} onSave={async ev=>{await set(ref(db,"events/"+ev.id),ev);}} onDelete={async id=>{await remove(ref(db,"events/"+id));setEvents(prev=>prev.filter(e=>e.id!==id));}} addToast={addToast}/>}
-        {tab==="planner"&&<PlannerTab places={visiblePlaces} entries={entries} addToast={addToast} userLat={userLat} userLng={userLng} onAddNewPlace={name=>{setAiAddPrefill(name);setShowAIAdd(true);}}/>}
-        {tab==="memories"&&<div style={{ padding:"0 16px 120px" }}>
+        {/* Always mounted tabs — hidden with CSS to preserve state */}
+        <div style={{display:tab==="map"?"block":"none"}}><MapTab places={filteredPlaces} entries={entries} onSelect={openModal}/></div>
+        <div style={{display:tab==="planner"?"block":"none"}}><PlannerTab places={visiblePlaces} entries={entries} addToast={addToast} userLat={userLat} userLng={userLng} onAddNewPlace={name=>{setAiAddPrefill(name);setShowAIAdd(true);}}/></div>
+        <div style={{display:tab==="memories"?"block":"none",padding:"0 16px 120px"}}>
           <div style={{ padding:"20px 0 16px" }}>
             <div style={{ fontSize:24,fontWeight:800,letterSpacing:"-0.03em",color:"#1A1A1A",marginBottom:4 }}>{isEN?"Memories":"Memórias"}</div>
             <div style={{ fontSize:12,color:"#8A8A9A",fontWeight:500 }}>{visitedCount} {isEN?"places visited":"lugares visitados"}</div>
@@ -2861,7 +2858,9 @@ export default function App() {
           <div style={{ height:1,background:"#E8E8EC",margin:"24px 0" }}/>
           <div style={{ fontSize:10,fontWeight:700,color:"#8A8A9A",letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:16 }}>{isEN?"Timeline":"Linha do Tempo"}</div>
           <TimelineTab places={visiblePlaces} entries={entries} onSelect={openModal}/>
-        </div>}
+        </div>
+        <div style={{display:tab==="curadoria"?"block":"none"}}><CuradoriaTab places={visiblePlaces} lists={lists} onSaveLists={saveLists} onSelectPlace={openModal}/></div>
+        <div style={{display:tab==="eventos"?"block":"none"}}><EventsTab events={events} onAdd={()=>setShowAddEvent(true)} onSave={async ev=>{await set(ref(db,"events/"+ev.id),ev);}} onDelete={async id=>{await remove(ref(db,"events/"+id));setEvents(prev=>prev.filter(e=>e.id!==id));}} addToast={addToast}/></div>
       </div>
 
       {/* Modals */}
