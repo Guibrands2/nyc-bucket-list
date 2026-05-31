@@ -616,14 +616,14 @@ function MapTab({ places, entries, onSelect }) {
   const selectedMeta = selected ? (CAT_META[selected.category]||{color:"#FF2D55"}) : null;
 
   if (!ready) return (
-    <div style={{ height:"calc(100vh - 140px)", display:"flex", alignItems:"center", justifyContent:"center", color:"#8A8A9A", flexDirection:"column", gap:8 }}>
+    <div style={{ position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:101,background:"#F8F7F4",display:"flex",alignItems:"center",justifyContent:"center",color:"#8A8A9A",flexDirection:"column",gap:8 }}>
       <div className="pulsing" style={{ fontSize:32 }}>🗺</div>
       <div style={{ fontSize:13 }}>Carregando mapa...</div>
     </div>
   );
 
   return (
-    <div style={{ position:"relative", height:"calc(100vh - 140px)", display:"flex", flexDirection:"column" }}>
+    <div style={{ position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:101,display:"flex",flexDirection:"column" }}>
 
       {/* Category filter bar */}
       <div style={{ display:"flex", gap:6, padding:"10px 16px 8px", overflowX:"auto", scrollbarWidth:"none", background:"#F8F7F4", borderBottom:"1px solid #E8E8EC", flexShrink:0 }} data-hscroll>
