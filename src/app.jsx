@@ -1239,7 +1239,7 @@ function ShareModal({ places, entries, onClose, addToast }) {
   </div></div>;
 }
 
-function PlannerTab({ places, entries, addToast, userLat, userLng }) {
+function PlannerTab({ places, entries, addToast, userLat, userLng, onAddNewPlace }) {
   const MAX_INTERACTIONS = 8;
   const [msgs, setMsgs] = useState([{role:"assistant",content:T.chatGreeting,linkedPlaces:[]}]);
   const [input, setInput] = useState("");
@@ -1416,7 +1416,7 @@ function PlannerTab({ places, entries, addToast, userLat, userLng }) {
                       <div style={{ fontSize:13,fontWeight:600,color:"#1A1A1A" }}>🌐 {s.name}</div>
                       <div style={{ fontSize:11,color:"#8A8A9A",marginTop:1 }}>{s.category} · {s.price}</div>
                     </div>
-                    <button onClick={()=>addToast(isEN?"Opening add form...":"Abrindo formulário...","info")} style={{ padding:"5px 10px",background:"#FF2D55",border:"none",borderRadius:20,color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer",flexShrink:0,whiteSpace:"nowrap" }}>
+                    <button onClick={()=>onAddNewPlace&&onAddNewPlace(s.name)} style={{ padding:"5px 10px",background:"#FF2D55",border:"none",borderRadius:20,color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer",flexShrink:0,whiteSpace:"nowrap" }}>
                       + {isEN?"Add":"Adicionar"}
                     </button>
                   </div>
@@ -2218,9 +2218,9 @@ const PlaceCard = memo(function PlaceCard({ place, entry, onSelect, onCheckIn, i
 
 
 // ─── AI ADD MODAL ─────────────────────────────────────────────────────────────
-function AIAddModal({ onClose, onSavePlace, onSaveEvent, addToast }) {
+function AIAddModal({ onClose, onSavePlace, onSaveEvent, addToast, prefill }) {
   const [mode, setMode] = useState("input"); // input | loading | preview
-  const [inputText, setInputText] = useState("");
+  const [inputText, setInputText] = useState(prefill||"");
   const [imageBase64, setImageBase64] = useState(null);
   const [imageMime, setImageMime] = useState("image/jpeg");
   const [imagePreview, setImagePreview] = useState(null);
@@ -2229,8 +2229,14 @@ function AIAddModal({ onClose, onSavePlace, onSaveEvent, addToast }) {
   const [saving, setSaving] = useState(false);
   const fileRef = useRef(null);
   const drag = useDragToDismiss(onClose);
+  const analyzedPrefill = useRef(false);
 
   const CATEGORIES_LIST = ["Museus","Monumentos","Observatorios","Natureza","Praias","Livrarias","Lojas","Entretenimento","Compras","Bairros","Comida","Mercados & Delis","Dispensaries","Bares","Daytrips"];
+
+  // Auto-analyze when prefill is provided
+  useEffect(()=>{
+    if(prefill&&!analyzedPrefill.current){ analyzedPrefill.current=true; setTimeout(()=>analyze(),100); }
+  },[]);
 
   const handleImage = e => {
     const file = e.target.files[0];
@@ -2542,6 +2548,7 @@ export default function App() {
   const [showSurpresa, setShowSurpresa] = useState(false);
   const [showAddEvent, setShowAddEvent] = useState(false);
   const [showAIAdd, setShowAIAdd] = useState(false);
+  const [aiAddPrefill, setAiAddPrefill] = useState(null);
   const [showFAB, setShowFAB] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [placeOfDay, setPlaceOfDay] = useState(null);
@@ -2832,7 +2839,7 @@ export default function App() {
         {tab==="timeline"&&<TimelineTab places={visiblePlaces} entries={entries} onSelect={openModal}/>}
         {tab==="curadoria"&&<CuradoriaTab places={visiblePlaces} lists={lists} onSaveLists={saveLists} onSelectPlace={openModal}/>}
         {tab==="eventos"&&<EventsTab events={events} onAdd={()=>setShowAddEvent(true)} onSave={async ev=>{await set(ref(db,"events/"+ev.id),ev);}} onDelete={async id=>{await remove(ref(db,"events/"+id));setEvents(prev=>prev.filter(e=>e.id!==id));}} addToast={addToast}/>}
-        {tab==="planner"&&<PlannerTab places={visiblePlaces} entries={entries} addToast={addToast} userLat={userLat} userLng={userLng}/>}
+        {tab==="planner"&&<PlannerTab places={visiblePlaces} entries={entries} addToast={addToast} userLat={userLat} userLng={userLng} onAddNewPlace={name=>{setAiAddPrefill(name);setShowAIAdd(true);}}/>}
         {tab==="memories"&&<div style={{ padding:"0 16px 120px" }}>
           <div style={{ padding:"20px 0 16px" }}>
             <div style={{ fontSize:24,fontWeight:800,letterSpacing:"-0.03em",color:"#1A1A1A",marginBottom:4 }}>{isEN?"Memories":"Memórias"}</div>
@@ -2850,7 +2857,7 @@ export default function App() {
       {checkIn&&<CheckInModal place={checkIn} onClose={()=>setCheckIn(null)} onSave={async data=>{await handleSave(checkIn.id,data);}} addToast={addToast}/>}
       {/* FAB Menu overlay */}
       {/* FAB action buttons */}
-      {showAIAdd&&<AIAddModal onClose={()=>setShowAIAdd(false)} onSavePlace={async place=>{await set(ref(db,"customPlaces/"+place.id),place);}} onSaveEvent={async ev=>{await set(ref(db,"events/"+ev.id),ev);setShowAIAdd(false);}} addToast={addToast}/>}
+      {showAIAdd&&<AIAddModal onClose={()=>{setShowAIAdd(false);setAiAddPrefill(null);}} onSavePlace={async place=>{await set(ref(db,"customPlaces/"+place.id),place);setShowAIAdd(false);setAiAddPrefill(null);}} onSaveEvent={async ev=>{await set(ref(db,"events/"+ev.id),ev);setShowAIAdd(false);setAiAddPrefill(null);}} addToast={addToast} prefill={aiAddPrefill}/>}
       {showAdd&&<AddPlaceModal onClose={()=>setShowAdd(false)} onSave={async place=>{await set(ref(db,"customPlaces/"+place.id),place);addToast(T.placeAdded,"success");setShowAdd(false);}} addToast={addToast}/>}
       {showShare&&<ShareModal onClose={()=>setShowShare(false)} addToast={addToast}/>}
       {showPlanner&&<PlannerChatModal places={visiblePlaces} entries={entries} onClose={()=>setShowPlanner(false)} addToast={addToast} userLat={userLat} userLng={userLng}/>}
