@@ -12,7 +12,7 @@ const firebaseConfig = {
   appId: "1:974412129874:web:b7343be650f319204de18b"
 };
 
-const AI_PROXY = "https://nyc-ai-proxy.guibrandao-pagamentos.workers.dev";
+const AI_PROXY = "https://nyc-ai-proxy.gabmonteiro.workers.dev";
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getDatabase(firebaseApp);
 
