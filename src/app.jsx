@@ -1337,7 +1337,16 @@ function ShareModal({ places, entries, onClose, addToast }) {
 function PlannerTab({ places, entries, addToast, userLat, userLng, onAddNewPlace, seedMsg, onSeedConsumed, onSaveToCuradoria, events, onSurpresa }) {
   const MAX_INTERACTIONS = 8;
   const STORAGE_KEY = "nyc_planner_msgs";
-  const savedMsgs = useMemo(()=>{ try{ const s=localStorage.getItem(STORAGE_KEY); return s?JSON.parse(s):null; }catch{return null;} },[]);
+  const STORAGE_TS_KEY = "nyc_planner_ts";
+  const SESSION_TTL_MS = 6 * 60 * 60 * 1000; // 6 horas
+  const savedMsgs = useMemo(()=>{
+    try{
+      const ts = parseInt(localStorage.getItem(STORAGE_TS_KEY)||"0");
+      if(Date.now()-ts > SESSION_TTL_MS) return null; // expirado
+      const s=localStorage.getItem(STORAGE_KEY);
+      return s?JSON.parse(s):null;
+    }catch{return null;}
+  },[]);
   const [msgs, setMsgs] = useState(savedMsgs||[{role:"assistant",content:T.chatGreeting,linkedPlaces:[]}]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -1353,7 +1362,7 @@ function PlannerTab({ places, entries, addToast, userLat, userLng, onAddNewPlace
   const userMsgCount = msgs.filter(m=>m.role==="user").length;
 
   useEffect(()=>{ bottomRef.current?.scrollIntoView({behavior:"smooth"}); },[msgs]);
-  useEffect(()=>{ try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(msgs.slice(-20))); }catch{} },[msgs]);
+  useEffect(()=>{ try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(msgs.slice(-20))); localStorage.setItem(STORAGE_TS_KEY,String(Date.now())); }catch{} },[msgs]);
   useEffect(()=>{
     if(!seedMsg) return;
     setMsgs(prev=>[
@@ -1491,7 +1500,7 @@ function PlannerTab({ places, entries, addToast, userLat, userLng, onAddNewPlace
             <div style={{ fontSize:11,color:"#8A8A9A",marginTop:1 }}>{T.chatSub}</div>
           </div>
           <div style={{ display:"flex",alignItems:"center",gap:8 }}>
-            {msgs.length>1&&<button onClick={()=>{setMsgs([{role:"assistant",content:T.chatGreeting,linkedPlaces:[]}]);setSelected([]);try{localStorage.removeItem(STORAGE_KEY);}catch{}}} style={{ padding:"6px 10px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:20,color:"#8A8A9A",fontSize:11,cursor:"pointer" }}>{isEN?"New chat":"Nova conversa"}</button>}
+            {msgs.length>1&&<button onClick={()=>{setMsgs([{role:"assistant",content:T.chatGreeting,linkedPlaces:[]}]);setSelected([]);try{localStorage.removeItem(STORAGE_KEY);localStorage.removeItem(STORAGE_TS_KEY);}catch{}}} style={{ padding:"6px 10px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:20,color:"#8A8A9A",fontSize:11,cursor:"pointer" }}>{isEN?"New chat":"Nova conversa"}</button>}
             <button onClick={detectLoc} style={{ display:"flex",alignItems:"center",gap:5,padding:"6px 12px",background:"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:20,color:"#8A8A9A",fontSize:11,cursor:"pointer",maxWidth:140,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>
               {locLoading?"...":"📍 "+startLoc.split(",")[0]}
             </button>
