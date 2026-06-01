@@ -1306,7 +1306,7 @@ function ShareModal({ places, entries, onClose, addToast }) {
   </div></div>;
 }
 
-function PlannerTab({ places, entries, addToast, userLat, userLng, onAddNewPlace, seedMsg, onSeedConsumed, onSaveToCuradoria }) {
+function PlannerTab({ places, entries, addToast, userLat, userLng, onAddNewPlace, seedMsg, onSeedConsumed, onSaveToCuradoria, events, onSurpresa }) {
   const MAX_INTERACTIONS = 8;
   const STORAGE_KEY = "nyc_planner_msgs";
   const savedMsgs = useMemo(()=>{ try{ const s=localStorage.getItem(STORAGE_KEY); return s?JSON.parse(s):null; }catch{return null;} },[]);
@@ -1481,6 +1481,31 @@ function PlannerTab({ places, entries, addToast, userLat, userLng, onAddNewPlace
           </div>
         )}
       </div>
+
+      {/* Upcoming events + Dia Surpresa */}
+      {(()=>{
+        const todayStr=new Date().toISOString().split("T")[0];
+        const upcoming=(events||[]).filter(e=>!e.archived&&e.date>=todayStr).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,3);
+        return (
+          <div style={{ padding:"10px 16px 0",maxWidth:600,width:"100%",margin:"0 auto",boxSizing:"border-box",flexShrink:0 }}>
+            {upcoming.length>0&&(
+              <div style={{ display:"flex",gap:8,overflowX:"auto",scrollbarWidth:"none",marginBottom:8 }} data-hscroll>
+                {upcoming.map(ev=>(
+                  <div key={ev.id} style={{ flexShrink:0,background:"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:12,padding:"8px 12px",minWidth:140,maxWidth:180 }}>
+                    <div style={{ fontSize:18,marginBottom:2 }}>{ev.emoji||"📅"}</div>
+                    <div style={{ fontSize:12,fontWeight:700,color:"#1A1A1A",lineHeight:1.2,marginBottom:2 }}>{ev.name}</div>
+                    <div style={{ fontSize:10,color:"#FF2D55",fontWeight:600 }}>{new Date(ev.date+"T12:00:00").toLocaleDateString(isEN?"en-US":"pt-BR",{month:"short",day:"numeric"})}</div>
+                    {ev.location&&<div style={{ fontSize:10,color:"#8A8A9A",marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>📍 {ev.location}</div>}
+                  </div>
+                ))}
+              </div>
+            )}
+            <button onClick={onSurpresa} style={{ display:"inline-flex",alignItems:"center",gap:6,padding:"7px 14px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:20,color:"#1A1A1A",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit",marginBottom:8 }}>
+              🎲 {isEN?"Surprise Day":"Dia Surpresa"}
+            </button>
+          </div>
+        );
+      })()}
 
       {/* Messages */}
       <div style={{ flex:1,overflowY:"auto",padding:"12px 16px",maxWidth:600,width:"100%",margin:"0 auto",boxSizing:"border-box" }}>
@@ -2070,63 +2095,28 @@ function EventsTab({ events, onAdd, onSave, onDelete, addToast }) {
 
 
 // ─── BOTTOM NAV ───────────────────────────────────────────────────────────────
-function BottomNav({ tab, setTab, onSurpresa, onNearby, onShare, unreadEvents }) {
-  const [showMais, setShowMais] = useState(false);
-
-  const NavItem = ({ id, icon, label, onClick }) => (
-    <button className={"nav-item"+(tab===id?" active":"")} onClick={onClick||(() => setTab(id))}>
+function BottomNav({ tab, setTab }) {
+  const NavItem = ({ id, icon, label }) => (
+    <button className={"nav-item"+(tab===id?" active":"")} onClick={()=>setTab(id)}>
       {icon}
       <span style={{ fontSize:9, fontWeight:tab===id?700:400, letterSpacing:"0.02em" }}>{label}</span>
     </button>
   );
 
-  const MaisIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="5" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.5" fill="currentColor" stroke="none"/></svg>;
   const ListIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>;
   const MapIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>;
-  const EventIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
   const PlanIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>;
   const MemIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>;
   const CurIcon = () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>;
 
   return (
-    <>
-      {showMais&&(
-        <div style={{ position:"fixed",inset:0,background:"#000000c0",zIndex:200 }} onClick={()=>setShowMais(false)}>
-          <div onClick={e=>e.stopPropagation()} style={{ position:"absolute",bottom:0,left:0,right:0,background:"#FFFFFF",borderTop:"1px solid #E8E8EC",borderRadius:"20px 20px 0 0",padding:"16px 16px 40px",maxWidth:600,margin:"0 auto" }}>
-            <div style={{ width:44,height:4,background:"#E8E8EC",borderRadius:2,margin:"0 auto 16px" }}/>
-            <div style={{ fontSize:11,color:"#8A8A9A",letterSpacing:"0.1em",marginBottom:12 }}>MAIS OPCOES</div>
-            {[
-              ["curadoria","🔖","Saves"],
-              ["eventos","📅",isEN?"Events":"Eventos"],
-            ].map(([id,emoji,label])=>(
-              <button key={id} onClick={()=>{setTab(id);setShowMais(false);}} style={{ width:"100%",display:"flex",alignItems:"center",gap:14,padding:"14px 12px",background:tab===id?"#FF2D5510":"none",border:"none",borderRadius:12,color:tab===id?"#FF2D55":"#1A1A1A",fontSize:14,cursor:"pointer",fontFamily:"inherit",marginBottom:4,textAlign:"left" }}>
-                <span style={{ fontSize:22 }}>{emoji}</span>{label}
-              </button>
-            ))}
-            <div style={{ height:1,background:"#E8E8EC",margin:"8px 0" }}/>
-            {[
-              [onSurpresa,"🗓️",isEN?"Surprise day (AI)":"Dia Surpresa (IA)"],
-              [onNearby,"📍",isEN?"Nearby":"Lugares proximos"],
-              [onShare,"↗",isEN?"Share":"Compartilhar"],
-            ].map(([fn,emoji,label])=>(
-              <button key={label} onClick={()=>{fn();setShowMais(false);}} style={{ width:"100%",display:"flex",alignItems:"center",gap:14,padding:"14px 12px",background:"none",border:"none",borderRadius:12,color:"#1A1A1A",fontSize:14,cursor:"pointer",fontFamily:"inherit",marginBottom:4,textAlign:"left" }}>
-                <span style={{ fontSize:22 }}>{emoji}</span>{label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-      <nav className="bottom-nav">
-        <NavItem id="list" icon={<ListIcon/>} label={isEN?"Explore":"Explorar"}/>
-        <NavItem id="map" icon={<MapIcon/>} label={isEN?"Map":"Mapa"}/>
-        <NavItem id="planner" icon={<PlanIcon/>} label={isEN?"Planner":"Planejar"}/>
-        <NavItem id="memories" icon={<MemIcon/>} label={isEN?"Memories":"Memórias"}/>
-        <button className={"nav-item"+(["timeline","stats","curadoria","eventos"].includes(tab)?" active":"")} onClick={()=>setShowMais(true)}>
-          <MaisIcon/>
-          <span style={{ fontSize:9, fontWeight:["timeline","stats","curadoria"].includes(tab)?700:400 }}>Mais</span>
-        </button>
-      </nav>
-    </>
+    <nav className="bottom-nav">
+      <NavItem id="list" icon={<ListIcon/>} label={isEN?"Explore":"Explorar"}/>
+      <NavItem id="map" icon={<MapIcon/>} label={isEN?"Map":"Mapa"}/>
+      <NavItem id="planner" icon={<PlanIcon/>} label={isEN?"Planner":"Planejar"}/>
+      <NavItem id="memories" icon={<MemIcon/>} label={isEN?"Memories":"Memórias"}/>
+      <NavItem id="curadoria" icon={<CurIcon/>} label="Saves"/>
+    </nav>
   );
 }
 
@@ -3012,19 +3002,45 @@ export default function App() {
 
         {/* Always mounted tabs — hidden with CSS to preserve state */}
         <div style={{display:tab==="map"?"block":"none"}}><MapTab places={filteredPlaces} entries={entries} onSelect={openModal} visible={tab==="map"} detailOpen={!!selected}/></div>
-        <div style={{display:tab==="planner"?"block":"none"}}><PlannerTab places={visiblePlaces} entries={entries} addToast={addToast} userLat={userLat} userLng={userLng} onAddNewPlace={name=>{setAiAddPrefill(name);setShowAIAdd(true);}} seedMsg={plannerSeed} onSeedConsumed={()=>setPlannerSeed(null)} onSaveToCuradoria={(name,linkedPlaces)=>{const nova={id:"l"+Date.now(),name,emoji:"💬",desc:new Date().toLocaleDateString(isEN?"en-US":"pt-BR"),placeIds:linkedPlaces.map(p=>p.id)};saveLists([...lists,nova]);}}/></div>
+        <div style={{display:tab==="planner"?"block":"none"}}><PlannerTab places={visiblePlaces} entries={entries} addToast={addToast} userLat={userLat} userLng={userLng} onAddNewPlace={name=>{setAiAddPrefill(name);setShowAIAdd(true);}} seedMsg={plannerSeed} onSeedConsumed={()=>setPlannerSeed(null)} onSaveToCuradoria={(name,linkedPlaces)=>{const nova={id:"l"+Date.now(),name,emoji:"💬",desc:new Date().toLocaleDateString(isEN?"en-US":"pt-BR"),placeIds:linkedPlaces.map(p=>p.id)};saveLists([...lists,nova]);}} events={events} onSurpresa={()=>setShowSurpresa(true)}/></div>
         <div style={{display:tab==="memories"?"block":"none",padding:"0 16px 120px"}}>
-          <div style={{ padding:"20px 0 16px" }}>
-            <div style={{ fontSize:24,fontWeight:800,letterSpacing:"-0.03em",color:"#1A1A1A",marginBottom:4 }}>{isEN?"Memories":"Memórias"}</div>
-            <div style={{ fontSize:12,color:"#8A8A9A",fontWeight:500 }}>{visitedCount} {isEN?"places visited":"lugares visitados"}</div>
+          <div style={{ padding:"20px 0 16px",display:"flex",alignItems:"flex-start",justifyContent:"space-between" }}>
+            <div>
+              <div style={{ fontSize:24,fontWeight:800,letterSpacing:"-0.03em",color:"#1A1A1A",marginBottom:4 }}>{isEN?"Memories":"Memórias"}</div>
+              <div style={{ fontSize:12,color:"#8A8A9A",fontWeight:500 }}>{visitedCount} {isEN?"places visited":"lugares visitados"}</div>
+            </div>
+            <button onClick={()=>setShowShare(true)} style={{ padding:"8px 14px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:20,color:"#1A1A1A",fontSize:12,fontWeight:600,cursor:"pointer",marginTop:4 }}>↗ {isEN?"Share":"Compartilhar"}</button>
           </div>
           <StatsTab places={visiblePlaces} entries={entries}/>
           <div style={{ height:1,background:"#E8E8EC",margin:"24px 0" }}/>
           <div style={{ fontSize:10,fontWeight:700,color:"#8A8A9A",letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:16 }}>{isEN?"Timeline":"Linha do Tempo"}</div>
           <TimelineTab places={visiblePlaces} entries={entries} onSelect={openModal}/>
+          {(()=>{
+            const todayStr=new Date().toISOString().split("T")[0];
+            const archived=(events||[]).filter(e=>e.archived||e.date<todayStr);
+            if(!archived.length) return null;
+            return (
+              <div style={{ marginTop:24 }}>
+                <div style={{ height:1,background:"#E8E8EC",marginBottom:24 }}/>
+                <div style={{ fontSize:10,fontWeight:700,color:"#8A8A9A",letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:12 }}>{isEN?"Past Events":"Eventos Passados"}</div>
+                {archived.map(ev=>(
+                  <div key={ev.id} style={{ display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:12,marginBottom:8 }}>
+                    <span style={{ fontSize:22 }}>{ev.emoji||"📅"}</span>
+                    <div style={{ flex:1,minWidth:0 }}>
+                      <div style={{ fontSize:13,fontWeight:600,color:"#1A1A1A" }}>{ev.name}</div>
+                      <div style={{ fontSize:11,color:"#8A8A9A" }}>{new Date(ev.date+"T12:00:00").toLocaleDateString(isEN?"en-US":"pt-BR",{month:"short",day:"numeric",year:"numeric"})}</div>
+                    </div>
+                    <div style={{ display:"flex",gap:6,flexShrink:0 }}>
+                      {!ev.wentTo&&<button onClick={async()=>{const todayD=new Date().toISOString().split("T")[0];await handleSave(ev.id,{status:"fui",date:todayD,who:"juntos",note:"",photos:[],stars:0,thumb:null,vibes:[],petFriendly:false,publicBathroom:false,season:"sempre",spent:null,needsReservation:false,hours:""});await set(ref(db,"events/"+ev.id),{...ev,wentTo:true});setEvents(prev=>prev.map(e=>e.id===ev.id?{...e,wentTo:true}:e));addToast(isEN?"Marked as visited!":"Marcado como visitado!","success");}} style={{ padding:"5px 10px",background:"#1A9E4A",border:"none",borderRadius:20,color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap" }}>✓ {isEN?"I went!":"Fui!"}</button>}
+                      {ev.wentTo&&<span style={{ padding:"5px 10px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:20,color:"#8A8A9A",fontSize:11 }}>{isEN?"Archived":"Arquivado"}</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
         </div>
         <div style={{display:tab==="curadoria"?"block":"none"}}><CuradoriaTab places={visiblePlaces} lists={lists} onSaveLists={saveLists} onSelectPlace={openModal} onSendToPlanner={roteiro=>{setPlannerSeed(roteiro);setTab("planner");}}/></div>
-        <div style={{display:tab==="eventos"?"block":"none"}}><EventsTab events={events} onAdd={()=>setShowAddEvent(true)} onSave={async ev=>{await set(ref(db,"events/"+ev.id),ev);}} onDelete={async id=>{await remove(ref(db,"events/"+id));setEvents(prev=>prev.filter(e=>e.id!==id));}} addToast={addToast}/></div>
       </div>
 
       {/* Modals */}
@@ -3060,7 +3076,7 @@ export default function App() {
         </>}
         <button onClick={()=>setShowFAB(!showFAB)} style={{ width:54,height:54,background:"#FF2D55",border:"none",borderRadius:"50%",color:"#fff",fontSize:showFAB?20:26,cursor:"pointer",boxShadow:"0 4px 20px #FF2D5560",display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",transform:showFAB?"rotate(45deg)":"none" }}>+</button>
       </div>}
-      <BottomNav tab={tab} setTab={setTab} onSurpresa={()=>setShowSurpresa(true)} onNearby={handleNearby} onShare={()=>setShowShare(true)}/>
+      <BottomNav tab={tab} setTab={setTab}/>
     </div>
   );
 }
