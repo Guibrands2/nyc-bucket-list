@@ -771,6 +771,9 @@ function CuradoriaTab({ places, lists, onSaveLists, onSelectPlace, onSendToPlann
   const [newDesc, setNewDesc] = useState("");
   const [search, setSearch] = useState("");
   const [error, setError] = useState(null);
+  const [editingMeta, setEditingMeta] = useState(false);
+  const [metaName, setMetaName] = useState("");
+  const [metaEmoji, setMetaEmoji] = useState("");
 
   const toArr = val => Array.isArray(val) ? val : (val && typeof val === "object" ? Object.values(val) : []);
   const normLists = lists.map(l => ({...l, placeIds: toArr(l.placeIds)}));
@@ -817,16 +820,27 @@ function CuradoriaTab({ places, lists, onSaveLists, onSelectPlace, onSendToPlann
       return (
         <div style={{ padding:"0 16px 80px" }}>
           <div style={{ display:"flex",alignItems:"center",gap:8,marginBottom:14 }}>
-            <button onClick={()=>setView("home")} style={{ background:"none",border:"none",color:"#8A8A9A",fontSize:13,cursor:"pointer" }}>{T.myCuradorias}</button>
+            <button onClick={()=>{setView("home");setEditingMeta(false);}} style={{ background:"none",border:"none",color:"#8A8A9A",fontSize:13,cursor:"pointer" }}>{T.myCuradorias}</button>
             <span style={{ color:"#E8E8EC" }}>›</span>
-            <span style={{ fontSize:13,color:"#1A1A1A",fontWeight:600 }}>{editList.emoji} {editList.name}</span>
+            {editingMeta
+              ? <div style={{ display:"flex",gap:6,flex:1,alignItems:"center" }}>
+                  <input value={metaEmoji} onChange={e=>setMetaEmoji(e.target.value)} maxLength={2} style={{ width:36,background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:6,padding:"4px",fontSize:18,textAlign:"center" }}/>
+                  <input autoFocus value={metaName} onChange={e=>setMetaName(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"){onSaveLists(normLists.map(l=>l.id===editList.id?{...l,name:metaName.trim()||l.name,emoji:metaEmoji||l.emoji}:l));setEditingMeta(false);}if(e.key==="Escape")setEditingMeta(false);}} style={{ flex:1,background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:6,padding:"4px 8px",fontSize:13,color:"#1A1A1A" }}/>
+                  <button onClick={()=>{onSaveLists(normLists.map(l=>l.id===editList.id?{...l,name:metaName.trim()||l.name,emoji:metaEmoji||l.emoji}:l));setEditingMeta(false);}} style={{ padding:"4px 10px",background:"#1A9E4A",border:"none",borderRadius:6,color:"#fff",fontSize:12,cursor:"pointer" }}>✓</button>
+                  <button onClick={()=>setEditingMeta(false)} style={{ padding:"4px 8px",background:"none",border:"none",color:"#8A8A9A",fontSize:16,cursor:"pointer" }}>×</button>
+                </div>
+              : <div style={{ display:"flex",alignItems:"center",gap:6,flex:1 }}>
+                  <span style={{ fontSize:13,color:"#1A1A1A",fontWeight:600 }}>{editList.emoji} {editList.name}</span>
+                  <button onClick={()=>{setMetaName(editList.name);setMetaEmoji(editList.emoji);setEditingMeta(true);}} style={{ background:"none",border:"none",color:"#AEAEB2",fontSize:13,cursor:"pointer",padding:"2px 4px" }}>✏️</button>
+                  <button onClick={()=>{ if(window.confirm(isEN?`Delete "${editList.name}"?`:`Apagar "${editList.name}"?`)){del(editList.id);}}} style={{ background:"none",border:"none",color:"#FF2D55",fontSize:13,cursor:"pointer",marginLeft:"auto",padding:"2px 4px" }}>🗑</button>
+                </div>
+            }
           </div>
 
           {/* Actions bar */}
           <div style={{ display:"flex",gap:6,marginBottom:16 }}>
             {onSendToPlanner&&listPlaces.length>0&&<button onClick={sendToPlanner} style={{ flex:1,padding:"9px",background:"#0055CC",border:"none",borderRadius:10,color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer" }}>💬 {isEN?"Plan in AI":"Planejar com IA"}</button>}
-            <button onClick={()=>share(editList)} style={{ padding:"9px 12px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:10,color:"#8A8A9A",fontSize:12,cursor:"pointer" }}>↗ {T.shareBtn}</button>
-            <button onClick={()=>del(editList.id)} style={{ padding:"9px 10px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:10,color:"#FF2D55",fontSize:12,cursor:"pointer" }}>🗑</button>
+            <button onClick={()=>share(editList)} style={{ padding:"9px 12px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:10,color:"#8A8A9A",fontSize:12,cursor:"pointer" }}>↗</button>
           </div>
 
           {/* Place cards — route view */}
@@ -2001,6 +2015,79 @@ function EventCard({ ev, onSave, onDelete, addToast }) {
           </div>}
         </div>
       )}
+    </div>
+  );
+}
+
+function AddPlaceModal({ onClose, onSave, addToast }) {
+  const CATS = ["Museus","Monumentos","Natureza","Praias","Comida","Bares","Entretenimento","Livrarias","Lojas","Mercados & Delis","Bairros","Dispensaries","Daytrips"];
+  const [emoji,setEmoji]=useState("📍");
+  const [name,setName]=useState("");
+  const [category,setCategory]=useState("Comida");
+  const [price,setPrice]=useState("$");
+  const [time,setTime]=useState("1h");
+  const [desc,setDesc]=useState("");
+  const [link,setLink]=useState("");
+  const [saving,setSaving]=useState(false);
+
+  const handle = async () => {
+    if(!name.trim()) return;
+    setSaving(true);
+    const place = { id:"m"+Date.now(), name:name.trim(), nameEN:name.trim(), emoji, category, price, time, desc:desc.trim(), descEN:desc.trim(), link:link.trim(), lat:null, lng:null, season:"sempre", petFriendly:false, publicBathroom:false, needsReservation:false, hours:"", rep:"", repEN:"" };
+    await onSave(place);
+    setSaving(false);
+  };
+
+  const fieldStyle = { width:"100%", background:"#F8F7F4", border:"1px solid #E8E8EC", borderRadius:8, padding:"9px 12px", color:"#1A1A1A", fontSize:14, boxSizing:"border-box" };
+  const labelStyle = { fontSize:10, color:"#8A8A9A", letterSpacing:"0.1em", marginBottom:6, display:"block" };
+
+  return (
+    <div style={{ position:"fixed",inset:0,background:"#000000f0",zIndex:300,display:"flex",alignItems:"flex-end",justifyContent:"center" }} onClick={onClose}>
+      <div className="modal" style={{ background:"#FFFFFF",borderTop:"1px solid #E8E8EC",borderRadius:"20px 20px 0 0",padding:"20px 16px 48px",maxWidth:560,width:"100%",maxHeight:"90vh",overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
+        <div style={{ width:36,height:3,background:"#E8E8EC",borderRadius:2,margin:"0 auto 16px" }}/>
+        <div style={{ fontSize:15,fontWeight:700,color:"#1A1A1A",marginBottom:14 }}>+ {isEN?"Add Place":"Adicionar Lugar"}</div>
+
+        <div style={{ display:"flex",gap:10,marginBottom:12 }}>
+          <input value={emoji} onChange={e=>setEmoji(e.target.value)} maxLength={2} style={{ width:50,background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:8,padding:"8px",fontSize:22,textAlign:"center" }}/>
+          <input value={name} onChange={e=>setName(e.target.value)} placeholder={isEN?"Place name...":"Nome do lugar..."} autoFocus style={{ flex:1,...fieldStyle }}/>
+        </div>
+
+        <div style={{ marginBottom:12 }}>
+          <label style={labelStyle}>{isEN?"CATEGORY":"CATEGORIA"}</label>
+          <div style={{ display:"flex",gap:5,flexWrap:"wrap" }}>
+            {CATS.map(cat=>{ const meta=CAT_META[cat]||{color:"#FF2D55"}; const active=category===cat; return <button key={cat} onClick={()=>setCategory(cat)} style={{ padding:"5px 10px",borderRadius:20,background:active?meta.color+"20":"#F8F7F4",border:"1px solid "+(active?meta.color:"#E8E8EC"),color:active?meta.color:"#8A8A9A",fontSize:11,cursor:"pointer",fontFamily:"inherit" }}>{catLabel(cat)}</button>; })}
+          </div>
+        </div>
+
+        <div style={{ display:"flex",gap:8,marginBottom:12 }}>
+          <div style={{ flex:1 }}>
+            <label style={labelStyle}>{isEN?"PRICE":"PREÇO"}</label>
+            <div style={{ display:"flex",gap:4 }}>
+              {["gratis","$","$$","$$$"].map(p=><button key={p} onClick={()=>setPrice(p)} style={{ flex:1,padding:"7px 4px",borderRadius:8,background:price===p?"#B8860B18":"#F8F7F4",border:"1px solid "+(price===p?"#B8860B":"#E8E8EC"),color:price===p?"#B8860B":"#8A8A9A",fontSize:11,cursor:"pointer" }}>{p==="gratis"?"🆓":p}</button>)}
+            </div>
+          </div>
+          <div style={{ flex:1 }}>
+            <label style={labelStyle}>{isEN?"TIME":"TEMPO"}</label>
+            <div style={{ display:"flex",gap:4 }}>
+              {["30min","1h","2h","3h+"].map(t=><button key={t} onClick={()=>setTime(t)} style={{ flex:1,padding:"7px 2px",borderRadius:8,background:time===t?"#0055CC18":"#F8F7F4",border:"1px solid "+(time===t?"#0055CC":"#E8E8EC"),color:time===t?"#0055CC":"#8A8A9A",fontSize:11,cursor:"pointer" }}>{t}</button>)}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ marginBottom:12 }}>
+          <label style={labelStyle}>{isEN?"DESCRIPTION (optional)":"DESCRIÇÃO (opcional)"}</label>
+          <textarea value={desc} onChange={e=>setDesc(e.target.value)} rows={2} style={{ ...fieldStyle,resize:"none" }}/>
+        </div>
+
+        <div style={{ marginBottom:16 }}>
+          <label style={labelStyle}>LINK (opcional)</label>
+          <input value={link} onChange={e=>setLink(e.target.value)} placeholder="https://..." style={fieldStyle}/>
+        </div>
+
+        <button onClick={handle} disabled={!name.trim()||saving} style={{ width:"100%",padding:"14px",background:name.trim()&&!saving?"#FF2D55":"#E8E8EC",border:"none",borderRadius:12,color:name.trim()&&!saving?"#fff":"#AEAEB2",fontSize:14,fontWeight:700,cursor:name.trim()&&!saving?"pointer":"default" }}>
+          {saving?"Salvando...":(isEN?"Add to list":"Adicionar à lista")}
+        </button>
+      </div>
     </div>
   );
 }
