@@ -1490,9 +1490,12 @@ function PlannerTab({ places, entries, addToast, userLat, userLng, onAddNewPlace
             <div style={{ fontSize:18,fontWeight:800,letterSpacing:"-0.02em",background:"linear-gradient(90deg,#FF2D55,#ff6b35)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent" }}>🤖 {isEN?"Planner":"Planejar"}</div>
             <div style={{ fontSize:11,color:"#8A8A9A",marginTop:1 }}>{T.chatSub}</div>
           </div>
-          <button onClick={detectLoc} style={{ display:"flex",alignItems:"center",gap:5,padding:"6px 12px",background:"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:20,color:"#8A8A9A",fontSize:11,cursor:"pointer",maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>
-            {locLoading?"...":"📍 "+startLoc.split(",")[0]}
-          </button>
+          <div style={{ display:"flex",alignItems:"center",gap:8 }}>
+            {msgs.length>1&&<button onClick={()=>{setMsgs([{role:"assistant",content:T.chatGreeting,linkedPlaces:[]}]);setSelected([]);try{localStorage.removeItem(STORAGE_KEY);}catch{}}} style={{ padding:"6px 10px",background:"#F8F7F4",border:"1px solid #E8E8EC",borderRadius:20,color:"#8A8A9A",fontSize:11,cursor:"pointer" }}>{isEN?"New chat":"Nova conversa"}</button>}
+            <button onClick={detectLoc} style={{ display:"flex",alignItems:"center",gap:5,padding:"6px 12px",background:"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:20,color:"#8A8A9A",fontSize:11,cursor:"pointer",maxWidth:140,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>
+              {locLoading?"...":"📍 "+startLoc.split(",")[0]}
+            </button>
+          </div>
         </div>
         {selected.length>0&&(
           <div style={{ marginTop:10,maxWidth:600,margin:"10px auto 0" }}>
