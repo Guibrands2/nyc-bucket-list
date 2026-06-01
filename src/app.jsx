@@ -1138,7 +1138,13 @@ function DetailModal({ place, entry, places, entries, onClose, onSave, onDelete,
   const [note,setNote]=useState(e.note||"");
   const [date,setDate]=useState(e.date||new Date().toISOString().split("T")[0]);
   const [photos,setPhotos]=useState(e.photos||(e.photo?[e.photo]:[]));
+  const [wikiPhoto,setWikiPhoto]=useState(null);
   const [status,setStatus]=useState(e.status||"quero");
+  useEffect(()=>{
+    if((e.photos||[]).length===0&&!e.photo){
+      fetchWikiPhoto(place.nameEN||place.name).then(url=>{ if(url) setWikiPhoto(url); });
+    }
+  },[place.id]);
   const [stars,setStars]=useState(e.stars||0);
   const [thumb,setThumb]=useState(e.thumb||null);
   const [vibes,setVibes]=useState(e.vibes||[]);
@@ -1181,15 +1187,10 @@ function DetailModal({ place, entry, places, entries, onClose, onSave, onDelete,
         {/* Drag handle */}
         <div style={{ width:36,height:4,background:"#E8E8EC",borderRadius:2,margin:"0 auto 20px" }}/>
 
-        {/* Hero image — shown only when no check-in photos */}
-        {photos.length === 0 && (
+        {/* Hero image — wikipedia photo or check-in photos */}
+        {photos.length===0 && wikiPhoto && (
           <div style={{ position:"relative",marginLeft:-16,marginRight:-16,marginTop:-20,marginBottom:20,height:180,overflow:"hidden" }}>
-            <img
-              src={getPlacePhoto(place)}
-              alt={displayName}
-              loading="lazy"
-              style={{ width:"100%",height:"100%",objectFit:"cover",display:"block" }}
-            />
+            <img src={wikiPhoto} alt={displayName} loading="lazy" style={{ width:"100%",height:"100%",objectFit:"cover",display:"block" }}/>
             <div style={{ position:"absolute",bottom:0,left:0,right:0,height:60,background:"linear-gradient(to bottom, transparent, rgba(0,0,0,0.35))" }}/>
           </div>
         )}
@@ -2295,9 +2296,15 @@ function QuickActionSheet({ place, entry, onClose, onToggleWant, onCheckIn, onSa
   );
 }
 
-const getPlacePhoto = (place) => {
-  const query = encodeURIComponent((place.nameEN || place.name) + " New York");
-  return `https://source.unsplash.com/400x300/?${query}`;
+const fetchWikiPhoto = async (name) => {
+  try {
+    const r = await fetch(
+      `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(name)}&prop=pageimages&format=json&pithumbsize=600&origin=*`
+    );
+    const d = await r.json();
+    const page = Object.values(d?.query?.pages||{})[0];
+    return page?.thumbnail?.source || null;
+  } catch { return null; }
 };
 
 const PlaceCard = memo(function PlaceCard({ place, entry, onSelect, onCheckIn, isEN, onToggleWant, onQuickAction }) {
