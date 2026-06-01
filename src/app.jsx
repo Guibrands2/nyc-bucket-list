@@ -1181,6 +1181,19 @@ function DetailModal({ place, entry, places, entries, onClose, onSave, onDelete,
         {/* Drag handle */}
         <div style={{ width:36,height:4,background:"#E8E8EC",borderRadius:2,margin:"0 auto 20px" }}/>
 
+        {/* Hero image — shown only when no check-in photos */}
+        {photos.length === 0 && (
+          <div style={{ position:"relative",marginLeft:-16,marginRight:-16,marginTop:-20,marginBottom:20,height:180,overflow:"hidden" }}>
+            <img
+              src={getPlacePhoto(place)}
+              alt={displayName}
+              loading="lazy"
+              style={{ width:"100%",height:"100%",objectFit:"cover",display:"block" }}
+            />
+            <div style={{ position:"absolute",bottom:0,left:0,right:0,height:60,background:"linear-gradient(to bottom, transparent, rgba(0,0,0,0.35))" }}/>
+          </div>
+        )}
+
         {/* Header */}
         <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16 }}>
           <div style={{ flex:1,minWidth:0,paddingRight:12 }}>
@@ -2282,6 +2295,11 @@ function QuickActionSheet({ place, entry, onClose, onToggleWant, onCheckIn, onSa
   );
 }
 
+const getPlacePhoto = (place) => {
+  const query = encodeURIComponent((place.nameEN || place.name) + " New York");
+  return `https://source.unsplash.com/400x300/?${query}`;
+};
+
 const PlaceCard = memo(function PlaceCard({ place, entry, onSelect, onCheckIn, isEN, onToggleWant, onQuickAction }) {
   const status = entry?.status;
   const meta = CAT_META[place.category]||{color:"#FF2D55"};
@@ -2349,7 +2367,7 @@ const PlaceCard = memo(function PlaceCard({ place, entry, onSelect, onCheckIn, i
         onClick={()=>{ if(Math.abs(swipeDx)<5) onSelect(place); }}
         style={{
           display:"flex", alignItems:"center", gap:14,
-          padding:"14px 0",
+          padding:"12px 14px",
           borderBottom:"1px solid #E8E8EC",
           cursor:"pointer",
           transform: swipeDx ? `translateX(${swipeDx}px)` : "none",
@@ -2367,11 +2385,10 @@ const PlaceCard = memo(function PlaceCard({ place, entry, onSelect, onCheckIn, i
             {isBeen && entry?.stars>0 && <span style={{ fontSize:11,color:"#B8860B",marginLeft:6,letterSpacing:0 }}>{"★".repeat(entry.stars)}</span>}
           </div>
           <div style={{ fontSize:11, color:"#8A8A9A", fontWeight:500, letterSpacing:"0.01em" }}>
-            {catLabel(place.category)}
+            <span style={{ color:meta.color, fontWeight:600 }}>{catLabel(place.category)}</span>
             {displayPrice && displayPrice!=="gratis" && <span style={{ color:"#8A8A9A" }}> · {displayPrice}</span>}
             {isBeen && entry?.date && <span style={{ color:"#8A8A9A" }}> · {new Date(entry.date+"T12:00:00").toLocaleDateString(isEN?"en-US":"pt-BR",{month:"short",year:"numeric"})}</span>}
             {isWant && !isBeen && <span style={{ color:"#0055CC" }}> · saved</span>}
-            {entry?.note && <span style={{ color:"#8A8A9A",fontStyle:"italic" }}> · "{entry.note.slice(0,30)}{entry.note.length>30?"…":""}"</span>}
           </div>
         </div>
 
