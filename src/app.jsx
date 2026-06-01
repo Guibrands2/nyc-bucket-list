@@ -2385,12 +2385,22 @@ function QuickActionSheet({ place, entry, onClose, onToggleWant, onCheckIn, onSa
 
 const fetchWikiPhoto = async (name) => {
   try {
-    const r = await fetch(
-      `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(name)}&prop=pageimages&format=json&pithumbsize=600&origin=*`
-    );
-    const d = await r.json();
-    const page = Object.values(d?.query?.pages||{})[0];
-    return page?.thumbnail?.source || null;
+    // 1. Try Wikipedia article thumbnail
+    const wr = await fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(name)}&prop=pageimages&format=json&pithumbsize=600&origin=*`);
+    const wd = await wr.json();
+    const wpage = Object.values(wd?.query?.pages||{})[0];
+    if(wpage?.thumbnail?.source) return wpage.thumbnail.source;
+
+    // 2. Fall back to Wikimedia Commons search (much broader coverage)
+    const q = encodeURIComponent(name+" New York");
+    const cr = await fetch(`https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrsearch=${q}&prop=imageinfo&iiprop=url&iiurlwidth=600&format=json&origin=*&gsrlimit=5`);
+    const cd = await cr.json();
+    const pages = Object.values(cd?.query?.pages||{});
+    const img = pages.find(p=>{
+      const u=(p.imageinfo?.[0]?.url||"").toLowerCase();
+      return (u.includes(".jpg")||u.includes(".jpeg")||u.includes(".png"))&&!u.includes("logo")&&!u.includes("icon")&&!u.includes("map");
+    });
+    return img?.imageinfo?.[0]?.url||null;
   } catch { return null; }
 };
 
