@@ -2742,6 +2742,7 @@ export default function App() {
   const [showAIAdd, setShowAIAdd] = useState(false);
   const [aiAddPrefill, setAiAddPrefill] = useState(null);
   const [showFAB, setShowFAB] = useState(false);
+  const [activeMood, setActiveMood] = useState(null);
   const [syncing, setSyncing] = useState(false);
   const [placeOfDay, setPlaceOfDay] = useState(null);
   const placeOfDayFixed = useRef(false);
@@ -2907,6 +2908,7 @@ export default function App() {
     ];
     return visiblePlaces.filter(p=>{
       const e=entries[p.id]||{};
+      if(activeMood){const mood=MOODS.find(m=>m.id===activeMood);if(mood&&!mood.filter(p))return false;}
       if(!search) return true;
       const q=normalize(search);
       const words=q.split(/\s+/).filter(Boolean);
@@ -2924,7 +2926,7 @@ export default function App() {
     }).sort((a,b)=>
       normalize(isEN&&a.nameEN?a.nameEN:a.name).localeCompare(normalize(isEN&&b.nameEN?b.nameEN:b.name))
     );
-  },[visiblePlaces,search,entries]);
+  },[visiblePlaces,search,entries,activeMood]);
 
   const visitedCount = useMemo(()=>visiblePlaces.filter(p=>(entries[p.id]||{}).status==="fui").length,[visiblePlaces,entries]);
   const total = visiblePlaces.length;
@@ -2969,6 +2971,13 @@ export default function App() {
             </div>
             {hasAnyFilter&&filteredPlaces.length!==total&&<div style={{ fontSize:10,color:"#8A8A9A",marginTop:4 }}>{filteredPlaces.length} {isEN?"shown":"exibidos"}</div>}
           </div>
+          {/* Mood chips */}
+          {tab==="list"&&<div style={{ display:"flex",gap:8,overflowX:"auto",scrollbarWidth:"none",padding:"4px 20px 8px",margin:"0 -16px" }}>
+            {MOODS.map(m=>{
+              const active=activeMood===m.id;
+              return <button key={m.id} onClick={()=>setActiveMood(active?null:m.id)} style={{ padding:"7px 14px",borderRadius:20,border:active?"1px solid #FF2D5560":"1px solid #E8E8EC",background:active?"#FF2D5520":"#FFFFFF",color:active?"#FF2D55":"#8A8A9A",fontWeight:active?600:400,fontSize:12,whiteSpace:"nowrap",cursor:"pointer",flexShrink:0 }}>{m.label}</button>;
+            })}
+          </div>}
           {/* Search */}
           {tab==="list"&&<div style={{ position:"relative",marginBottom:10 }}>
             <span style={{ position:"absolute",left:13,top:"50%",transform:"translateY(-50%)",color:"#8A8A9A",fontSize:15 }}>🔍</span>
@@ -3085,13 +3094,12 @@ export default function App() {
 
       {/* FAB — only on Explorar tab */}
       {tab==="list"&&showFAB&&<div style={{ position:"fixed",inset:0,zIndex:190 }} onClick={()=>setShowFAB(false)}/>}
-      {tab==="list"&&<div style={{ position:"fixed",bottom:74,right:20,zIndex:200,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:8 }}>
+      {tab==="list"&&<div style={{ position:"fixed",bottom:74,right:20,zIndex:200,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:10 }}>
         {showFAB&&<>
-          <button onClick={()=>{setShowFAB(false);setShowAIAdd(true);}} style={{ display:"flex",alignItems:"center",gap:8,padding:"10px 16px",background:"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:20,color:"#1A1A1A",fontSize:13,cursor:"pointer",boxShadow:"0 4px 16px #00000060",whiteSpace:"nowrap" }}>✨ {isEN?"Add with AI":"Adicionar com IA"}</button>
-          <button onClick={()=>{setShowFAB(false);setShowAdd(true);}} style={{ display:"flex",alignItems:"center",gap:8,padding:"10px 16px",background:"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:20,color:"#1A1A1A",fontSize:13,cursor:"pointer",boxShadow:"0 4px 16px #00000060",whiteSpace:"nowrap" }}>📝 {isEN?"Add manually":"Adicionar manual"}</button>
-          <button onClick={()=>{setShowFAB(false);getSurprise();}} style={{ display:"flex",alignItems:"center",gap:8,padding:"10px 16px",background:"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:20,color:"#1A1A1A",fontSize:13,cursor:"pointer",boxShadow:"0 4px 16px #00000060",whiteSpace:"nowrap" }}>🎲 {isEN?"Roll a place":"Sortear lugar"}</button>
+          <button onClick={()=>{setShowFAB(false);setShowAIAdd(true);}} style={{ display:"flex",alignItems:"center",gap:8,padding:"10px 16px",background:"#FF2D55",border:"none",borderRadius:20,color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer",boxShadow:"0 4px 16px rgba(255,45,85,0.4)",whiteSpace:"nowrap" }}>✨ {isEN?"Add with AI":"Adicionar com IA"}</button>
+          <button onClick={()=>{setShowFAB(false);setShowAdd(true);}} style={{ display:"flex",alignItems:"center",gap:8,padding:"8px 14px",background:"#FFFFFF",border:"1px solid #E8E8EC",borderRadius:20,color:"#1A1A1A",fontSize:12,cursor:"pointer",boxShadow:"0 2px 8px #00000020",whiteSpace:"nowrap" }}>+ {isEN?"Manual":"Manual"}</button>
         </>}
-        <button onClick={()=>setShowFAB(!showFAB)} style={{ width:54,height:54,background:"#FF2D55",border:"none",borderRadius:"50%",color:"#fff",fontSize:showFAB?20:26,cursor:"pointer",boxShadow:"0 4px 20px #FF2D5560",display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s",transform:showFAB?"rotate(45deg)":"none" }}>+</button>
+        <button onClick={()=>setShowFAB(!showFAB)} style={{ width:52,height:52,background:"#FF2D55",border:"none",borderRadius:"50%",color:"#fff",fontSize:22,cursor:"pointer",boxShadow:"0 4px 16px rgba(255,45,85,0.4)",display:"flex",alignItems:"center",justifyContent:"center" }}>✨</button>
       </div>}
       <BottomNav tab={tab} setTab={setTab}/>
     </div>
